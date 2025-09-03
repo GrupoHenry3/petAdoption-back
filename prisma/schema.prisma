@@ -1,0 +1,121 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {        
+  id                    Int             @id @default(autoincrement())
+  username              String          @unique
+  name                  String?
+  phoneNumber           String?         @map("phone_number")
+  address               String?
+  avatarURL             String?         @map("avatar_url")
+  email                 String          @unique
+  passwordHash          String          @map("password_hash")
+  googleID              String          @unique @map("google_id")
+  adoptions             Adoption[]
+
+  @@map("pa_users")
+}
+
+model Organization {
+  id                    Int             @id @default(autoincrement())
+  name                  String
+  phoneNumber           String?         @map("phone_number")
+  address               String?
+  website               String?
+  description           String?
+  thumbnailURL          String?         @map("thumbnail_url")
+  email                 String          @unique
+  passwordHash          String          @map("password_hash")
+  googleID              String?         @unique @map("google_id")
+  animals               Animal[]
+  adoptions             Adoption[]
+
+  @@map("pa_organizations")
+}
+
+model Animal {
+  id                    Int             @id @default(autoincrement())
+  name                  String
+  age                   Int
+  gender                Gender
+  neutered              Boolean
+  description           String?
+  adoptionFee           Int?            @map("adoption_fee")
+  species               Species?
+
+  breedID               Int             @map("breed_id") @unique
+  breed                 Breed           @relation(fields: [breedID], references: [id])
+  
+  organizationID        Int             @map("organization_id")
+  organization          Organization    @relation(fields: [organizationID], references: [id])
+
+  adoptionID            Int             @map("adoption_id")
+  adoption              Adoption        @relation(fields: [adoptionID], references: [id])
+
+  @@index([name, gender, neutered])
+  
+  @@map("pa_animals")
+}
+
+model Breed {
+  id                    Int             @id @default(autoincrement())
+  name                  String
+  description           String
+  thumbnailURL          String?         @map("thumbnail_url")
+  animal                Animal? 
+  species               Species?
+
+  @@index([name])
+
+  @@map("pa_breeds")
+}
+
+model Adoption {
+  id                    Int             @id @default(autoincrement())
+  status                Status          @default(Pending)
+  adoptionDate          DateTime?       @map("adoption_date")
+  
+  userID                Int             @map("user_id")
+  user                  User            @relation(fields: [userID], references: [id])
+
+  organizationID        Int             @map("organization_id")
+  organization          Organization?   @relation(fields: [organizationID], references: [id])
+
+  animalID              Int             @map("animal_id")
+  animals               Animal[]                          
+
+  @@map("pa_adoptions")
+}
+
+model Species {
+  id                    Int             @id @default(autoincrement())
+  name                  String
+
+  breedID               Int @map("breed_id") @unique
+  breed                 Breed @relation(fields: [breedID], references: [id])
+
+  animalID              Int @map("aniaml_id") @unique
+  animal                Animal @relation(fields: [animalID], references: [id])
+
+  @@index([name])
+
+  @@map("pa_species")
+}
+
+enum Gender {
+  Male
+  Female
+}
+
+enum Status {
+  Pending
+  Approved
+  Rejected
+}
