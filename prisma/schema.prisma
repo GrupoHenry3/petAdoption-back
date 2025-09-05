@@ -17,7 +17,7 @@ model User {
   avatarURL             String?         @map("avatar_url")
   email                 String          @unique
   passwordHash          String          @map("password_hash")
-  googleID              String          @unique @map("google_id")
+  googleID              String?         @unique @map("google_id")
   adoptions             Adoption[]
 
   @@map("pa_users")
