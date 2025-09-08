@@ -101,7 +101,7 @@ model Species {
   breedID               Int @map("breed_id") @unique
   breed                 Breed @relation(fields: [breedID], references: [id])
 
-  animalID              Int @map("aniaml_id") @unique
+  animalID              Int @map("animal_id") @unique
   animal                Animal @relation(fields: [animalID], references: [id])
 
   @@index([name])
