@@ -1,9 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { OrgDTO, UserDTO } from './types/user';
-import { Organization } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -18,28 +17,24 @@ export class AuthService {
     const existingUser = await this.prisma.user.findUnique({ where: { email: payload.email } });
 
     if (!existingUser) {
-      throw new ConflictException(`${payload.email} not found`);
+      throw new NotFoundException(`${payload.email} not found`);
     }
 
     // Check if password is valid
     const isPasswordValid = await bcrypt.compare(payload.password, existingUser.passwordHash);
 
     if (!isPasswordValid) {
-      throw new ConflictException('Invalid password');
+      throw new UnauthorizedException('Invalid password');
     }
 
     const jwt = {
       sub: existingUser.id,
-      email: existingUser.email,
+      type: 'user',
     };
 
     return {
       statusCode: 200,
-      user: {
-        id: existingUser.id,
-        username: existingUser.username,
-        token: await this.jwtService.signAsync(jwt),
-      },
+      acessToken: await this.jwtService.signAsync(jwt),
     };
   }
 
@@ -80,7 +75,7 @@ export class AuthService {
 
       return {
         statusCode: 201,
-        message: 'User created successfully. Please check your email for verification',
+        message: 'User created successfully',
       };
     } catch (error) {
       return {
@@ -98,28 +93,24 @@ export class AuthService {
     });
 
     if (!existingOrg) {
-      throw new ConflictException(`${payload.email} not found`);
+      throw new NotFoundException(`${payload.email} not found`);
     }
 
     // Check if password is valid
     const isPasswordValid = await bcrypt.compare(payload.password, existingOrg.passwordHash);
 
     if (!isPasswordValid) {
-      throw new ConflictException('Invalid password');
+      throw new UnauthorizedException('Invalid password');
     }
 
     const jwt = {
       sub: existingOrg.id,
-      email: existingOrg.email,
+      type: 'organization',
     };
 
     return {
       statusCode: 200,
-      user: {
-        id: existingOrg.id,
-        username: existingOrg.name,
-        token: await this.jwtService.signAsync(jwt),
-      },
+      accessToken: await this.jwtService.signAsync(jwt),
     };
   }
 
