@@ -49,6 +49,7 @@ model Animal {
   description           String?
   adoptionFee           Int?            @map("adoption_fee")
   species               Species?
+  is_active             Boolean
 
   breedID               Int             @map("breed_id") @unique
   breed                 Breed           @relation(fields: [breedID], references: [id])
