@@ -29,7 +29,8 @@ export class AuthService {
 
     const jwt = {
       sub: user.id,
-      type: user,
+      email: user.email,
+      type: user.userType,
       site_admin: user.siteAdmin,
     };
 
@@ -104,6 +105,7 @@ export class AuthService {
 
     const jwt = {
       sub: user.id,
+      email: user.email,
       type: user.userType,
       site_admin: user.siteAdmin,
     };
