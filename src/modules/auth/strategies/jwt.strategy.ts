@@ -1,35 +1,37 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PrismaService } from 'src/prisma/prisma.service';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common'
+import { JwtService } from '@nestjs/jwt'
+import { Request } from 'express'
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
-  constructor(private prisma: PrismaService) {
-    function getJWT(req) {
-      let token = null;
+export class JwtStrategy implements CanActivate {
+  constructor(private jwtService: JwtService) {}
 
-      if (req && req.cookies) {
-        token = req.cookies['access_token'];
-      }
-
-      return token || ExtractJwt.fromAuthHeaderAsBearerToken()(req);
-    }
-
-    super({
-      ignoreExpiration: false,
-      jwtFromRequest: getJWT,
-      secretOrKey: `${process.env.JWT_SECRET}`,
-    });
+  private extractTokenFromHeader(request: Request): string | undefined {
+    const [type, token] = request.headers.authorization?.split(' ') ?? []
+    return type === 'Bearer' ? token : undefined
   }
 
-  async validate(id: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: id } });
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request: Request = context.switchToHttp().getRequest()
+    const token = this.extractTokenFromHeader(request)
 
-    if (!user) {
-      throw new UnauthorizedException();
+    if (!token) {
+      throw new UnauthorizedException()
     }
 
-    return user;
+    try {
+      const payload: string[] = await this.jwtService.verifyAsync(token)
+      request['user'] = payload
+    } catch {
+      throw new UnauthorizedException()
+    }
+    
+    return true
   }
 }
+
