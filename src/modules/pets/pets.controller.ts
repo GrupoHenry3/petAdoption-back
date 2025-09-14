@@ -9,16 +9,16 @@ import {
   Query,
   ParseIntPipe,
 } from '@nestjs/common';
-import { AnimalService } from './animal.service';
 import { Prisma } from '@prisma/client';
+import { PetsService } from './pets.service';
 
 @Controller('pets')
-export class AnimalController {
-  constructor(private readonly animalService: AnimalService) {}
+export class PetsController {
+  constructor(private readonly petsService: PetsService) {}
 
   @Post()
-  async create(@Body() data: Prisma.AnimalCreateInput) {
-    return this.animalService.create(data);
+  async create(@Body() data: Prisma.PetCreateInput) {
+    return this.petsService.create(data);
   }
 
   @Get()
@@ -29,12 +29,12 @@ export class AnimalController {
     @Query('gender') gender?: string,
     @Query('neutered') neutered?: string,
   ) {
-    const where: Prisma.AnimalWhereInput = {};
+    const where: Prisma.PetWhereInput = {};
     if (name) where.name = { contains: name };
     if (gender) where.gender = gender as any;
     if (neutered !== undefined) where.neutered = neutered === 'true' ? true : false;
 
-    return this.animalService.findAll({
+    return this.petsService.findAll({
       skip: skip ? parseInt(skip) : undefined,
       take: take ? parseInt(take) : undefined,
       where,
@@ -42,17 +42,17 @@ export class AnimalController {
   }
 
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.animalService.findOne(id);
+  async findOne(@Param('id', ParseIntPipe) id: string) {
+    return this.petsService.findOne(id);
   }
 
   @Patch(':id')
-  async update(@Param('id', ParseIntPipe) id: number, @Body() data: Prisma.AnimalUpdateInput) {
-    return this.animalService.update(id, data);
+  async update(@Param('id', ParseIntPipe) id: string, @Body() data: Prisma.PetUpdateInput) {
+    return this.petsService.update(id, data);
   }
 
   @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number) {
-    return this.animalService.remove(id);
+  async remove(@Param('id', ParseIntPipe) id: string) {
+    return this.petsService.remove(id);
   }
 }

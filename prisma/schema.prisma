@@ -72,6 +72,7 @@ model Pet {
   gender                PetGender       @default(Male)
   size                  PetSize         @default(Small)
   adoptionFee           Int
+  neutered              Boolean         @default(false)
   isAdopted             Boolean         @default(false) @map("is_adopted")
   isActive              Boolean         @default(true)
   createdAt             DateTime        @default(now()) @map("created_at")

@@ -1,14 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
-// import { SpeciesEnum} from './enums/pet.enum';k
 
 @Injectable()
-export class AnimalService {
+export class PetsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(data: Prisma.AnimalCreateInput): Promise<Animal> {
-    return this.prisma.animal.create({
+  async create(data: Prisma.PetCreateInput) {
+    return this.prisma.pet.create({
       data,
     });
   }
@@ -16,32 +15,32 @@ export class AnimalService {
   async findAll(params?: {
     skip?: number;
     take?: number;
-    where?: Prisma.AnimalWhereInput;
-    orderBy?: Prisma.AnimalOrderByWithRelationInput;
-  }): Promise<Animal[]> {
+    where?: Prisma.PetWhereInput;
+    orderBy?: Prisma.PetOrderByWithRelationInput;
+  }) {
     const { skip, take, where, orderBy } = params || {};
-    return this.prisma.animal.findMany({
+    return this.prisma.pet.findMany({
       skip,
       take,
       where: {
-        is_active: true,
+        isActive: true,
         ...where,
       },
       orderBy,
       include: {
         breed: true,
-        organization: true,
+        shelter: true,
         adoption: true,
       },
     });
   }
 
-  async findOne(id: number): Promise<Animal> {
-    const animal = await this.prisma.animal.findFirst({
-      where: { id, is_active: true },
+  async findOne(id: string) {
+    const animal = await this.prisma.pet.findFirst({
+      where: { id, isActive: true },
       include: {
         breed: true,
-        organization: true,
+        shelter: true,
         adoption: true,
       },
     });
@@ -49,27 +48,29 @@ export class AnimalService {
     return animal;
   }
 
-  async update(id: number, data: Prisma.AnimalUpdateInput): Promise<Animal> {
-    const exists = await this.prisma.animal.findUnique({ where: { id } });
-    if (!exists || !exists.is_active) {
-      throw new NotFoundException(`Pet with ID ${id} not found`);
-    }
-
-    return this.prisma.animal.update({
-      where: { id },
-      data,
-    });
-  } // Soft delete
-
-  async remove(id: string): Promise<void> {
+  async update(id: string, data: Prisma.PetUpdateInput) {
     const exists = await this.prisma.pet.findUnique({ where: { id } });
-    if (!exists || !exists.is_active) {
+    if (!exists || !exists.isActive) {
       throw new NotFoundException(`Pet with ID ${id} not found`);
     }
 
     return this.prisma.pet.update({
       where: { id },
-      data: { is_active: false },
+      data,
+    });
+  }
+
+  // Soft delete
+  async remove(id: string) {
+    const exists = await this.prisma.pet.findUnique({ where: { id } });
+
+    if (!exists || !exists.isActive) {
+      throw new NotFoundException(`Pet with ID ${id} not found`);
+    }
+
+    return this.prisma.pet.update({
+      where: { id },
+      data: { isActive: false },
     });
   }
 }
