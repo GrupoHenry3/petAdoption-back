@@ -9,7 +9,7 @@ async function bootstrap() {
   const config = new DocumentBuilder().setTitle('Pet Adoption').setVersion('1.0').build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, documentFactory);
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true}))
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.enableCors();
   app.setGlobalPrefix('api');
 
