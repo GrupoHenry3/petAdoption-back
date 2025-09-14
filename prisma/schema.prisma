@@ -84,6 +84,7 @@ model Pet {
   createdAt             DateTime        @default(now()) @map("created_at")
   updatedAt             DateTime        @updatedAt @map("updated_at")
 
+
   shelterID             String          @map("shelter_id")
   shelter               Shelter         @relation(fields: [shelterID], references: [id])
   breedID               String          @map("breed_id")
@@ -91,6 +92,7 @@ model Pet {
   speciesID             String          @map("species_id")
   species               PetSpecies      @relation(fields: [speciesID], references: [id])
   adoptionID            String?         @map("adoption_id")
+
   adoption              Adoption?       @relation(fields: [adoptionID], references: [id])
   favorites             FavoritePets[]
   photos                PetPhotos[]
@@ -104,11 +106,13 @@ model PetPhotos {
   image_url             String
   createdAt             DateTime        @default(now()) @map("created_at")
 
+
   petID                 String          @map("pet_id")
   pet                   Pet             @relation(fields: [petID], references: [id])
 
   @@index([petID])
   @@map("pa_pet_photos")
+
 }
 
 model PetBreed {
@@ -120,7 +124,9 @@ model PetBreed {
   updatedAt             DateTime        @updatedAt
 
   pets                  Pet[]
+
   speciesID             String          @map("species_id")
+
   species               PetSpecies      @relation(fields: [speciesID], references: [id])
 
   @@index([name])
@@ -145,9 +151,11 @@ model Adoption {
   rejectionStatus       String?         @map("rejection_status")
   pets                  Pet[]
   
+
   userID                String          @map("user_id")
   user                  User            @relation(fields: [userID], references: [id])
   shelterID             String          @map("shelter_id")
+
   shelter               Shelter         @relation(fields: [shelterID], references: [id])
 
   createdAt             DateTime        @default(now()) @map("created_at")

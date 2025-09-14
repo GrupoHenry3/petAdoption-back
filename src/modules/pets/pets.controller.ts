@@ -38,9 +38,8 @@ export class PetController {
     @Query('take', new DefaultValuePipe(10), ParseIntPipe) take: number,
   ) {
     return this.petService.findAll({ skip, take });
-  }
+  } ///----- Admin ---//
 
-  ///----- Admin ---//
   @Get('all')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all pets (active and inactive) - (admin only)' })
@@ -69,8 +68,7 @@ export class PetController {
   })
   async restore(@Param('id') id: string) {
     return this.petService.restore(id);
-  }
-  //-------------//
+  } //-------------//
   @Get(':id')
   @ApiOperation({ summary: 'Get a pet by ID' })
   @ApiParam({ name: 'id', type: String })
