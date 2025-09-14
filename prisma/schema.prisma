@@ -1,6 +1,5 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -8,115 +7,150 @@ datasource db {
   url      = "file:./dev.db"
 }
 
-model User {        
-  id                    Int             @id @default(autoincrement())
-  username              String          @unique
-  name                  String?
-  phoneNumber           String?         @map("phone_number")
-  address               String?
-  avatarURL             String?         @map("avatar_url")
+model User {
+  id                    String          @id @default(cuid(2))
   email                 String          @unique
-  passwordHash          String          @map("password_hash")
-  googleID              String?         @unique @map("google_id")
+  password              String          @unique
+  googleID              String?         @map("google_id")
+  fullName              String?         @map("full_name")
+  country               String?
+  city                  String?
+  avatarURL             String?         @map("avatar_url")
+  userType              UserType        @default(User) @map("user_type")
+  siteAdmin             Boolean         @default(false) @map("site_admin")
+  createdAt             DateTime        @default(now()) @map("created_at")
+  updatedAt             DateTime        @updatedAt @map("updated_at")
+
+  shelter               Shelter?
+  favoritePets          FavoritePets[]
   adoptions             Adoption[]
 
+  @@index([id, email])
   @@map("pa_users")
 }
 
-model Organization {
-  id                    Int             @id @default(autoincrement())
+model FavoritePets {
+  id                    String          @id @default(cuid(2))
+  userID                String          
+  user                  User            @relation(fields: [userID], references: [id])
+  petID                 String          
+  pet                   Pet             @relation(fields: [petID], references: [id])
+  createdAt             DateTime        @default(now()) @map("created_at")
+
+  @@index([userID, petID])
+  @@map("pa_user_favorites")
+}
+
+model Shelter {
+  id                    String          @id @default(cuid(2))
   name                  String
-  phoneNumber           String?         @map("phone_number")
-  address               String?
-  website               String?
-  description           String?
-  thumbnailURL          String?         @map("thumbnail_url")
-  email                 String          @unique
-  passwordHash          String          @map("password_hash")
-  googleID              String?         @unique @map("google_id")
-  animals               Animal[]
+  country               String
+  state                 String
+  city                  String
+  address               String
+  phoneNumber           String          @map("phone_number")
+  website               String
+  description           String
+  createdAt             DateTime        @default(now()) @map("created_at")
+  updatedAt             DateTime        @updatedAt @map("updated_at")
+
+  userID                String          @unique @map("user_id")
+  user                  User            @relation(fields: [userID], references: [id])
+  pets                  Pet[]
   adoptions             Adoption[]
 
-  @@map("pa_organizations")
+  @@index([name, country, city, state])
+  @@map("pa_shelters")
 }
 
-model Animal {
-  id                    Int             @id @default(autoincrement())
+model Pet {
+  id                    String          @id @default(cuid(2))
   name                  String
   age                   Int
-  gender                Gender
-  neutered              Boolean
-  description           String?
-  adoptionFee           Int?            @map("adoption_fee")
-  species               Species?
-  is_active             Boolean
+  gender                PetGender       @default(Male)
+  size                  PetSize         @default(Small)
+  adoptionFee           Int
+  isAdopted             Boolean         @default(false) @map("is_adopted")
+  createdAt             DateTime        @default(now()) @map("created_at")
+  updatedAt             DateTime        @updatedAt @map("updated_at")
 
-  breedID               Int             @map("breed_id") @unique
-  breed                 Breed           @relation(fields: [breedID], references: [id])
-  
-  organizationID        Int             @map("organization_id")
-  organization          Organization    @relation(fields: [organizationID], references: [id])
+  shelterID             String          @unique 
+  shelter               Shelter         @relation(fields: [shelterID], references: [id])
+  breedID               String          @unique
+  breed                 PetBreed        @relation(fields: [breedID], references: [id])
+  speciesID             String          @unique
+  species               PetSpecies      @relation(fields: [speciesID], references: [id])
+  adoptionID            String?         @unique
+  adoption              Adoption?       @relation(fields: [adoptionID], references: [id])
+  favorites             FavoritePets[]
 
-  adoptionID            Int             @map("adoption_id")
-  adoption              Adoption        @relation(fields: [adoptionID], references: [id])
-
-  @@index([name, gender, neutered])
-  
-  @@map("pa_animals")
+  @@index([name, gender, size, breedID, speciesID])
+  @@map("pa_pets")
 }
 
-model Breed {
-  id                    Int             @id @default(autoincrement())
+model PetBreed {
+  id                    String          @id @default(cuid(2))
   name                  String
   description           String
-  thumbnailURL          String?         @map("thumbnail_url")
-  animal                Animal? 
-  species               Species?
+  avatarURL             String?         @map("avatar_url")
+  createdAt             DateTime        @default(now()) @map("created_at")
+
+  pets                  Pet[]
+  speciesID             String          @unique
+  species               PetSpecies      @relation(fields: [speciesID], references: [id])
 
   @@index([name])
+  @@map("pa_pet_breeds")
+}
 
-  @@map("pa_breeds")
+model PetSpecies {
+  id                    String          @id @default(cuid(2))
+  name                  String          @unique
+  createdAt             DateTime        @default(now()) @map("created_at")
+
+  pets                  Pet[]
+  breeds                PetBreed[]
+
+  @@map("pa_pet_species")
 }
 
 model Adoption {
-  id                    Int             @id @default(autoincrement())
-  status                Status          @default(Pending)
-  adoptionDate          DateTime?       @map("adoption_date")
+  id                    String          @id @default(cuid(2))
+  questions             Json?
+  status                AdoptionStatus  @default(Pending)
+  rejectionStatus       String?
+  pets                  Pet[]
   
-  userID                Int             @map("user_id")
+  userID                String          @unique
   user                  User            @relation(fields: [userID], references: [id])
+  shelterID             String          @unique
+  shelter               Shelter         @relation(fields: [shelterID], references: [id])
 
-  organizationID        Int             @map("organization_id")
-  organization          Organization?   @relation(fields: [organizationID], references: [id])
+  createdAt             DateTime        @default(now()) @map("created_at")
+  updatedAt             DateTime        @updatedAt @map("updated_at")
 
-  animalID              Int             @map("animal_id")
-  animals               Animal[]                          
-
+  @@index([status])
   @@map("pa_adoptions")
 }
 
-model Species {
-  id                    Int             @id @default(autoincrement())
-  name                  String
-
-  breedID               Int @map("breed_id") @unique
-  breed                 Breed @relation(fields: [breedID], references: [id])
-
-  animalID              Int @map("animal_id") @unique
-  animal                Animal @relation(fields: [animalID], references: [id])
-
-  @@index([name])
-
-  @@map("pa_species")
+enum PetSize {
+  Small
+  Medium
+  Large
 }
-
-enum Gender {
+enum PetGender {
   Male
   Female
 }
 
-enum Status {
+enum AdoptionStatus {
   Pending
   Approved
   Rejected
+  Withdrawn
+}
+
+enum UserType {
+  User
+  Shelter
 }

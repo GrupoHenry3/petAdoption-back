@@ -1,32 +1,42 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+  Get,
+  Res,
+  Req,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { OrgDTO, UserDTO } from './types/user';
+import { UserDTO } from './types/user';
+import { GoogleAuthGuard } from './guards/google.guard';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('user/signin')
+  @Post('signin')
   @HttpCode(HttpStatus.ACCEPTED)
   userSignIn(@Body() payload: { email: string; password: string }) {
     return this.authService.userSignIn(payload);
   }
 
-  @Post('user/signup')
+  @Post('signup')
   @HttpCode(HttpStatus.CREATED)
   userSignUp(@Body() payload: UserDTO) {
     return this.authService.userSignUp(payload);
   }
 
-  @Post('org/signin')
-  @HttpCode(HttpStatus.ACCEPTED)
-  orgSignIn(@Body() payload: { email: string; password: string }) {
-    return this.authService.orgSignIn(payload);
-  }
+  @Get('google')
+  @UseGuards(GoogleAuthGuard)
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  async googleAuth() {}
 
-  @Post('org/signup')
-  @HttpCode(HttpStatus.CREATED)
-  orgSignUn(@Body() payload: OrgDTO) {
-    return this.authService.orgSignUp(payload);
+  @Get('google/callback')
+  @UseGuards(GoogleAuthGuard)
+  async googleCB(@Req() req, @Res() res) {
+    console.log(req.user);
   }
 }

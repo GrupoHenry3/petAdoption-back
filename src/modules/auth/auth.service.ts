@@ -1,9 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { OrgDTO, UserDTO } from './types/user';
-import { Organization } from '@prisma/client';
+import { UserDTO } from './types/user';
 
 @Injectable()
 export class AuthService {
@@ -12,54 +11,40 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  // Users
+  // Local Auth
   async userSignIn(payload: { email: string; password: string }) {
     // Check if email exists
-    const existingUser = await this.prisma.user.findUnique({ where: { email: payload.email } });
+    const user = await this.prisma.user.findUnique({ where: { email: payload.email } });
 
-    if (!existingUser) {
-      throw new ConflictException(`${payload.email} not found`);
+    if (!user) {
+      throw new NotFoundException(`${payload.email} not found`);
     }
 
     // Check if password is valid
-    const isPasswordValid = await bcrypt.compare(payload.password, existingUser.passwordHash);
+    const isPasswordValid = await bcrypt.compare(payload.password, user.password);
 
     if (!isPasswordValid) {
-      throw new ConflictException('Invalid password');
+      throw new UnauthorizedException('Invalid password');
     }
 
     const jwt = {
-      sub: existingUser.id,
-      email: existingUser.email,
+      sub: user.id,
+      type: user,
+      site_admin: user.siteAdmin,
     };
 
     return {
       statusCode: 200,
-      user: {
-        id: existingUser.id,
-        username: existingUser.username,
-        token: await this.jwtService.signAsync(jwt),
-      },
+      acessToken: await this.jwtService.signAsync(jwt),
     };
   }
 
   async userSignUp(payload: UserDTO) {
     try {
-      // Check if user / mail already exists
-      const username = await this.prisma.user.findUnique({
-        where: { username: payload.username },
-      });
-
+      // Check if mail already exists
       const email = await this.prisma.user.findUnique({
         where: { email: payload.email },
       });
-
-      if (username) {
-        return {
-          statusCode: 409,
-          message: 'Username already in use',
-        };
-      }
 
       if (email) {
         return {
@@ -70,17 +55,16 @@ export class AuthService {
 
       const hashPassword = await bcrypt.hash(payload.password, 10);
 
-      const user = await this.prisma.user.create({
+      await this.prisma.user.create({
         data: {
-          username: payload.username,
           email: payload.email,
-          passwordHash: hashPassword,
+          password: hashPassword,
         },
       });
 
       return {
         statusCode: 201,
-        message: 'User created successfully. Please check your email for verification',
+        message: 'User created successfully',
       };
     } catch (error) {
       return {
@@ -90,72 +74,43 @@ export class AuthService {
     }
   }
 
-  // Organizations
-  async orgSignIn(payload: { email: string; password: string }) {
-    // Check if email exists
-    const existingOrg = await this.prisma.organization.findUnique({
-      where: { email: payload.email },
+  // Google Auth
+  async validateGoogleUser(payload: {
+    sub: string;
+    email: string;
+    name: string;
+    avatarURL?: string;
+  }) {
+    // Check if google id or email exist
+    const user = await this.prisma.user.findFirst({
+      where: { OR: [{ googleID: payload.sub }, { email: payload.email }] },
     });
 
-    if (!existingOrg) {
-      throw new ConflictException(`${payload.email} not found`);
-    }
+    // If user doesn't exist create new
+    if (!user) {
+      const hashedPassword = await bcrypt.hash(payload.sub, 10);
 
-    // Check if password is valid
-    const isPasswordValid = await bcrypt.compare(payload.password, existingOrg.passwordHash);
+      const res = await this.prisma.user.create({
+        data: {
+          fullName: payload.name,
+          email: payload.email,
+          password: hashedPassword,
+          googleID: payload.sub,
+        },
+      });
 
-    if (!isPasswordValid) {
-      throw new ConflictException('Invalid password');
+      return res;
     }
 
     const jwt = {
-      sub: existingOrg.id,
-      email: existingOrg.email,
+      sub: user.id,
+      type: user.userType,
+      site_admin: user.siteAdmin,
     };
 
     return {
       statusCode: 200,
-      user: {
-        id: existingOrg.id,
-        username: existingOrg.name,
-        token: await this.jwtService.signAsync(jwt),
-      },
+      acessToken: await this.jwtService.signAsync(jwt),
     };
-  }
-
-  async orgSignUp(payload: OrgDTO) {
-    try {
-      // Check if mail already exists
-      const email = await this.prisma.organization.findUnique({
-        where: { email: payload.email },
-      });
-
-      if (email) {
-        return {
-          statusCode: 409,
-          message: 'Email already in use',
-        };
-      }
-
-      const hashPassword = await bcrypt.hash(payload.password, 10);
-
-      const user = await this.prisma.organization.create({
-        data: {
-          name: payload.name,
-          email: payload.email,
-          passwordHash: hashPassword,
-        },
-      });
-
-      return {
-        statusCode: 201,
-        message: 'Organization created successfully. Please check your email for verification',
-      };
-    } catch (error) {
-      return {
-        statusCode: 400,
-        message: 'Error during organization creation',
-      };
-    }
   }
 }

@@ -9,8 +9,7 @@ export class UsersService {
     const users = await this.prisma.user.findMany({
       select: {
         id: true,
-        username: true,
-        name: true,
+        fullName: true,
         email: true,
       },
     });
@@ -18,21 +17,19 @@ export class UsersService {
     return users;
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     return this.prisma.user.findUnique({
       where: { id },
       select: {
         id: true,
-        username: true,
-        name: true,
-        phoneNumber: true,
+        fullName: true,
         email: true,
-        adoptions: true
+        adoptions: true,
       },
     });
   }
 
-  async deleteOne(id: number) {
+  async deleteOne(id: string) {
     return this.prisma.user.delete({ where: { id } });
   }
 }
