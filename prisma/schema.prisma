@@ -11,7 +11,7 @@ model User {
   id                    String          @id @default(cuid(2))
   email                 String          @unique
   password              String          @unique
-  googleID              String?         @map("google_id")
+  googleID              String?         @unique @map("google_id")
   fullName              String?         @map("full_name")
   country               String?
   city                  String?
@@ -77,18 +77,28 @@ model Pet {
   createdAt             DateTime        @default(now()) @map("created_at")
   updatedAt             DateTime        @updatedAt @map("updated_at")
 
-  shelterID             String          @unique 
+  shelterID             String           
   shelter               Shelter         @relation(fields: [shelterID], references: [id])
-  breedID               String          @unique
+  breedID               String          
   breed                 PetBreed        @relation(fields: [breedID], references: [id])
-  speciesID             String          @unique
+  speciesID             String          
   species               PetSpecies      @relation(fields: [speciesID], references: [id])
-  adoptionID            String?         @unique
+  adoptionID            String?         
   adoption              Adoption?       @relation(fields: [adoptionID], references: [id])
   favorites             FavoritePets[]
+  photos                PetPhotos[]
 
   @@index([name, gender, size, breedID, speciesID])
   @@map("pa_pets")
+}
+
+model PetPhotos {
+  id                    String          @id @default(cuid(2))
+  image_url             String
+  createdAt             DateTime        @default(now()) @map("created_at")
+
+  petID                 String          
+  pet                   Pet             @relation(fields: [petID], references: [id])
 }
 
 model PetBreed {
@@ -99,7 +109,7 @@ model PetBreed {
   createdAt             DateTime        @default(now()) @map("created_at")
 
   pets                  Pet[]
-  speciesID             String          @unique
+  speciesID             String          
   species               PetSpecies      @relation(fields: [speciesID], references: [id])
 
   @@index([name])
@@ -124,9 +134,9 @@ model Adoption {
   rejectionStatus       String?
   pets                  Pet[]
   
-  userID                String          @unique
+  userID                String          
   user                  User            @relation(fields: [userID], references: [id])
-  shelterID             String          @unique
+  shelterID             String          
   shelter               Shelter         @relation(fields: [shelterID], references: [id])
 
   createdAt             DateTime        @default(now()) @map("created_at")
