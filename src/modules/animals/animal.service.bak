@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Prisma, Animal } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 // import { SpeciesEnum} from './enums/pet.enum';k
 
 @Injectable()
@@ -61,13 +61,13 @@ export class AnimalService {
     });
   } // Soft delete
 
-  async remove(id: number): Promise<Animal> {
-    const exists = await this.prisma.animal.findUnique({ where: { id } });
+  async remove(id: string): Promise<void> {
+    const exists = await this.prisma.pet.findUnique({ where: { id } });
     if (!exists || !exists.is_active) {
       throw new NotFoundException(`Pet with ID ${id} not found`);
     }
 
-    return this.prisma.animal.update({
+    return this.prisma.pet.update({
       where: { id },
       data: { is_active: false },
     });

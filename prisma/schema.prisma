@@ -18,6 +18,7 @@ model User {
   avatarURL             String?         @map("avatar_url")
   userType              UserType        @default(User) @map("user_type")
   siteAdmin             Boolean         @default(false) @map("site_admin")
+  isActive              Boolean         @default(true)
   createdAt             DateTime        @default(now()) @map("created_at")
   updatedAt             DateTime        @updatedAt @map("updated_at")
 
@@ -51,6 +52,7 @@ model Shelter {
   phoneNumber           String          @map("phone_number")
   website               String
   description           String
+  isActive              Boolean         @default(true)
   createdAt             DateTime        @default(now()) @map("created_at")
   updatedAt             DateTime        @updatedAt @map("updated_at")
 
@@ -71,6 +73,7 @@ model Pet {
   size                  PetSize         @default(Small)
   adoptionFee           Int
   isAdopted             Boolean         @default(false) @map("is_adopted")
+  isActive              Boolean         @default(true)
   createdAt             DateTime        @default(now()) @map("created_at")
   updatedAt             DateTime        @updatedAt @map("updated_at")
 
