@@ -1,67 +1,83 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Put,
+  Query,
+  ParseIntPipe,
+  DefaultValuePipe,
+} from '@nestjs/common';
 import { PetService } from './pets.service';
-import { Prisma, Pet } from '@prisma/client';
+import { Pet, Prisma } from '@prisma/client';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { PetWithRelations } from './types/pet.types';
 
 @Controller('pets')
-@ApiTags('Pets - endpoinds / routes')
+@ApiTags('Pets - endpoints / routes')
 export class PetController {
   constructor(private readonly petService: PetService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Crear una nueva mascota' })
-  @ApiResponse({ status: 201, description: 'Mascota creada exitosamente.' })
-  @ApiResponse({ status: 400, description: 'Datos inválidos.' })
+  @ApiOperation({ summary: 'Create a new pet' })
+  @ApiResponse({ status: 201, description: 'Pet created successfully.' })
+  @ApiResponse({ status: 400, description: 'Invalid data.' })
   create(@Body() data: Prisma.PetCreateInput): Promise<Pet> {
     return this.petService.create(data);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Obtener todas las mascotas activas' })
-  @ApiResponse({ status: 200, description: 'Lista de mascotas retornada.' })
-  findAll(@Query('skip') skip?: number, @Query('take') take?: number): Promise<Pet[]> {
-    return this.petService.findAll({
-      skip: skip ? Number(skip) : undefined,
-      take: take ? Number(take) : undefined,
-    });
+  @ApiOperation({ summary: 'Get all active pets (public)' })
+  @ApiResponse({ status: 200, description: 'List of active pets returned.' })
+  @ApiResponse({ status: 204, description: 'No pets found.' })
+  findAll(
+    @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip: number,
+    @Query('take', new DefaultValuePipe(10), ParseIntPipe) take: number,
+  ): Promise<PetWithRelations[]> {
+    return this.petService.findAll({ skip, take });
   }
-  ///-----Admin---//
+
+  ///----- Admin ---//
   @Get('all')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Obtener todas las mascotas activas e inactivas' })
-  @ApiResponse({ status: 200, description: 'Lista de mascotas retornada.' })
-  findAllWithInactive(@Query('skip') skip?: number, @Query('take') take?: number): Promise<Pet[]> {
-    return this.petService.findAllWithInactive({
-      skip: skip ? Number(skip) : undefined,
-      take: take ? Number(take) : undefined,
-    });
+  @ApiOperation({ summary: 'Get all pets (active and inactive) - ADMIN' })
+  @ApiResponse({ status: 200, description: 'List of pets returned.' })
+  findAllWithInactive(
+    @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip: number,
+    @Query('take', new DefaultValuePipe(10), ParseIntPipe) take: number,
+  ): Promise<PetWithRelations[]> {
+    return this.petService.findAllWithInactive({ skip, take });
   }
-  //--admin--//
+
   @Get(':id')
-  @ApiOperation({ summary: 'Obtener una mascota por ID' })
+  @ApiOperation({ summary: 'Get a pet by ID' })
   @ApiParam({ name: 'id', type: String })
-  @ApiResponse({ status: 200, description: 'Mascota encontrada.' })
-  @ApiResponse({ status: 404, description: 'Mascota no encontrada.' })
-  findOne(@Param('id') id: string): Promise<Pet> {
+  @ApiResponse({ status: 200, description: 'Pet found.' })
+  @ApiResponse({ status: 404, description: 'Pet not found.' })
+  findOne(@Param('id') id: string): Promise<PetWithRelations> {
     return this.petService.findOne(id);
   }
 
   @Put(':id')
-  @ApiOperation({ summary: 'Actualizar una mascota' })
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update a pet - ADMIN' })
   @ApiParam({ name: 'id', type: String })
-  @ApiResponse({ status: 200, description: 'Mascota actualizada.' })
-  @ApiResponse({ status: 404, description: 'Mascota no encontrada.' })
-  update(@Param('id') id: string, @Body() data: Prisma.PetUpdateInput): Promise<Pet> {
+  @ApiResponse({ status: 200, description: 'Updated pet.' })
+  @ApiResponse({ status: 404, description: 'Pet not found.' })
+  update(@Param('id') id: string, @Body() data: Prisma.PetUpdateInput): Promise<PetWithRelations> {
     return this.petService.update(id, data);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Desactivar (soft delete) una mascota' })
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Deactivate (soft delete) a pet - ADMIN' })
   @ApiParam({ name: 'id', type: String })
-  @ApiResponse({ status: 200, description: 'Mascota desactivada.' })
-  @ApiResponse({ status: 404, description: 'Mascota no encontrada.' })
-  async remove(@Param('id') id: string): Promise<{ message: string; pet: Pet }> {
+  @ApiResponse({ status: 200, description: 'Pet disabled.' })
+  @ApiResponse({ status: 404, description: 'Pet not found.' })
+  async remove(@Param('id') id: string): Promise<{ message: string; pet: PetWithRelations }> {
     const pet = await this.petService.remove(id);
-    return { message: `Pet ${id} marked as inactive`, pet };
+    return { message: `Pet with ID ${id} marked as inactive.`, pet };
   }
 }
