@@ -88,7 +88,6 @@ export class PetService {
       },
     });
   }
-
   //-----ADMIN--------//
   async findAllWithInactive(params?: {
     skip?: number;
