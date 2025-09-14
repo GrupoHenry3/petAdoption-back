@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/co
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { OrgDTO, UserDTO } from './types/user';
+import { UserDTO } from './types/user';
 
 @Injectable()
 export class AuthService {
@@ -11,25 +11,26 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  // Users
+  // Local Auth
   async userSignIn(payload: { email: string; password: string }) {
     // Check if email exists
-    const existingUser = await this.prisma.user.findUnique({ where: { email: payload.email } });
+    const user = await this.prisma.user.findUnique({ where: { email: payload.email } });
 
-    if (!existingUser) {
+    if (!user) {
       throw new NotFoundException(`${payload.email} not found`);
     }
 
     // Check if password is valid
-    const isPasswordValid = await bcrypt.compare(payload.password, existingUser.passwordHash);
+    const isPasswordValid = await bcrypt.compare(payload.password, user.password);
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid password');
     }
 
     const jwt = {
-      sub: existingUser.id,
-      type: 'user',
+      sub: user.id,
+      type: user,
+      site_admin: user.siteAdmin,
     };
 
     return {
@@ -40,21 +41,10 @@ export class AuthService {
 
   async userSignUp(payload: UserDTO) {
     try {
-      // Check if user / mail already exists
-      const username = await this.prisma.user.findUnique({
-        where: { username: payload.username },
-      });
-
+      // Check if mail already exists
       const email = await this.prisma.user.findUnique({
         where: { email: payload.email },
       });
-
-      if (username) {
-        return {
-          statusCode: 409,
-          message: 'Username already in use',
-        };
-      }
 
       if (email) {
         return {
@@ -65,11 +55,10 @@ export class AuthService {
 
       const hashPassword = await bcrypt.hash(payload.password, 10);
 
-      const user = await this.prisma.user.create({
+      await this.prisma.user.create({
         data: {
-          username: payload.username,
           email: payload.email,
-          passwordHash: hashPassword,
+          password: hashPassword,
         },
       });
 
@@ -85,68 +74,43 @@ export class AuthService {
     }
   }
 
-  // Organizations
-  async orgSignIn(payload: { email: string; password: string }) {
-    // Check if email exists
-    const existingOrg = await this.prisma.organization.findUnique({
-      where: { email: payload.email },
+  // Google Auth
+  async validateGoogleUser(payload: {
+    sub: string;
+    email: string;
+    name: string;
+    avatarURL?: string;
+  }) {
+    // Check if google id or email exist
+    const user = await this.prisma.user.findFirst({
+      where: { OR: [{ googleID: payload.sub }, { email: payload.email }] },
     });
 
-    if (!existingOrg) {
-      throw new NotFoundException(`${payload.email} not found`);
-    }
+    // If user doesn't exist create new
+    if (!user) {
+      const hashedPassword = await bcrypt.hash(payload.sub, 10);
 
-    // Check if password is valid
-    const isPasswordValid = await bcrypt.compare(payload.password, existingOrg.passwordHash);
+      const res = await this.prisma.user.create({
+        data: {
+          fullName: payload.name,
+          email: payload.email,
+          password: hashedPassword,
+          googleID: payload.sub,
+        },
+      });
 
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid password');
+      return res;
     }
 
     const jwt = {
-      sub: existingOrg.id,
-      type: 'organization',
+      sub: user.id,
+      type: user.userType,
+      site_admin: user.siteAdmin,
     };
 
     return {
       statusCode: 200,
-      accessToken: await this.jwtService.signAsync(jwt),
+      acessToken: await this.jwtService.signAsync(jwt),
     };
-  }
-
-  async orgSignUp(payload: OrgDTO) {
-    try {
-      // Check if mail already exists
-      const email = await this.prisma.organization.findUnique({
-        where: { email: payload.email },
-      });
-
-      if (email) {
-        return {
-          statusCode: 409,
-          message: 'Email already in use',
-        };
-      }
-
-      const hashPassword = await bcrypt.hash(payload.password, 10);
-
-      const user = await this.prisma.organization.create({
-        data: {
-          name: payload.name,
-          email: payload.email,
-          passwordHash: hashPassword,
-        },
-      });
-
-      return {
-        statusCode: 201,
-        message: 'Organization created successfully. Please check your email for verification',
-      };
-    } catch (error) {
-      return {
-        statusCode: 400,
-        message: 'Error during organization creation',
-      };
-    }
   }
 }
