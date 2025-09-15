@@ -14,27 +14,27 @@ export class AuthService {
     private readonly usersService: UsersService,
   ) {}
 
-  async validateUser(payload: { id: string; email: string }) {
-    const user = await this.prisma.user.findFirst({
-      where: { OR: [{ googleID: payload.id }, { email: payload.email }] },
+  async validateUser(id: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: id },
+      select: { id: true },
     });
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+    if (!user) throw new NotFoundException('User not found');
 
     try {
-      const user = await this.prisma.user.findUnique({
-        where: { id: payload.id },
+      const res = await this.prisma.user.findUnique({
+        where: { id: user.id },
         select: {
           id: true,
+          email: true,
           userType: true,
           isActive: true,
           siteAdmin: true,
         },
       });
 
-      return user;
+      return res;
     } catch (error) {
       this.logger.error(`Error validating user: ${error.message}`, error.stack);
     }
@@ -55,14 +55,16 @@ export class AuthService {
 
     const jwt = {
       id: user.id,
+      email: user.email,
       userType: user.userType,
       siteAdmin: user.siteAdmin,
       isActive: user.isActive,
     };
 
+    console.log(jwt);
+
     return {
-      statusCode: 200,
-      token: await this.jwtService.signAsync(jwt),
+      accessToken: await this.jwtService.signAsync(jwt),
     };
   }
 
@@ -85,7 +87,7 @@ export class AuthService {
     };
 
     return {
-      token: await this.jwtService.signAsync(jwt),
+      accessToken: await this.jwtService.signAsync(jwt),
     };
   }
 
