@@ -24,7 +24,7 @@ export class AdminGuard implements CanActivate {
 
     try {
       const decodedToken = this.JwtService.verify(token, {
-        secret: `${process.env.JWT_SECRET}`,
+        secret: `${process.env.JWT_SECRET_TOKEN}`,
       });
 
       if (!decodedToken || typeof decodedToken !== 'object' || !('site_admin' in decodedToken)) {

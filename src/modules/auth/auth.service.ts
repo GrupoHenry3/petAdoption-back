@@ -3,7 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { compare } from 'bcrypt';
 import { UsersService } from '../users/users.service';
-import { CreateUserDTO } from '../users/user.dto';
+import { CreateUserDTO, SignInDTO } from '../users/user.dto';
 
 @Injectable()
 export class AuthService {
@@ -40,7 +40,7 @@ export class AuthService {
     }
   }
 
-  async signIn(payload: { email: string; password: string }) {
+  async signIn(payload: SignInDTO) {
     const user = await this.prisma.user.findUnique({ where: { email: payload.email } });
 
     if (!user) {

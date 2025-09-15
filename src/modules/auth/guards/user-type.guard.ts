@@ -23,11 +23,9 @@ export class UserTypeGuard implements CanActivate {
 
     const token = authHeader.split(' ')[1];
 
-    console.log(this.JwtService.verify(token, { secret: `${process.env.JWT_SECRET}` }));
-
     try {
       const decodedToken = this.JwtService.verify(token, {
-        secret: `${process.env.JWT_SECRET}`,
+        secret: `${process.env.JWT_SECRET_TOKEN}`,
       });
 
       if (!decodedToken || typeof decodedToken !== 'object' || !('type' in decodedToken)) {
