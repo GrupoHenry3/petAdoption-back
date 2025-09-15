@@ -112,8 +112,8 @@ model PetBreed {
   createdAt             DateTime        @default(now()) @map("created_at")
 
   pets                  Pet[]
-  speciesID             String?          
-  species               PetSpecies?      @relation(fields: [speciesID], references: [id])
+  speciesID             String          
+  species               PetSpecies      @relation(fields: [speciesID], references: [id])
 
   @@index([name])
   @@map("pa_pet_breeds")
