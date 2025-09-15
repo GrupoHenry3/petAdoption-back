@@ -17,9 +17,6 @@ import { CreateUserDTO, GetUsersDTO, UpdateUserDTO } from './user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { AdminGuard } from '../auth/guards/admin.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { UserTypeGuard } from '../auth/guards/user-type.guard';
-import { UserTypes } from '../auth/decorators/user-type.decorator';
-import { UserType } from '@prisma/client';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -51,8 +48,7 @@ export class UsersController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AdminGuard, UserTypeGuard)
-  @UserTypes(UserType.User)
+  @UseGuards(AdminGuard)
   async findAll(@Query() filters: GetUsersDTO) {
     return await this.usersService.findAll(filters);
   }

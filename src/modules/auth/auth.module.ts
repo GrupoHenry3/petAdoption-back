@@ -14,7 +14,7 @@ import { UsersService } from '../users/users.service';
     JwtModule.registerAsync({
       global: true,
       useFactory: async () => ({
-        secret: `${process.env.JWT_SECRET}`,
+        secret: `${process.env.JWT_SECRET_TOKEN}`,
         signOptions: { expiresIn: '1h' },
       }),
     }),
