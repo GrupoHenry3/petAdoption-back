@@ -102,6 +102,9 @@ model PetPhotos {
 
   petID                 String          
   pet                   Pet             @relation(fields: [petID], references: [id])
+
+  @@index([petID])
+  @@map("pa_pet_photos")
 }
 
 model PetBreed {
