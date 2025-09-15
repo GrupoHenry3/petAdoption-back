@@ -1,24 +1,24 @@
 export class ResponseUserDto {
-  id: number;
-  name: string;
+  id: string;
+  fullName?: string | null;
   email: string;
-  userName: string;
-  phone: string;
-  address: string;
-  city?: string | undefined;
-  country?: string | undefined;
-  createdAt: string;
+  phone?: string | null;
+  address?: string | null;
+  city?: string | null;
+  country?: string | null;
+  avatarURL?: string | null;
+  createdAt: Date;
 
   constructor(partial: Partial<ResponseUserDto>) {
-    const { id, name, email, userName, phone, address, city, country, createdAt } = partial;
+    const { id, fullName, email, phone, address, city, country, avatarURL, createdAt } = partial;
     this.id = id!;
-    this.name = name!;
+    this.fullName = fullName!;
     this.email = email!;
-    this.userName = userName!;
+    this.phone = phone;
     this.address = address!;
-    this.phone = phone!;
-    this.country = country;
     this.city = city;
+    this.country = country;
+    this.avatarURL = avatarURL!;
     this.createdAt = createdAt!;
   };
 };

@@ -1,21 +1,47 @@
-import { ERole } from "../enum/role.enum";
+import { EUserType } from "../enum/userType.enum";
 
 interface IUser {
-  id: number;
-  username: string;
-  passwordHash: string;
-  phoneNumber?: string | null;  // <-- aceptar null
-  name?: string | null;
+  id: string;
+  fullName?: string | null;
   email: string;
-  role: ERole;
+  password: string;
+  googleID?: string | null;
+  phone?: string | null;
+  address?: string | null;
   city?: string | null;
   country?: string | null;
-  address?: string | null;
   avatarURL?: string | null;
-  googleID?: string | null;
-}
+  userType: EUserType;
+  siteAdmin: boolean;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
-export default IUser;
+export default IUser
+
+
+
+
+
+// import { ERole } from "../enum/role.enum";
+
+// interface IUser {
+//   id: number;
+//   username: string;
+//   passwordHash: string;
+//   phoneNumber?: string | null;  // <-- aceptar null
+//   name?: string | null;
+//   email: string;
+//   role: ERole;
+//   city?: string | null;
+//   country?: string | null;
+//   address?: string | null;
+//   avatarURL?: string | null;
+//   googleID?: string | null;
+// }
+
+// export default IUser;
 
 
 

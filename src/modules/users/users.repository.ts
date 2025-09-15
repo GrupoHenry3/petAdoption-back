@@ -1,95 +1,119 @@
-import { Injectable, ConflictException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import * as bcrypt from 'bcrypt';
-import { CreateUserDto } from './dto/create-user.dto';
-import { Role } from '@prisma/client';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { PrismaService } from "src/prisma/prisma.service";
+import { CreateUserDto } from "./dto/create-user.dto";
+import { UpdateUserDto } from "./dto/update-user.dto";
+import IUser from "./interfaces/user.interface";
+import { EUserType } from "./enum/userType.enum";
+import * as bcrypt from "bcrypt";
+import { toLocalDate } from "src/utils/dateUtils";
+import { UserType } from "@prisma/client";
 
 @Injectable()
 export class UsersRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  // -------------------- CREATE USER --------------------
-  async createUser(payload: CreateUserDto) {
-    try {
-      // Verificar si el username ya existe
-      const existingUsername = await this.prisma.user.findUnique({
-        where: { username: payload.userName },
-      });
-      if (existingUsername) {
-        throw new ConflictException('Username already in use');
-      }
+  // -------------------- CREATE --------------------
+  async createUser(newUser: CreateUserDto): Promise<IUser> {
+    const hashedPassword = await bcrypt.hash(newUser.password, 10);
 
-      // Verificar si el email ya existe
-      const existingEmail = await this.prisma.user.findUnique({
-        where: { email: payload.email },
-      });
-      if (existingEmail) {
-        throw new ConflictException('Email already in use');
-      }
-
-      // Hash de la contraseña
-      const hashedPassword = await bcrypt.hash(payload.password, 10);
-
-      // Crear el usuario en la base de datos
-      const user = await this.prisma.user.create({
-        data: {
-          username: payload.userName,
-          email: payload.email,
-          name: payload.name,
-          phoneNumber: payload.phone,
-          address: payload.address,
-          city: payload.city,
-          country: payload.country,
-          passwordHash: hashedPassword,
-          role: Role.USER, // asigna el rol por defecto
-        },
-      });
-
-      // Retornar el usuario creado
-      return user;
-    } catch (error) {
-      if (error instanceof ConflictException) {
-        throw error;
-      }
-      throw new BadRequestException('Error creating user');
-    }
-  }
-
-  // -------------------- READ USERS --------------------
-  async getUsers() {
-    return this.prisma.user.findMany();
-  }
-
-  async getUserById(id: number) {
-    return this.prisma.user.findUnique({ where: { id } });
-  }
-
-  async getUserByEmail(email: string) {
-    return this.prisma.user.findUnique({ where: { email } });
-  }
-
-  async getUserByUserName(username: string) {
-    return this.prisma.user.findUnique({ where: { username } });
-  }
-
-  // -------------------- UPDATE USER --------------------
-  async updateUser(id: number, data: Partial<CreateUserDto>) {
-    const user = await this.prisma.user.update({
-      where: { id },
+    const user = await this.prisma.user.create({
       data: {
-        ...data,
-        passwordHash: data.password
-          ? await bcrypt.hash(data.password, 10)
-          : undefined,
+        email: newUser.email,
+        password: hashedPassword,
+        googleID: newUser.googleID ?? null,
+        phone: newUser.phone ?? null,
+        fullName: newUser.fullName ?? null,
+        address: newUser.address ?? null,
+        city: newUser.city ?? null,
+        country: newUser.country ?? null,
+        avatarURL: "https://cdn-icons-png.flaticon.com/512/1361/1361728.png",
+        userType: UserType.USER,
+        siteAdmin: false,
+        isActive: true,
       },
     });
-    return user;
+
+    return this.toIUser(user);
+  }
+  // -------------------- CREATE --------------------
+
+  // --------------------- READ ---------------------
+  async getUsers(): Promise<IUser[]> {
+    const users = await this.prisma.user.findMany();
+    return users.map((u) => this.toIUser(u));
   }
 
-  // -------------------- DELETE USER --------------------
-  async deleteUser(id: number) {
+  async getUserById(id: string): Promise<IUser | null> {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    return user ? this.toIUser(user) : null;
+  }
+
+  async getUserByEmail(email: string): Promise<IUser | undefined> {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    return user ? this.toIUser(user) : undefined;
+  }
+  // --------------------- READ ---------------------
+
+  // -------------------- UPDATE --------------------
+  async updateUser(id: string, updateData: UpdateUserDto): Promise<IUser> {
+    const existing = await this.prisma.user.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+
+    let data: any = { ...updateData };
+
+    // Hash password si se envía
+    if (updateData.password) {
+      data.password = await bcrypt.hash(updateData.password, 10);
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data,
+    });
+
+    return this.toIUser(updated);
+  }
+  // -------------------- UPDATE --------------------
+
+  // -------------------- DELETE --------------------
+  async deleteUser(id: string): Promise<boolean> {
+    const existing = await this.prisma.user.findUnique({ where: { id } });
+    if (!existing) return false;
+
     await this.prisma.user.delete({ where: { id } });
-    return { message: 'User deleted successfully' };
+    return true;
+  }
+  // -------------------- DELETE --------------------
+
+  // -------------------- STATUS --------------------
+  async updateUserStatus(id: string, isActive: boolean): Promise<IUser> {
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: { isActive },
+    });
+    return this.toIUser(updated);
+  }
+  // -------------------- STATUS --------------------
+
+  // -------------------- MAPPER --------------------
+  private toIUser(user: any): IUser {
+    return {
+      id: user.id,
+      email: user.email,
+      password: user.password,
+      googleID: user.googleID,
+      phone: user.phone,
+      fullName: user.fullName,
+      address: user.address,
+      city: user.city,
+      country: user.country,
+      avatarURL: user.avatarURL,
+      userType: user.userType as EUserType, // Prisma → enum local
+      siteAdmin: user.siteAdmin,
+      isActive: user.isActive,
+      createdAt: toLocalDate(user.createdAt),
+      updatedAt: toLocalDate(user.updatedAt),
+    };
   }
 }
 
@@ -101,92 +125,97 @@ export class UsersRepository {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import { Injectable, NotFoundException } from "@nestjs/common";
+// import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 // import IUser from "./interfaces/user.interface";
-// import { ERole } from "./enum/role.enum";
+// import { EUserType } from "./enum/userType.enum";
 // import { CreateUserDto } from "./dto/create-user.dto";
 // import { UpdateUserDto } from "./dto/update-user.dto";
 // import { PrismaService } from "src/prisma/prisma.service";
+// import { v4 as uuidv4 } from "uuid";
+// import * as bcrypt from "bcrypt";
+// import { isUUID } from "class-validator";
+// import { toLocalDate } from "src/utils/dateUtils";
 
 // @Injectable()
 // export class UsersRepository {
-//     constructor(
-//       private readonly prisma: PrismaService,
+//   constructor(private readonly prisma: PrismaService) { }
 
-//     ) { }
 //   private users: IUser[] = [
 //     {
-//       id: 1,
-//       name: 'César Delgado',
-//       email: 'cesar.delgado@example.com',
-//       userName: 'cesard',
-//       password: 'password123',
-//       phone: '+593987654321',
-//       address: 'Av. Amazonas 1234',
-//       city: 'Quito',
-//       country: 'Ecuador',
-//       createdAt: new Date('2025-01-15T10:30:00Z'),
-//       role: ERole.ADMIN,
+//       id: "550e8400-e29b-41d4-a716-446655440000",
+//       email: "maria.gomez@example.com",
+//       password: "$2b$10$4nccwNG7s0tvwUqjJKkXmOXWe/04JXJ.auXhxYMcX5MJuvRCpkgnq",
+//       googleID: "google-123456",
+//       phone: "+593987654321",
+//       fullName: "María Gómez",
+//       address: "Calle Falsa 456",
+//       city: "Guayaquil",
+//       country: "Ecuador",
+//       avatarURL: "https://cdn-icons-png.flaticon.com/512/1361/1361729.png",
+//       userType: EUserType.USER,
+//       siteAdmin: false,
+//       isActive: true,
+//       createdAt: toLocalDate(new Date("2024-08-15T18:58:04.025Z")),
+//       updatedAt: toLocalDate(new Date("2024-09-13T10:45:06.025Z"))
 //     },
 //     {
-//       id: 2,
-//       name: 'María Pérez',
-//       email: 'maria.perez@example.com',
-//       userName: 'mariap',
-//       password: 'securePass456',
-//       phone: '+593998877665',
-//       address: 'Calle La Ronda 567',
-//       city: 'Quito',
-//       country: 'Ecuador',
-//       createdAt: new Date('2025-02-20T14:45:00Z'),
-//       role: ERole.USER,
+//       id: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+//       email: "carlos.lopez@example.com",
+//       password: "$2b$10$4nccwNG7s0tvwUqjJKkXmOXWe/04JXJ.auXhxYMcX5MJuvRCpkgnq",
+//       googleID: "google-234567",
+//       phone: "+593999888777",
+//       fullName: "Carlos López",
+//       address: "Av. Libertad 789",
+//       city: "Cuenca",
+//       country: "Ecuador",
+//       avatarURL: "https://cdn-icons-png.flaticon.com/512/1361/1361730.png",
+//       userType: EUserType.USER,
+//       siteAdmin: false,
+//       isActive: true,
+//       createdAt: toLocalDate(new Date("2025-09-10T20:34:02.025Z")),
+//       updatedAt: toLocalDate(new Date("2025-09-12T18:58:04.025Z"))
 //     },
 //     {
-//       id: 3,
-//       name: 'Juan Gómez',
-//       email: 'juan.gomez@example.com',
-//       userName: 'juang',
-//       password: 'myPass789',
-//       phone: '+593987112233',
-//       address: 'Av. 6 de Diciembre 890',
-//       city: 'Quito',
-//       country: 'Ecuador',
-//       createdAt: new Date('2025-03-05T09:15:00Z'),
-//       role: ERole.USER,
-//     },
-//   ];
+//       id: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+//       email: "ana.martinez@example.com",
+//       password: "$2b$10$4nccwNG7s0tvwUqjJKkXmOXWe/04JXJ.auXhxYMcX5MJuvRCpkgnq",
+//       googleID: "google-345678",
+//       phone: "+593976543210",
+//       fullName: "Ana Martínez",
+//       address: "Boulevard Central 101",
+//       city: "Ambato",
+//       country: "Ecuador",
+//       avatarURL: "https://cdn-icons-png.flaticon.com/512/1361/1361731.png",
+//       userType: EUserType.USER,
+//       siteAdmin: false,
+//       isActive: true,
+//       createdAt: toLocalDate(new Date("2025-03-17T11:13:07.025Z")),
+//       updatedAt: toLocalDate(new Date("2025-05-14T13:18:04.025Z"))
+//     }
+//   ]; // Inicialmente vacío o con seed
 
 //   // -------------------- CREATE --------------------
 //   async createUser(newUser: CreateUserDto): Promise<IUser> {
-//     const createUser: IUser = {
-//       id: this.users.length + 1,
-//       name: newUser.name,
+//     const hashedPassword = await bcrypt.hash(newUser.password, 10);
+//     const user: IUser = {
+//       id: uuidv4(),
 //       email: newUser.email,
-//       userName: newUser.userName,
-//       password: newUser.password,
-//       phone: newUser.phone,
-//       address: newUser.address,
-//       city: newUser.city,
-//       country: newUser.country,
-//       createdAt: new Date(),
-//       role: ERole.USER,
+//       password: hashedPassword,
+//       googleID: newUser.googleID ?? null,
+//       phone: newUser.phone ?? null,
+//       fullName: newUser.fullName ?? null,
+//       address: newUser.address ?? null,
+//       city: newUser.city ?? null,
+//       country: newUser.country ?? null,
+//       avatarURL: "https://cdn-icons-png.flaticon.com/512/1361/1361728.png",
+//       userType: EUserType.USER,
+//       siteAdmin: false,
+//       isActive: true,
+//       createdAt: toLocalDate(new Date()),
+//       updatedAt: toLocalDate(new Date()),
 //     };
-//     this.users.push(createUser);
-//     return createUser;
+//     this.users.push(user);
+//     return user;
 //   }
 //   // -------------------- CREATE --------------------
 
@@ -195,25 +224,36 @@ export class UsersRepository {
 //     return this.users;
 //   }
 
-//   async getUserById(id: number): Promise<IUser | undefined> {
-//     return this.users.find((user) => user.id === id);
+//   async getUserById(id: string): Promise<IUser | null> {
+//     const user = this.users.find((user) => user.id === id);
+//     if (!user) {
+//       return null; // El service se encarga de lanzar NotFoundException
+//     }
+//     return user;
 //   }
 
 //   async getUserByEmail(email: string): Promise<IUser | undefined> {
 //     return this.users.find((user) => user.email === email);
 //   }
-
-//   async getUserByUserName(userName: string): Promise<IUser | undefined> {
-//     return this.users.find((user) => user.userName === userName);
-//   }
 //   // --------------------- READ ---------------------
 
 //   // -------------------- UPDATE --------------------
-//   async updateUser(id: number, updateData: UpdateUserDto): Promise<IUser> {
+//   async updateUser(id: string, updateData: UpdateUserDto): Promise<IUser> {
 //     const userIndex = this.users.findIndex((user) => user.id === id);
+//     if (userIndex === -1) {
+//       throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+//     }
+//     // Si se actualiza la contraseña, hashearla
+//     if (updateData.password) {
+//       updateData.password = await bcrypt.hash(updateData.password, 10);
+//     }
+//     // Solo actualizar campos definidos (evita sobreescribir con undefined)
 //     const updatedUser: IUser = {
 //       ...this.users[userIndex],
-//       ...updateData,
+//       ...Object.fromEntries(
+//         Object.entries(updateData).filter(([_, value]) => value !== undefined)
+//       ),
+//       updatedAt: new Date(),
 //     };
 //     this.users[userIndex] = updatedUser;
 //     return updatedUser;
@@ -221,43 +261,24 @@ export class UsersRepository {
 //   // -------------------- UPDATE --------------------
 
 //   // -------------------- DELETE --------------------
-//   async deleteUser(id: number): Promise<boolean> {
+//   async deleteUser(id: string): Promise<boolean> {
 //     const originalCount = this.users.length;
 //     this.users = this.users.filter((user) => user.id !== id);
-//     return this.users.length < originalCount; // true si eliminó, false si no encontró
+//     return this.users.length < originalCount;
 //   }
 //   // -------------------- DELETE --------------------
+
+//   // -------------------- STATUS --------------------
+//   async updateUserStatus(id: string, isActive: boolean): Promise<IUser> {
+//     const userIndex = this.users.findIndex(user => user.id === id);
+//     if (userIndex === -1) {
+//       throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+//     }
+//     // Actualizar status
+//     this.users[userIndex].isActive = isActive;
+//     // Actualizar fecha de modificación a hora local
+//     this.users[userIndex].updatedAt = toLocalDate(new Date());
+//     return this.users[userIndex];
+//   }
+//   // -------------------- STATUS --------------------
 // }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//   @Column({ type: 'boolean', default: false })
-//   isAdmin: boolean;
-
-//   @OneToMany(() => Order, (order) => order.user)
-//   orders: Order[]
-
-//   @Column({ default: () => 'CURRENT_TIMESTAMP' })
-//   createdAt: Date;
-
-//   @Column({
-//     type: 'simple-enum',
-//     enum: ERole,
-//     default: ERole.USER
-//   })
-//   role: ERole;
-// };

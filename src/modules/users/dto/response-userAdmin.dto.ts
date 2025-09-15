@@ -1,26 +1,30 @@
 export class ResponseUserAdminDto {
-  id: number;
-  name: string;
+  id: string;
+  fullName?: string | null;
   email: string;
-  userName: string;
-  phone: string;
-  address: string;
-  city?: string | undefined;
-  country?: string | undefined;
-  role: string;
+  phone?: string | null;
+  address?: string | null;
+  city?: string | null;
+  country?: string | null;
+  avatarURL?: string | null;
+  siteAdmin: boolean;
+  isActive: boolean;
   createdAt: string;
+  updatedAt: string;
 
   constructor(partial: Partial<ResponseUserAdminDto>) {
-    const { id, name, email, userName, phone, address, city, country, role, createdAt } = partial;
+    const { id, fullName, email, phone, address, city, country, avatarURL, siteAdmin, isActive, createdAt, updatedAt } = partial;
     this.id = id!;
-    this.name = name!;
+    this.fullName = fullName;
     this.email = email!;
-    this.userName = userName!;
-    this.address = address!;
-    this.phone = phone!;
-    this.country = country;
+    this.phone = phone;
+    this.address = address;
     this.city = city;
-    this.role = role!;
+    this.country = country;
+    this.avatarURL = avatarURL;
+    this.siteAdmin = siteAdmin!;
+    this.isActive = isActive!;
     this.createdAt = createdAt!;
+    this.updatedAt = updatedAt!;
   };
 };
