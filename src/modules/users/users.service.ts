@@ -134,6 +134,7 @@ export class UsersService {
       const users = await this.prisma.user.findMany({
         where: where,
         select: {
+          id: true,
           email: true,
           fullName: true,
           country: true,
@@ -168,6 +169,7 @@ export class UsersService {
       const user = await this.prisma.user.findUnique({
         where: { id: id },
         select: {
+          id: true,
           email: true,
           fullName: true,
           country: true,
