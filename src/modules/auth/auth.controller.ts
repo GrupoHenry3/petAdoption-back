@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { GoogleAuthGuard } from './guards/google.guard';
-import { CreateUserDTO } from '../users/user.dto';
+import { CreateUserDTO, SignInDTO } from '../users/user.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -19,7 +19,7 @@ export class AuthController {
 
   @Post('signin')
   @HttpCode(HttpStatus.ACCEPTED)
-  async signIn(@Body() payload: { email: string; password: string }) {
+  async signIn(@Body() payload: SignInDTO) {
     return this.authService.signIn(payload);
   }
 

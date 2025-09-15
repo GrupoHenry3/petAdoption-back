@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
 import { UserType } from '@prisma/client';
 import {
   IsBooleanString,
@@ -37,12 +37,12 @@ export class CreateUserDTO {
   @MaxLength(60)
   confirmedPassword: string;
 
-  @ApiProperty()
+  @ApiHideProperty()
   @IsOptional()
   @IsString()
   googleID?: string;
 
-  @ApiProperty()
+  @ApiHideProperty()
   @IsOptional()
   @IsString()
   avatarURL?: string;
@@ -96,4 +96,18 @@ export class GetUsersDTO {
   @IsOptional()
   @IsString()
   search?: string;
+}
+
+export class SignInDTO {
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsEmail()
+  email?: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(6)
+  @MaxLength(60)
+  password: string;
 }
