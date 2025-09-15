@@ -16,7 +16,7 @@ async function bootstrap() {
     })
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, documentFactory);
+  SwaggerModule.setup('/', app, documentFactory);
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }));
   app.enableCors();
   app.setGlobalPrefix('api');
