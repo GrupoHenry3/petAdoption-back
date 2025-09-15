@@ -27,11 +27,11 @@ export class AdminGuard implements CanActivate {
         secret: `${process.env.JWT_SECRET_TOKEN}`,
       });
 
-      if (!decodedToken || typeof decodedToken !== 'object' || !('site_admin' in decodedToken)) {
+      if (!decodedToken || typeof decodedToken !== 'object' || !('siteAdmin' in decodedToken)) {
         throw new ForbiddenException();
       }
 
-      const siteAdmin = decodedToken.site_admin;
+      const siteAdmin = decodedToken.siteAdmin;
 
       if (siteAdmin === true) {
         return true;

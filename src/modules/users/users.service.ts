@@ -39,7 +39,7 @@ export class UsersService {
       password: passwordHash,
       googleID: payload.googleID,
       avatarURL:
-        payload.avatarURL ??
+        payload.avatarURL ||
         'https://res.cloudinary.com/dbngufqmd/image/upload/v1757395194/blank_xpjfv8.webp',
     };
 
