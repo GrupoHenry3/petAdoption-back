@@ -19,7 +19,7 @@ export class UsersService {
 
   async create(payload: CreateUserDTO) {
     if (payload.password !== payload.confirmedPassword) {
-      throw new BadRequestException('Passwords do not match');
+      throw new ConflictException('Passwords do not match');
     }
 
     const isEmailValid = await this.prisma.user.findUnique({
@@ -33,18 +33,28 @@ export class UsersService {
 
     const passwordHash = await bcrypt.hash(payload.password, 10);
 
-    const user = {
+    const newUser = {
+      fullName: payload.fullName,
       email: payload.email,
       password: passwordHash,
+      googleID: payload.googleID,
+      avatarURL:
+        payload.avatarURL ??
+        'https://res.cloudinary.com/dbngufqmd/image/upload/v1757395194/blank_xpjfv8.webp',
     };
 
     try {
-      await this.prisma.user.create({ data: user });
+      const user = await this.prisma.user.create({ data: newUser });
 
       this.logger.log('User created successfully');
       return {
         statusCode: HttpStatus.CREATED,
         message: 'User created successfully',
+        user: {
+          id: user.id,
+          createAt: user.createdAt,
+          updatedAt: user.updatedAt,
+        },
       };
     } catch (error) {
       this.logger.error(`Error creating user: ${error.message}`, error.stack);
@@ -195,17 +205,7 @@ export class UsersService {
     }
   }
 
-  // async findUserAdoptions(id: string) {
-  //   const user = await this.prisma.user.findUnique({ where: { id: id }, select: { id: true } });
-
-  //   if (!user) {
-  //     throw new NotFoundException(`User not found`);
-  //   }
-
-  //   try {
-  //     return await this.prisma.adoption.findMany({ where: { userID: id } });
-  //   } catch (error) {
-  //     this.logger.error(`Error fetching adoptions for user: ${id}, ${error.message}`, error.stack);
-  //   }
-  // }
+  async findByEmail(email: string) {
+    return await this.prisma.user.findUnique({ where: { email: email } });
+  }
 }
