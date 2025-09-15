@@ -1,145 +1,209 @@
-import { BadRequestException, ConflictException, HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
-import { PrismaService } from "src/prisma/prisma.service";
-import { UsersRepository } from "./users.repository";
-import { CreateUserDto } from "./dto/create-user.dto";
-import { UpdateUserDto } from "./dto/update-user.dto";
-import { toLocalDate } from "src/utils/dateUtils";
-import IUser from "./interfaces/user.interface";
+import {
+  BadRequestException,
+  ConflictException,
+  HttpStatus,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
+import * as bcrypt from 'bcrypt';
+import { CreateUserDTO, GetUsersDTO, UpdateUserDTO } from './user.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+  constructor(private readonly prisma: PrismaService) {}
 
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly usersRepository: UsersRepository
-  ) { }
-
-  // -------------------- CREATE --------------------
-  async createUser(newUser: CreateUserDto) {
-    // Validar passwords iguales
-    if (newUser.password !== newUser.confirmPassword) {
-      throw new BadRequestException({
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: 'Las contraseñas no coinciden',
-        detail: 'El campo password y confirmPassword deben ser iguales',
-        timestamp: toLocalDate(new Date()),
-      });
+  async create(payload: CreateUserDTO) {
+    if (payload.password !== payload.confirmedPassword) {
+      throw new BadRequestException('Passwords do not match');
     }
 
-    // Validar email único
-    const existsEmail = await this.usersRepository.getUserByEmail(newUser.email);
-    if (existsEmail) {
-      throw new ConflictException({
-        statusCode: HttpStatus.CONFLICT,
-        message: 'El email ya está registrado',
-        detail: `El email ${newUser.email} ya existe en el sistema`,
-        timestamp: toLocalDate(new Date()),
-      });
-    }
-    return this.usersRepository.createUser(newUser);
-  }
-  // -------------------- CREATE --------------------
+    const isEmailValid = await this.prisma.user.findUnique({
+      where: { email: payload.email },
+      select: { email: true },
+    });
 
-  // --------------------- READ ---------------------
-  async getUsers() {
-    const users = await this.usersRepository.getUsers();
-    if (!users || users.length === 0) {
-      throw new NotFoundException({
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'No se encontraron usuarios registrados.',
-        detail: 'Actualmente no existen registros de usuarios en el sistema.',
-        timestamp: toLocalDate(new Date()),
-      });
+    if (isEmailValid) {
+      throw new ConflictException('Email alredy in use');
     }
-    return users;
+
+    const passwordHash = await bcrypt.hash(payload.password, 10);
+
+    const user = {
+      email: payload.email,
+      password: passwordHash,
+    };
+
+    try {
+      await this.prisma.user.create({ data: user });
+
+      this.logger.log('User created successfully');
+      return {
+        statusCode: HttpStatus.CREATED,
+        message: 'User created successfully',
+      };
+    } catch (error) {
+      this.logger.error(`Error creating user: ${error.message}`, error.stack);
+      throw new InternalServerErrorException('An unexpected error occurred during user creation');
+    }
   }
 
-  async getUserById(id: string): Promise<IUser> {
-    const user = await this.usersRepository.getUserById(id);
+  async update(id: string, payload: UpdateUserDTO) {
+    const user = await this.prisma.user.findUnique({ where: { id: id } });
+
     if (!user) {
-      throw new NotFoundException({
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'Usuario no encontrado.',
-        detail: `El ID ${id} no corresponde a ningún usuario registrado.`,
-        timestamp: toLocalDate(new Date()),
-      });
+      throw new NotFoundException(`User not found`);
     }
-    return user;
+
+    try {
+      const user = await this.prisma.user.update({
+        where: { id: id },
+        data: { ...payload },
+        select: {
+          email: true,
+          fullName: true,
+          country: true,
+          city: true,
+          address: true,
+          phoneNumber: true,
+          avatarURL: true,
+          userType: true,
+          siteAdmin: true,
+          isActive: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+
+      this.logger.log(`Successfully updated user ${id}`);
+
+      return user;
+    } catch (error) {
+      this.logger.error(`Error creating user: ${error.message}`, error.stack);
+      throw new BadRequestException('An error has ocurred');
+    }
   }
 
-  async getUserByEmail(email: string): Promise<IUser> {
-    const user = await this.usersRepository.getUserByEmail(email);
+  async delete(id: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: id }, select: { id: true } });
+
     if (!user) {
-      throw new NotFoundException({
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'Usuario no encontrado.',
-        detail: `El EMAIL ${email} no corresponde a ningún usuario registrado.`,
-        timestamp: toLocalDate(new Date()),
-      });
+      throw new NotFoundException(`User not found`);
     }
-    return user;
-  }
-  // --------------------- READ ---------------------
 
-  // -------------------- UPDATE --------------------
-  async updateUser(id: string, updateData: UpdateUserDto): Promise<IUser> {
-    // Obtener usuario existente
-    const user = await this.usersRepository.getUserById(id);
+    const updatedUser = await this.prisma.user.update({
+      where: { id: id },
+      data: { isActive: false },
+    });
+
+    return {
+      id: updatedUser.id,
+      isActive: updatedUser.isActive,
+      createdAt: updatedUser.createdAt,
+      updatedAt: updatedUser.updatedAt,
+    };
+  }
+
+  async findAll(filters: GetUsersDTO) {
+    const where: Prisma.UserWhereInput = {};
+
+    if (filters.active !== undefined) {
+      where.isActive = filters.active === 'true';
+    }
+
+    if (filters.admin !== undefined) {
+      where.siteAdmin = filters.admin === 'true';
+    }
+
+    if (filters.type) {
+      where.userType = filters.type;
+    }
+
+    if (filters.search) {
+      where.OR = [
+        { fullName: { contains: filters.search } },
+        { email: { contains: filters.search } },
+      ];
+    }
+
+    try {
+      const users = await this.prisma.user.findMany({
+        where: where,
+        select: {
+          email: true,
+          fullName: true,
+          country: true,
+          city: true,
+          address: true,
+          phoneNumber: true,
+          avatarURL: true,
+          userType: true,
+          siteAdmin: true,
+          isActive: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+
+      this.logger.log('Fetched information of all users');
+
+      return users;
+    } catch (error) {
+      this.logger.error(`Error fetching users: ${error.message}`, error.stack);
+    }
+  }
+
+  async findOne(id: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: id }, select: { id: true } });
+
     if (!user) {
-      throw new NotFoundException({
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'Usuario no encontrado',
-        detail: `El ID ${id} no corresponde a ningún usuario registrado.`,
-        timestamp: toLocalDate(new Date()),
-      });
+      throw new NotFoundException(`User not found`);
     }
-    // Validar password
-    if (updateData.password || updateData.confirmPassword) {
-      if (updateData.password !== updateData.confirmPassword) {
-        throw new BadRequestException({
-          statusCode: HttpStatus.BAD_REQUEST,
-          message: 'Las contraseñas no coinciden',
-          detail: 'El campo password y confirmPassword deben ser iguales',
-          timestamp: toLocalDate(new Date()),
-        });
-      }
-    }
-    // Eliminar confirmPassword antes de guardar
-    if (updateData.confirmPassword) {
-      delete updateData.confirmPassword;
-    }
-    return this.usersRepository.updateUser(id, updateData);
-  }
-  // -------------------- UPDATE --------------------
 
-  // -------------------- DELETE --------------------
-  async deleteUser(id: string): Promise<void> {
-    const deleted = await this.usersRepository.deleteUser(id);
-    if (!deleted) {
-      throw new NotFoundException({
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'Usuario no encontrado.',
-        detail: `El ID ${id} no corresponde a ningún usuario registrado.`,
-        timestamp: toLocalDate(new Date()),
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: id },
+        select: {
+          email: true,
+          fullName: true,
+          country: true,
+          city: true,
+          address: true,
+          phoneNumber: true,
+          avatarURL: true,
+          userType: true,
+          siteAdmin: true,
+          isActive: true,
+          createdAt: true,
+          updatedAt: true,
+          adoptions: true,
+          favoritePets: true,
+        },
       });
+
+      this.logger.log(`Fetched information for user ${id}`);
+
+      return user;
+    } catch (error) {
+      this.logger.error(`Error fetching user: ${error.message}`, error.stack);
     }
   }
-  // -------------------- DELETE --------------------
 
+  // async findUserAdoptions(id: string) {
+  //   const user = await this.prisma.user.findUnique({ where: { id: id }, select: { id: true } });
 
-  // -------------------- STATUS --------------------
-  async updateUserStatus(id: string, isActive: boolean): Promise<IUser> {
-    // Validar que el usuario exista
-    const user = await this.usersRepository.getUserById(id);
-    if (!user) {
-      throw new NotFoundException({
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'Usuario no encontrado',
-        detail: `El ID ${id} no corresponde a ningún usuario registrado.`,
-        timestamp: toLocalDate(new Date()),
-      });
-    }
-    return this.usersRepository.updateUserStatus(id, isActive);
-  }
-  // -------------------- STATUS --------------------
+  //   if (!user) {
+  //     throw new NotFoundException(`User not found`);
+  //   }
+
+  //   try {
+  //     return await this.prisma.adoption.findMany({ where: { userID: id } });
+  //   } catch (error) {
+  //     this.logger.error(`Error fetching adoptions for user: ${id}, ${error.message}`, error.stack);
+  //   }
+  // }
 }
