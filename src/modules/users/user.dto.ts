@@ -14,6 +14,11 @@ import {
 export class CreateUserDTO {
   @ApiProperty()
   @IsNotEmpty()
+  @IsString()
+  fullName: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
   @IsEmail()
   email: string;
 
@@ -30,17 +35,12 @@ export class CreateUserDTO {
   @IsString()
   @MinLength(6)
   @MaxLength(60)
-  confirmedPassword?: string;
+  confirmedPassword: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
   googleID?: string;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  fullName?: string;
 
   @ApiProperty()
   @IsOptional()
@@ -74,6 +74,10 @@ export class UpdateUserDTO {
   @IsOptional()
   @IsString()
   phoneNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  avatarURL?: string;
 }
 
 export class GetUsersDTO {

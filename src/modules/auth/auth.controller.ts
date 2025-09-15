@@ -10,8 +10,8 @@ import {
   Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { UserDTO } from './types/user';
 import { GoogleAuthGuard } from './guards/google.guard';
+import { CreateUserDTO } from '../users/user.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -19,14 +19,14 @@ export class AuthController {
 
   @Post('signin')
   @HttpCode(HttpStatus.ACCEPTED)
-  userSignIn(@Body() payload: { email: string; password: string }) {
-    return this.authService.userSignIn(payload);
+  async signIn(@Body() payload: { email: string; password: string }) {
+    return this.authService.signIn(payload);
   }
 
   @Post('signup')
   @HttpCode(HttpStatus.CREATED)
-  userSignUp(@Body() payload: UserDTO) {
-    return this.authService.userSignUp(payload);
+  async signUp(@Body() payload: CreateUserDTO) {
+    return this.authService.signUp(payload);
   }
 
   @Get('google')
@@ -36,7 +36,8 @@ export class AuthController {
 
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
-  async googleCB(@Req() req, @Res() res) {
-    console.log(req.user);
+  async googleCallback(@Req() req, @Res() res) {
+    const response = await this.authService.googleSignIn(req.user.user.id);
+    res.redirect(`${process.env.FRONTEND_URL}/?token=${response.token}`);
   }
 }

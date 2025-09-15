@@ -5,17 +5,22 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
+import { PassportModule } from '@nestjs/passport';
+import { UsersService } from '../users/users.service';
 
 @Module({
   imports: [
-    JwtModule.register({
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    JwtModule.registerAsync({
       global: true,
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '10m' },
+      useFactory: async () => ({
+        secret: `${process.env.JWT_SECRET}`,
+        signOptions: { expiresIn: '1h' },
+      }),
     }),
   ],
-
   controllers: [AuthController],
-  providers: [AuthService, PrismaService, JwtStrategy, GoogleStrategy],
+  providers: [AuthService, PrismaService, UsersService, JwtStrategy, GoogleStrategy],
+  exports: [PassportModule, JwtModule, JwtStrategy],
 })
 export class AuthModule {}
