@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { GetSheltersDTO, ShelterDTO, UpdateShelterDTO } from './shelters.dto';
-import { Prisma } from '@prisma/client';
+import { Prisma, UserType } from '@prisma/client';
 
 @Injectable()
 export class SheltersService {
@@ -90,26 +90,93 @@ export class SheltersService {
     }
   }
 
+  async updateStatus(id: string) {
+    const shelter = await this.prisma.shelter.findUnique({
+      where: { id: id },
+      select: { id: true, userID: true, name: true, isActive: true },
+    });
+    if (!shelter) throw new NotFoundException('Shelter not found');
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: shelter.userID },
+      select: { id: true, userType: true },
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    const shelterStatus = !shelter.isActive;
+    let userType: any;
+
+    if (user.userType === 'Shelter') {
+      userType = 'User';
+    } else {
+      userType = 'Shelter';
+    }
+
+    try {
+      const tx = await this.prisma.$transaction(async (prisma) => {
+        const updatedShelter = await prisma.shelter.update({
+          where: { id: shelter?.id },
+          data: {
+            isActive: shelterStatus,
+          },
+          select: {
+            id: true,
+            isActive: true,
+          },
+        });
+
+        const updateUser = await prisma.user.update({
+          where: { id: shelter.userID },
+          data: { userType: userType },
+        });
+
+        return { updatedShelter, updateUser };
+      });
+
+      this.logger.log(`Shelter ${shelter.name} status updated successfully`);
+
+      return {
+        statusCode: HttpStatus.ACCEPTED,
+        shelter: tx.updatedShelter,
+      };
+    } catch (error) {
+      this.logger.error(`Error disabling shelter ${shelter.id}`, error.stack);
+    }
+  }
+
   async delete(id: string) {
     const shelter = await this.prisma.shelter.findUnique({ where: { id: id } });
 
-    if (!shelter) throw new NotFoundException();
+    if (!shelter) throw new NotFoundException('Shelter not found');
 
     try {
-      const updatedShelter = await this.prisma.shelter.update({
-        where: { id: shelter?.id },
-        data: {
-          isActive: false,
-        },
-        select: {
-          id: true,
-          isActive: true,
-        },
+      const tx = await this.prisma.$transaction(async (prisma) => {
+        const updatedShelter = await prisma.shelter.update({
+          where: { id: shelter?.id },
+          data: {
+            isActive: false,
+          },
+          select: {
+            id: true,
+            isActive: true,
+          },
+        });
+
+        const updateUser = await prisma.user.update({
+          where: { id: shelter.userID },
+          data: { userType: 'User' },
+        });
+
+        return { updatedShelter };
       });
 
-      this.logger.log(`Successfully disabled shelter (${shelter.id})`);
+      this.logger.log(`Shelter ${shelter.name} deactivated successfully`);
 
-      return updatedShelter;
+      return {
+        statusCode: HttpStatus.ACCEPTED,
+        shelter: tx.updatedShelter,
+      };
     } catch (error) {
       this.logger.error(`Error disabling shelter ${shelter.id}`, error.stack);
     }

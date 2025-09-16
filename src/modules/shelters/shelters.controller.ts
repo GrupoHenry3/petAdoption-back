@@ -29,6 +29,12 @@ export class SheltersController {
     return await this.sheltersService.update(id, payload);
   }
 
+  @Patch(':id/status')
+  @HttpCode(HttpStatus.ACCEPTED)
+  async updateStatus(@Param('id') id: string) {
+    return await this.sheltersService.updateStatus(id);
+  }
+
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   async delete(@Param('id') id: string) {
