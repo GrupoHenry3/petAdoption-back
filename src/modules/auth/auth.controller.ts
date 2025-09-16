@@ -19,8 +19,21 @@ export class AuthController {
 
   @Post('signin')
   @HttpCode(HttpStatus.ACCEPTED)
-  async signIn(@Body() payload: SignInDTO) {
-    return this.authService.signIn(payload);
+  async signIn(@Body() payload: SignInDTO, @Res({ passthrough: true }) res) {
+    const result = await this.authService.signIn(payload);
+
+    // Guardar token en cookie
+    res.cookie('access_token', result.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 1000, // 1 hora
+    });
+
+    return {
+      statusCode: result.statusCode,
+      user: result.user,
+    };
   }
 
   @Post('signup')
@@ -31,13 +44,35 @@ export class AuthController {
 
   @Get('google')
   @UseGuards(GoogleAuthGuard)
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  async googleAuth() {}
+  async googleAuth() {
+    // Google OAuth redirection handled by GoogleAuthGuard
+  }
 
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
   async googleCallback(@Req() req, @Res() res) {
     const response = await this.authService.googleSignIn(req.user.user.id);
-    res.redirect(`${process.env.FRONTEND_URL}/?token=${response.token}`);
+
+    // Guardar token en cookie
+    res.cookie('access_token', response.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 1000, // 1 hora
+    });
+
+    res.redirect(`${process.env.FRONTEND_URL}/`);
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  logout(@Res({ passthrough: true }) res) {
+    // Limpiar cookie
+    res.clearCookie('access_token');
+
+    return {
+      statusCode: 200,
+      message: 'Logged out successfully',
+    };
   }
 }

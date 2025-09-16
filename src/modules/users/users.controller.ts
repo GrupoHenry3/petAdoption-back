@@ -10,6 +10,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
@@ -55,6 +56,12 @@ export class UsersController {
   @UserTypes(UserType.User)
   async findAll(@Query() filters: GetUsersDTO) {
     return await this.usersService.findAll(filters);
+  }
+
+  @Get('me')
+  @HttpCode(HttpStatus.OK)
+  async getCurrentUser(@Req() req) {
+    return await this.usersService.findOne(req.user.id);
   }
 
   @Get(':id')

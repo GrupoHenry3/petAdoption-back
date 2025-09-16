@@ -52,12 +52,16 @@ export class UsersService {
         message: 'User created successfully',
         user: {
           id: user.id,
-          createAt: user.createdAt,
+          fullName: user.fullName,
+          email: user.email,
+          createdAt: user.createdAt,
           updatedAt: user.updatedAt,
         },
       };
-    } catch (error) {
-      this.logger.error(`Error creating user: ${error.message}`, error.stack);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Error creating user: ${errorMessage}`, errorStack);
       throw new InternalServerErrorException('An unexpected error occurred during user creation');
     }
   }
@@ -92,8 +96,10 @@ export class UsersService {
       this.logger.log(`Successfully updated user ${id}`);
 
       return user;
-    } catch (error) {
-      this.logger.error(`Error creating user: ${error.message}`, error.stack);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Error updating user: ${errorMessage}`, errorStack);
       throw new BadRequestException('An error has ocurred');
     }
   }
@@ -163,8 +169,10 @@ export class UsersService {
       this.logger.log('Fetched information of all users');
 
       return users;
-    } catch (error) {
-      this.logger.error(`Error fetching users: ${error.message}`, error.stack);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Error fetching users: ${errorMessage}`, errorStack);
     }
   }
 
@@ -200,8 +208,10 @@ export class UsersService {
       this.logger.log(`Fetched information for user ${id}`);
 
       return user;
-    } catch (error) {
-      this.logger.error(`Error fetching user: ${error.message}`, error.stack);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Error fetching user: ${errorMessage}`, errorStack);
     }
   }
 

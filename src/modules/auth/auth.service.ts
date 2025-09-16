@@ -1,109 +1,170 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
-import { compare } from 'bcrypt';
-import { UsersService } from '../users/users.service';
-import { CreateUserDTO, SignInDTO } from '../users/user.dto';
+import * as bcrypt from 'bcrypt';
+import { CreateUserDTO } from '../users/user.dto';
 
 @Injectable()
 export class AuthService {
-  logger: any;
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-    private readonly usersService: UsersService,
   ) {}
 
-  async validateUser(payload: { id: string; email: string }) {
-    const user = await this.prisma.user.findFirst({
-      where: { OR: [{ googleID: payload.id }, { email: payload.email }] },
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    try {
-      const user = await this.prisma.user.findUnique({
-        where: { id: payload.id },
-        select: {
-          id: true,
-          userType: true,
-          isActive: true,
-          siteAdmin: true,
-        },
-      });
-
-      return user;
-    } catch (error) {
-      this.logger.error(`Error validating user: ${error.message}`, error.stack);
-    }
-  }
-
-  async signIn(payload: SignInDTO) {
+  // Local Auth
+  async signIn(payload: { email: string; password: string }) {
+    // Check if email exists
     const user = await this.prisma.user.findUnique({ where: { email: payload.email } });
 
     if (!user) {
       throw new NotFoundException(`${payload.email} not found`);
     }
 
-    const isPasswordValid = await compare(payload.password, user.password);
+    // Check if password is valid
+    const isPasswordValid = await bcrypt.compare(payload.password, user.password);
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid password');
     }
 
     const jwt = {
-      id: user.id,
-      userType: user.userType,
-      siteAdmin: user.siteAdmin,
-      isActive: user.isActive,
+      sub: user.id,
+      email: user.email,
+      type: user.userType,
+      site_admin: user.siteAdmin,
     };
 
     return {
       statusCode: 200,
-      token: await this.jwtService.signAsync(jwt),
+      accessToken: await this.jwtService.signAsync(jwt),
+      user: {
+        id: user.id,
+        email: user.email,
+        userType: user.userType,
+        siteAdmin: user.siteAdmin,
+      },
     };
   }
 
-  async signUp(payload: CreateUserDTO) {
-    return await this.usersService.create(payload);
+  async userSignIn(payload: { email: string; password: string }) {
+    return this.signIn(payload);
   }
 
-  async googleSignIn(id: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: id } });
+  async signUp(payload: CreateUserDTO) {
+    try {
+      // Check if mail already exists
+      const email = await this.prisma.user.findUnique({
+        where: { email: payload.email },
+      });
+
+      if (email) {
+        return {
+          statusCode: 409,
+          message: 'Email already in use',
+        };
+      }
+
+      const hashPassword = await bcrypt.hash(payload.password, 10);
+
+      await this.prisma.user.create({
+        data: {
+          fullName: payload.fullName,
+          email: payload.email,
+          password: hashPassword,
+          userType: 'User',
+        },
+      });
+
+      return {
+        statusCode: 201,
+        message: 'User created successfully',
+      };
+    } catch (error: unknown) {
+      console.error('Error during user creation:', error);
+      return {
+        statusCode: 400,
+        message: 'Error during user creation',
+      };
+    }
+  }
+
+  async userSignUp(payload: CreateUserDTO) {
+    return this.signUp(payload);
+  }
+
+  async validateUser(payload: { sub: string; email: string; type: string; site_admin: boolean }) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      userType: user.userType,
+      siteAdmin: user.siteAdmin,
+    };
+  }
+
+  // Google Auth
+  async validateGoogleUser(payload: {
+    sub: string;
+    email: string;
+    name: string;
+    avatarURL?: string;
+  }) {
+    // Check if google id or email exist
+    const user = await this.prisma.user.findFirst({
+      where: { OR: [{ googleID: payload.sub }, { email: payload.email }] },
+    });
+
+    // If user doesn't exist create new
+    if (!user) {
+      const hashedPassword = await bcrypt.hash(payload.sub, 10);
+
+      const res = await this.prisma.user.create({
+        data: {
+          fullName: payload.name,
+          email: payload.email,
+          password: hashedPassword,
+          googleID: payload.sub,
+        },
+      });
+
+      return res;
+    }
+
+    return user;
+  }
+
+  async googleSignIn(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
     const jwt = {
-      id: user.id,
-      userType: user.userType,
-      siteAdmin: user.siteAdmin,
-      isActive: user.isActive,
+      sub: user.id,
+      email: user.email,
+      type: user.userType,
+      site_admin: user.siteAdmin,
     };
 
     return {
+      statusCode: 200,
       token: await this.jwtService.signAsync(jwt),
-    };
-  }
-
-  async validateGoogleUser(payload: CreateUserDTO) {
-    const user = await this.prisma.user.findFirst({
-      where: { OR: [{ googleID: payload.googleID }, { email: payload.email }] },
-      select: {
-        id: true,
-        userType: true,
-        isActive: true,
-        siteAdmin: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        userType: user.userType,
+        siteAdmin: user.siteAdmin,
       },
-    });
-
-    if (!user) {
-      return await this.usersService.create(payload);
-    }
-
-    return user;
+    };
   }
 }
