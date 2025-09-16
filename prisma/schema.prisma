@@ -52,8 +52,9 @@ model Shelter {
   city                  String
   address               String
   phoneNumber           String          @map("phone_number")
-  website               String
-  description           String
+  website               String?
+  description           String?
+  isVerified            Boolean         @default(false)
   isActive              Boolean         @default(true)
   createdAt             DateTime        @default(now()) @map("created_at")
   updatedAt             DateTime        @updatedAt @map("updated_at")
