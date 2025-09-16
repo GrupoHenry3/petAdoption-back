@@ -24,30 +24,36 @@ import { UserType } from '@prisma/client';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class UsersController {
   private readonly logger = new Logger(UsersController.name);
   constructor(private readonly usersService: UsersService) {}
 
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  @UseGuards(AdminGuard)
-  @ApiBearerAuth()
-  async create(@Body() payload: CreateUserDTO) {
-    return await this.usersService.create(payload);
-  }
+  // @Post()
+  // @HttpCode(HttpStatus.CREATED)
+  // @UseGuards(AdminGuard)
+  // async create(@Body() payload: CreateUserDTO) {
+  //   return await this.usersService.create(payload);
+  // }
 
-  @Patch(':id')
+  @Patch(':id/status')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AdminGuard)
-  async update(@Param('id') id: string, @Body() payload: UpdateUserDTO) {
-    return await this.usersService.update(id, payload);
+  async updateStatus(@Param('id') id: string) {
+    return await this.usersService.updateUserStatus(id);
   }
 
-  @Delete(':id')
+  @Patch()
   @HttpCode(HttpStatus.OK)
   @UseGuards(AdminGuard)
-  async delete(@Param('id') id: string) {
-    return await this.usersService.delete(id);
+  async update(@Req() req, @Body() payload: UpdateUserDTO) {
+    return await this.usersService.update(req.user.id, payload);
+  }
+
+  @Delete()
+  @HttpCode(HttpStatus.OK)
+  async delete(@Param('id') id: string, @Req() req) {
+    return await this.usersService.delete(req.user.id);
   }
 
   @Get()

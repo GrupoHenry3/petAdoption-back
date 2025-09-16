@@ -27,7 +27,6 @@ export class AuthService {
         where: { id: user.id },
         select: {
           id: true,
-          email: true,
           userType: true,
           isActive: true,
           siteAdmin: true,
@@ -55,7 +54,6 @@ export class AuthService {
 
     const jwt = {
       sub: user.id,
-      email: user.email,
       userType: user.userType,
       siteAdmin: user.siteAdmin,
       isActive: user.isActive,

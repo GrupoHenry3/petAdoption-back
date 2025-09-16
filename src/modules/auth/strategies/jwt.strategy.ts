@@ -6,7 +6,6 @@ import { Request } from 'express';
 
 export interface JwtPayload {
   sub: string;
-  email: string;
   type: string;
   site_admin: boolean;
 }
