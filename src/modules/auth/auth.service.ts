@@ -11,14 +11,10 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  // Local Auth
   async signIn(payload: { email: string; password: string }) {
-    // Check if email exists
     const user = await this.prisma.user.findUnique({ where: { email: payload.email } });
 
-    if (!user) {
-      throw new NotFoundException(`${payload.email} not found`);
-    }
+    if (!user) throw new NotFoundException(`${payload.email} not found`);
 
     // Check if password is valid
     const isPasswordValid = await bcrypt.compare(payload.password, user.password);
@@ -97,9 +93,7 @@ export class AuthService {
       where: { id: payload.sub },
     });
 
-    if (!user) {
-      return null;
-    }
+    if (!user) throw new NotFoundException('User not found');
 
     return {
       id: user.id,
@@ -109,19 +103,16 @@ export class AuthService {
     };
   }
 
-  // Google Auth
   async validateGoogleUser(payload: {
     sub: string;
     email: string;
     name: string;
     avatarURL?: string;
   }) {
-    // Check if google id or email exist
     const user = await this.prisma.user.findFirst({
       where: { OR: [{ googleID: payload.sub }, { email: payload.email }] },
     });
 
-    // If user doesn't exist create new
     if (!user) {
       const hashedPassword = await bcrypt.hash(payload.sub, 10);
 
@@ -145,9 +136,7 @@ export class AuthService {
       where: { id: userId },
     });
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+    if (!user) throw new NotFoundException('User not found');
 
     const jwt = {
       sub: user.id,
