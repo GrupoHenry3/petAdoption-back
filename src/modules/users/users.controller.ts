@@ -10,6 +10,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
@@ -17,6 +18,9 @@ import { CreateUserDTO, GetUsersDTO, UpdateUserDTO } from './user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { AdminGuard } from '../auth/guards/admin.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { UserTypeGuard } from '../auth/guards/user-type.guard';
+import { UserTypes } from '../auth/decorators/user-type.decorator';
+import { UserType } from '@prisma/client';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -28,21 +32,21 @@ export class UsersController {
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(AdminGuard)
   @ApiBearerAuth()
-  async createUser(@Body() payload: CreateUserDTO) {
+  async create(@Body() payload: CreateUserDTO) {
     return await this.usersService.create(payload);
   }
 
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AdminGuard)
-  async updateUser(@Param('id') id: string, @Body() payload: UpdateUserDTO) {
+  async update(@Param('id') id: string, @Body() payload: UpdateUserDTO) {
     return await this.usersService.update(id, payload);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AdminGuard)
-  async deleteUser(@Param('id') id: string) {
+  async delete(@Param('id') id: string) {
     return await this.usersService.delete(id);
   }
 
@@ -57,5 +61,11 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
     return await this.usersService.findOne(id);
+  }
+
+  @Get('me')
+  @HttpCode(HttpStatus.OK)
+  async getCurrentUser(@Req() req) {
+    return await this.usersService.findOne(req.user.id);
   }
 }

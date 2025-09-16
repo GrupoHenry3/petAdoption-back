@@ -10,20 +10,25 @@ import { Observable } from 'rxjs';
 
 @Injectable()
 export class AdminGuard implements CanActivate {
-  constructor(private readonly JwtService: JwtService) {}
+  constructor(private readonly jwtService: JwtService) {}
 
   canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
     const request = context.switchToHttp().getRequest();
-    const authHeader = request.headers.authorization;
+    let token = request?.cookies?.access_token;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!token) {
+      const authHeader = request.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.split(' ')[1];
+      }
+    }
+
+    if (!token) {
       throw new UnauthorizedException();
     }
 
-    const token = authHeader.split(' ')[1];
-
     try {
-      const decodedToken = this.JwtService.verify(token, {
+      const decodedToken = this.jwtService.verify(token, {
         secret: `${process.env.JWT_SECRET_TOKEN}`,
       });
 
@@ -33,11 +38,11 @@ export class AdminGuard implements CanActivate {
 
       const siteAdmin = decodedToken.siteAdmin;
 
-      if (siteAdmin === true) {
-        return true;
-      } else {
+      if (siteAdmin === false) {
         throw new ForbiddenException('User has no administrator priviledges');
       }
+
+      return true;
     } catch (error) {
       if (error instanceof JsonWebTokenError) {
         throw new ForbiddenException('Invalid token');
