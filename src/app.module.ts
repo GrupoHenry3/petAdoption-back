@@ -3,8 +3,10 @@ import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { PetModule } from './modules/pets/pets.module';
 import { SheltersModule } from './modules/shelters/shelters.module';
+import { SpeciesModule } from './modules/species/species.module';
+import { BreedsModule } from './modules/breeds/breeds.module';
 
 @Module({
-  imports: [UsersModule, AuthModule, PetModule, SheltersModule],
+  imports: [UsersModule, AuthModule, PetModule, SheltersModule, SpeciesModule, BreedsModule],
 })
 export class AppModule {}
