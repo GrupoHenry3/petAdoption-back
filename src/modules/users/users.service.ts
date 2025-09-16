@@ -104,12 +104,33 @@ export class UsersService {
     }
   }
 
+  async updateUserStatus(id: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: id } });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    const userStatus = !user.isActive;
+
+    try {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          isActive: userStatus,
+        },
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+
+      this.logger.error(`Error updating user status: ${errorMessage}`, errorStack);
+      throw new BadRequestException('An error has ocurred');
+    }
+  }
+
   async delete(id: string) {
     const user = await this.prisma.user.findUnique({ where: { id: id }, select: { id: true } });
 
-    if (!user) {
-      throw new NotFoundException(`User not found`);
-    }
+    if (!user) throw new NotFoundException('User not found');
 
     const updatedUser = await this.prisma.user.update({
       where: { id: id },
@@ -117,10 +138,8 @@ export class UsersService {
     });
 
     return {
-      id: updatedUser.id,
-      isActive: updatedUser.isActive,
-      createdAt: updatedUser.createdAt,
-      updatedAt: updatedUser.updatedAt,
+      statusCode: HttpStatus.OK,
+      message: 'User deleted successfully',
     };
   }
 
@@ -172,6 +191,7 @@ export class UsersService {
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       const errorStack = error instanceof Error ? error.stack : undefined;
+
       this.logger.error(`Error fetching users: ${errorMessage}`, errorStack);
     }
   }
@@ -211,6 +231,7 @@ export class UsersService {
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       const errorStack = error instanceof Error ? error.stack : undefined;
+
       this.logger.error(`Error fetching user: ${errorMessage}`, errorStack);
     }
   }

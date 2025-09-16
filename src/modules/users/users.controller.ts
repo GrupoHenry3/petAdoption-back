@@ -11,6 +11,7 @@ import {
   Post,
   Query,
   Req,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
@@ -18,15 +19,17 @@ import { CreateUserDTO, GetUsersDTO, UpdateUserDTO } from './user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { AdminGuard } from '../auth/guards/admin.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { UserTypeGuard } from '../auth/guards/user-type.guard';
-import { UserTypes } from '../auth/decorators/user-type.decorator';
-import { UserType } from '@prisma/client';
+import type { Request } from 'express';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
 export class UsersController {
   private readonly logger = new Logger(UsersController.name);
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -36,37 +39,49 @@ export class UsersController {
     return await this.usersService.create(payload);
   }
 
-  @Patch(':id')
+  @Patch()
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AdminGuard)
-  async updateUser(@Param('id') id: string, @Body() payload: UpdateUserDTO) {
-    return await this.usersService.update(id, payload);
+  async updateUser(@Req() req: Request, @Body() payload: UpdateUserDTO) {
+    const accessToken = req.cookies.access_token;
+    if (!accessToken) throw new UnauthorizedException();
+    const token = await this.jwtService.decode(accessToken);
+
+    return await this.usersService.update(token.sub, payload);
   }
 
-  @Delete(':id')
+  @Patch(':id/status')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AdminGuard)
-  async deleteUser(@Param('id') id: string) {
-    return await this.usersService.delete(id);
+  async updateStatus(@Param('id') id: string) {
+    return await this.usersService.updateUserStatus(id);
+  }
+
+  @Delete()
+  @HttpCode(HttpStatus.OK)
+  async deleteUser(@Req() req: Request) {
+    const accessToken = req.cookies.access_token;
+    if (!accessToken) throw new UnauthorizedException();
+    const token = await this.jwtService.decode(accessToken);
+
+    return await this.usersService.delete(token.sub);
   }
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AdminGuard, UserTypeGuard)
-  @UserTypes(UserType.User)
+  @UseGuards(AdminGuard)
   async findAll(@Query() filters: GetUsersDTO) {
     return await this.usersService.findAll(filters);
-  }
-
-  @Get('me')
-  @HttpCode(HttpStatus.OK)
-  async getCurrentUser(@Req() req) {
-    return await this.usersService.findOne(req.user.id);
   }
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
     return await this.usersService.findOne(id);
+  }
+
+  @Get('me')
+  @HttpCode(HttpStatus.OK)
+  async getCurrentUser(@Req() req) {
+    return await this.usersService.findOne(req.user.id);
   }
 }

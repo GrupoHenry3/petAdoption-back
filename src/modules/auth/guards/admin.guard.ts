@@ -14,11 +14,8 @@ export class AdminGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
     const request = context.switchToHttp().getRequest();
-    
-    // Intentar obtener token de cookie primero
     let token = request?.cookies?.access_token;
-    
-    // Fallback: obtener de header Authorization
+
     if (!token) {
       const authHeader = request.headers.authorization;
       if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -31,9 +28,7 @@ export class AdminGuard implements CanActivate {
     }
 
     try {
-      const decodedToken = this.JwtService.verify(token, {
-        secret: `${process.env.JWT_SECRET}`,
-      });
+      const decodedToken = this.JwtService.verify(token);
 
       if (!decodedToken || typeof decodedToken !== 'object' || !('site_admin' in decodedToken)) {
         throw new ForbiddenException();

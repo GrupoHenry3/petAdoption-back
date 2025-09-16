@@ -8,20 +8,23 @@ import {
 import { JsonWebTokenError, JwtService } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
 import { UserType } from '@prisma/client';
+import { Reflector } from '@nestjs/core';
+import { USER_TYPES_KEY } from '../decorators/user-type.decorator';
 
 @Injectable()
 export class UserTypeGuard implements CanActivate {
-  constructor(private readonly JwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly reflector: Reflector,
+  ) {}
 
   canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
     const request = context.switchToHttp().getRequest();
-    
-    // Intentar obtener token de cookie primero
     let token = request?.cookies?.access_token;
-    
-    // Fallback: obtener de header Authorization
+
     if (!token) {
       const authHeader = request.headers.authorization;
+
       if (authHeader && authHeader.startsWith('Bearer ')) {
         token = authHeader.split(' ')[1];
       }
@@ -31,9 +34,14 @@ export class UserTypeGuard implements CanActivate {
       throw new UnauthorizedException();
     }
 
+    const requiredUserTypes = this.reflector.getAllAndOverride<UserType[]>(USER_TYPES_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
     try {
-      const decodedToken = this.JwtService.verify(token, {
-        secret: `${process.env.JWT_SECRET}`,
+      const decodedToken = this.jwtService.verify(token, {
+        secret: `${process.env.JWT_SECRET_TOKEN}`,
       });
 
       if (!decodedToken || typeof decodedToken !== 'object' || !('type' in decodedToken)) {
@@ -42,19 +50,21 @@ export class UserTypeGuard implements CanActivate {
 
       const userType = decodedToken.type;
 
-      if (userType === UserType.Shelter) {
-        return true;
-      } else if (userType === UserType.User) {
-        return true;
-      } else {
-        throw new ForbiddenException('User is not a Shelter');
+      if (!requiredUserTypes.includes(userType)) {
+        throw new ForbiddenException('This user is not managing a shelter');
       }
+
+      return true;
     } catch (error) {
       if (error instanceof JsonWebTokenError) {
         throw new ForbiddenException('Invalid token');
       }
 
-      throw new UnauthorizedException();
+      if (error instanceof UnauthorizedException || error instanceof ForbiddenException) {
+        throw error;
+      }
+
+      throw new UnauthorizedException('Authentication failed due to an unexpected error');
     }
   }
 }
