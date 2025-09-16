@@ -28,7 +28,7 @@ export class UsersService {
     });
 
     if (isEmailValid) {
-      throw new ConflictException('Email alredy in use');
+      throw new ConflictException('Email already in use');
     }
 
     const passwordHash = await bcrypt.hash(payload.password, 10);
@@ -160,7 +160,7 @@ export class UsersService {
         },
       });
 
-      this.logger.log('Fetched information of all users');
+      this.logger.log('Fetched information for all users');
 
       return users;
     } catch (error) {
