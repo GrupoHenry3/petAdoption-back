@@ -98,6 +98,29 @@ export class UsersService {
     }
   }
 
+  async updateUserStatus(id: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: id } });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    const userStatus = !user.isActive;
+
+    try {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          isActive: userStatus,
+        },
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+
+      this.logger.error(`Error updating user status: ${errorMessage}`, errorStack);
+      throw new BadRequestException('An error has ocurred');
+    }
+  }
+
   async delete(id: string) {
     const user = await this.prisma.user.findUnique({ where: { id: id }, select: { id: true } });
 

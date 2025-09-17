@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { compare } from 'bcrypt';
@@ -7,7 +7,7 @@ import { CreateUserDTO, SignInDTO } from '../users/user.dto';
 
 @Injectable()
 export class AuthService {
-  logger: any;
+  private readonly logger = new Logger(AuthService.name);
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
@@ -27,7 +27,6 @@ export class AuthService {
         where: { id: user.id },
         select: {
           id: true,
-          email: true,
           userType: true,
           isActive: true,
           siteAdmin: true,
@@ -54,14 +53,13 @@ export class AuthService {
     }
 
     const jwt = {
-      id: user.id,
-      email: user.email,
+      sub: user.id,
       userType: user.userType,
       siteAdmin: user.siteAdmin,
       isActive: user.isActive,
     };
 
-    console.log(jwt);
+    this.logger.log(`User '${user.fullName}' has logged in`);
 
     return {
       accessToken: await this.jwtService.signAsync(jwt),
@@ -80,7 +78,7 @@ export class AuthService {
     }
 
     const jwt = {
-      id: user.id,
+      sub: user.id,
       userType: user.userType,
       siteAdmin: user.siteAdmin,
       isActive: user.isActive,
