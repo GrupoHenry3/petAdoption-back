@@ -21,12 +21,18 @@ export class AuthController {
   @Post('signup')
   @HttpCode(HttpStatus.CREATED)
   async signUp(@Body() payload: CreateUserDTO) {
-    return await this.authService.signUp(payload);
+    console.log('Signup payload received:', payload);
+    const result = await this.authService.signUp(payload);
+    console.log('Signup result:', result);
+    return result;
   }
 
   @Post('signin')
   @HttpCode(HttpStatus.ACCEPTED)
-  async signIn(@Res({ passthrough: true }) res: Response, @Body() payload: SignInDTO) {
+  async signIn(
+    @Res({ passthrough: true }) res: Response,
+    @Body() payload: SignInDTO
+  ) {
     const result = await this.authService.signIn(payload);
 
     res.cookie('access_token', result.accessToken, {
@@ -35,6 +41,12 @@ export class AuthController {
       sameSite: 'lax',
       maxAge: 60 * 60 * 1000,
     });
+
+    return {
+      statusCode: 202,
+      message: 'Login successful',
+      accessToken: result.accessToken,
+    };
   }
 
   @Post('signout')
@@ -55,7 +67,7 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
   async googleCallback(@Req() req, @Res() res) {
-    const result = await this.authService.googleSignIn(req.user.user.id);
+    const result = await this.authService.googleSignIn(req.user.id);
 
     res.cookie('access_token', result.accessToken, {
       httpOnly: true,

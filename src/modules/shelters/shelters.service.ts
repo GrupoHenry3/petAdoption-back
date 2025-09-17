@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { GetSheltersDTO, ShelterDTO, UpdateShelterDTO } from './shelters.dto';
+import { CreateShelterDTO, GetSheltersDTO, UpdateShelterDTO } from './shelters.dto';
 import { Prisma, UserType } from '@prisma/client';
 
 @Injectable()
@@ -14,17 +14,26 @@ export class SheltersService {
   private readonly logger = new Logger(SheltersService.name);
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(payload: ShelterDTO) {
+  async create(payload: CreateShelterDTO, userID: string) {
     const existingShelter = await this.prisma.shelter.findUnique({
-      where: { userID: payload.userID },
+      where: { userID: userID },
     });
 
-    if (existingShelter) throw new ConflictException('This user already manages a shelter');
+    if (existingShelter)
+      throw new ConflictException('This user already manages a shelter');
 
     try {
       const tx = await this.prisma.$transaction(async (prisma) => {
         const newShelter = await prisma.shelter.create({
-          data: payload,
+          data: {
+            userID: userID,
+            name: payload.name,
+            country: payload.country,
+            state: payload.state,
+            city: payload.city,
+            address: payload.address,
+            phoneNumber: payload.phoneNumber,
+          },
           select: {
             id: true,
             name: true,
@@ -32,15 +41,13 @@ export class SheltersService {
             state: true,
             city: true,
             address: true,
-            website: true,
             phoneNumber: true,
-            description: true,
             createdAt: true,
           },
         });
 
         const updateUser = await prisma.user.update({
-          where: { id: payload.userID },
+          where: { id: userID },
           data: { userType: 'Shelter' },
         });
 
@@ -220,7 +227,9 @@ export class SheltersService {
   }
 
   async findOne(id: string) {
-    const isShelter = await this.prisma.shelter.findUnique({ where: { id: id } });
+    const isShelter = await this.prisma.shelter.findUnique({
+      where: { id: id },
+    });
 
     if (!isShelter) throw new NotFoundException('Shelter not found');
 

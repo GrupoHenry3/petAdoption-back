@@ -7,6 +7,13 @@ import { SpeciesModule } from './modules/species/species.module';
 import { BreedsModule } from './modules/breeds/breeds.module';
 
 @Module({
-  imports: [UsersModule, AuthModule, PetModule, SheltersModule, SpeciesModule, BreedsModule],
+  imports: [
+    UsersModule,
+    AuthModule,
+    PetModule,
+    SheltersModule,
+    SpeciesModule,
+    BreedsModule,
+  ],
 })
 export class AppModule {}

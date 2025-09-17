@@ -53,7 +53,9 @@ export class BreedsService {
     if (!breed) throw new NotFoundException('Pet breed not found');
 
     try {
-      const breeds = await this.prisma.petBreed.findUnique({ where: { id: breed.id } });
+      const breeds = await this.prisma.petBreed.findUnique({
+        where: { id: breed.id },
+      });
       return breeds;
     } catch (error) {
       console.log(error);

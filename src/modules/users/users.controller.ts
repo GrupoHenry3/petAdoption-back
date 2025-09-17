@@ -13,21 +13,18 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
-import { CreateUserDTO, GetUsersDTO, UpdateUserDTO } from './user.dto';
+import { GetUsersDTO, UpdateUserDTO } from './user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { AdminGuard } from '../auth/guards/admin.guard';
-import { ApiBearerAuth } from '@nestjs/swagger';
-import { UserTypeGuard } from '../auth/guards/user-type.guard';
-import { UserTypes } from '../auth/decorators/user-type.decorator';
-import { UserType } from '@prisma/client';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class UsersController {
   private readonly logger = new Logger(UsersController.name);
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) { }
 
   // @Post()
   // @HttpCode(HttpStatus.CREATED)
@@ -63,15 +60,15 @@ export class UsersController {
     return await this.usersService.findAll(filters);
   }
 
-  @Get(':id')
-  @HttpCode(HttpStatus.OK)
-  async findOne(@Param('id') id: string) {
-    return await this.usersService.findOne(id);
-  }
-
   @Get('me')
   @HttpCode(HttpStatus.OK)
   async getCurrentUser(@Req() req) {
     return await this.usersService.findOne(req.user.id);
+  }
+
+  @Get(':id')
+  @HttpCode(HttpStatus.OK)
+  async findOne(@Param('id') id: string) {
+    return await this.usersService.findOne(id);
   }
 }

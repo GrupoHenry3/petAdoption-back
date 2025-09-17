@@ -49,11 +49,15 @@ export class PetService {
         favorites: true,
       },
     });
-    if (!pet) throw new NotFoundException(`Pet with ID ${id} not found or inactive`);
+    if (!pet)
+      throw new NotFoundException(`Pet with ID ${id} not found or inactive`);
     return pet;
   }
 
-  async update(id: string, data: Prisma.PetUpdateInput): Promise<PetWithRelations> {
+  async update(
+    id: string,
+    data: Prisma.PetUpdateInput
+  ): Promise<PetWithRelations> {
     // valida existencia y activo
     await this.findOne(id);
 

@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { compare } from 'bcrypt';
@@ -11,7 +16,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-    private readonly usersService: UsersService,
+    private readonly usersService: UsersService
   ) {}
 
   async validateUser(id: string) {
@@ -40,7 +45,9 @@ export class AuthService {
   }
 
   async signIn(payload: SignInDTO) {
-    const user = await this.prisma.user.findUnique({ where: { email: payload.email } });
+    const user = await this.prisma.user.findUnique({
+      where: { email: payload.email },
+    });
 
     if (!user) {
       throw new NotFoundException(`${payload.email} not found`);

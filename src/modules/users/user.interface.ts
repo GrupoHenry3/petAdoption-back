@@ -1,5 +1,4 @@
-import { UserType } from "@prisma/client";
-
+import { UserType } from '@prisma/client';
 
 export interface IUser {
   id: string;
@@ -16,4 +15,4 @@ export interface IUser {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
-};
+}

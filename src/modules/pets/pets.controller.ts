@@ -13,7 +13,13 @@ import {
 } from '@nestjs/common';
 import { PetService } from './pets.service';
 import { Pet, Prisma } from '@prisma/client';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { PetWithRelations } from './types/pet.types';
 
 @Controller('pets')
@@ -34,7 +40,7 @@ export class PetController {
   @ApiResponse({ status: 204, description: 'No pets found.' })
   findAll(
     @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip: number,
-    @Query('take', new DefaultValuePipe(10), ParseIntPipe) take: number,
+    @Query('take', new DefaultValuePipe(10), ParseIntPipe) take: number
   ): Promise<PetWithRelations[]> {
     return this.petService.findAll({ skip, take });
   }
@@ -46,7 +52,7 @@ export class PetController {
   @ApiResponse({ status: 200, description: 'List of pets returned.' })
   findAllWithInactive(
     @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip: number,
-    @Query('take', new DefaultValuePipe(10), ParseIntPipe) take: number,
+    @Query('take', new DefaultValuePipe(10), ParseIntPipe) take: number
   ): Promise<PetWithRelations[]> {
     return this.petService.findAllWithInactive({ skip, take });
   }
@@ -66,7 +72,10 @@ export class PetController {
   @ApiParam({ name: 'id', type: String })
   @ApiResponse({ status: 200, description: 'Updated pet.' })
   @ApiResponse({ status: 404, description: 'Pet not found.' })
-  update(@Param('id') id: string, @Body() data: Prisma.PetUpdateInput): Promise<PetWithRelations> {
+  update(
+    @Param('id') id: string,
+    @Body() data: Prisma.PetUpdateInput
+  ): Promise<PetWithRelations> {
     return this.petService.update(id, data);
   }
 
@@ -76,7 +85,9 @@ export class PetController {
   @ApiParam({ name: 'id', type: String })
   @ApiResponse({ status: 200, description: 'Pet disabled.' })
   @ApiResponse({ status: 404, description: 'Pet not found.' })
-  async remove(@Param('id') id: string): Promise<{ message: string; pet: PetWithRelations }> {
+  async remove(
+    @Param('id') id: string
+  ): Promise<{ message: string; pet: PetWithRelations }> {
     const pet = await this.petService.remove(id);
     return { message: `Pet with ID ${id} marked as inactive.`, pet };
   }

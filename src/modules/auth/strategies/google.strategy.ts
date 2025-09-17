@@ -14,10 +14,14 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(_accessToken: string, _refreshToken: string, profile: Profile) {
+  async validate(
+    _accessToken: string,
+    _refreshToken: string,
+    profile: Profile
+  ) {
     const payload = {
       googleID: profile.id,
-      fullName: profile.name.givenName + profile.name.familyName,
+      fullName: `${profile.name.givenName} ${profile.name.familyName}`,
       email: profile.emails[0].value,
       password: profile.id,
       confirmedPassword: profile.id,

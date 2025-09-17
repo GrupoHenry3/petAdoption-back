@@ -12,7 +12,9 @@ import { Observable } from 'rxjs';
 export class AdminGuard implements CanActivate {
   constructor(private readonly jwtService: JwtService) {}
 
-  canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
+  canActivate(
+    context: ExecutionContext
+  ): boolean | Promise<boolean> | Observable<boolean> {
     const request = context.switchToHttp().getRequest();
     let token = request?.cookies?.access_token;
 
@@ -32,7 +34,11 @@ export class AdminGuard implements CanActivate {
         secret: `${process.env.JWT_SECRET_TOKEN}`,
       });
 
-      if (!decodedToken || typeof decodedToken !== 'object' || !('siteAdmin' in decodedToken)) {
+      if (
+        !decodedToken ||
+        typeof decodedToken !== 'object' ||
+        !('siteAdmin' in decodedToken)
+      ) {
         throw new ForbiddenException();
       }
 
