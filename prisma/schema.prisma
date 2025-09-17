@@ -27,6 +27,7 @@ model User {
   shelter               Shelter?
   favoritePets          FavoritePets[]
   adoptions             Adoption[]
+  donations             Donation[]
 
   @@index([id, email])
   @@map("pa_users")
@@ -63,6 +64,7 @@ model Shelter {
   user                  User            @relation(fields: [userID], references: [id])
   pets                  Pet[]
   adoptions             Adoption[]
+  donations             Donation[]
 
   @@index([name, country, city, state])
   @@map("pa_shelters")
@@ -153,6 +155,17 @@ model Adoption {
 
   @@index([status])
   @@map("pa_adoptions")
+}
+
+model Donation {
+  id                    String          @id @default(cuid(2))
+  amount                Int
+  message               String?
+
+  userID                String
+  user                  User            @relation(fields: [userID], references: [id])
+  shelterID             String
+  shelter               Shelter         @relation(fields: [shelterID], references: [id])
 }
 
 enum PetSize {
