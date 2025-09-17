@@ -75,6 +75,7 @@ model Pet {
   gender                PetGender       @default(Male)
   size                  PetSize         @default(Small)
   adoptionFee           Int
+  avatarURL             String          
   neutered              Boolean         @default(false)
   isAdopted             Boolean         @default(false) @map("is_adopted")
   isActive              Boolean         @default(true)
@@ -114,6 +115,7 @@ model PetBreed {
   description           String
   avatarURL             String?         @map("avatar_url")
   createdAt             DateTime        @default(now()) @map("created_at")
+  updatedAt             DateTime        @updatedAt
 
   pets                  Pet[]
   speciesID             String          
