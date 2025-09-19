@@ -24,9 +24,6 @@ export class ShelterDTO {
   @IsNotEmpty()
   @IsString()
   country: string;
-
-  @IsString()
-  phone?: never;
 }
 
 export class UpdateShelterDTO {
