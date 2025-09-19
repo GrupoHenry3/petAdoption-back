@@ -9,9 +9,12 @@ import {
   Patch,
   Post,
   Query,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { SheltersService } from './shelters.service';
-import { GetSheltersDTO, ShelterDTO, UpdateShelterDTO } from './shelters.dto';
+import { ShelterDTO, GetSheltersDTO, UpdateShelterDTO } from './shelters.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 
 @Controller('shelters')
 export class SheltersController {
@@ -19,8 +22,9 @@ export class SheltersController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() payload: ShelterDTO) {
-    return await this.sheltersService.create(payload);
+  @UseGuards(JwtAuthGuard)
+  async create(@Body() payload: ShelterDTO, @Req() req: any) {
+    return await this.sheltersService.create(payload, req.user.id);
   }
 
   @Patch(':id')

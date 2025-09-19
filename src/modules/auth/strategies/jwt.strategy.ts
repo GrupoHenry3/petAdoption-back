@@ -6,8 +6,9 @@ import { Request } from 'express';
 
 export interface JwtPayload {
   sub: string;
-  type: string;
-  site_admin: boolean;
+  userType: string;
+  siteAdmin: boolean;
+  isActive: boolean;
 }
 
 @Injectable()

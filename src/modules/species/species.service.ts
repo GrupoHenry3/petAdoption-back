@@ -24,18 +24,24 @@ export class SpeciesService {
   }
 
   async findOne(id: string) {
-    const species = await this.prisma.petSpecies.findUnique({ where: { id: id } });
+    const species = await this.prisma.petSpecies.findUnique({
+      where: { id: id },
+    });
     if (!species) throw new NotFoundException('Species not found');
 
     try {
-      return await this.prisma.petSpecies.findUnique({ where: { id: species.id } });
+      return await this.prisma.petSpecies.findUnique({
+        where: { id: species.id },
+      });
     } catch (error) {
       console.log(error);
     }
   }
 
   async update(id: string, payload: SpeciesDTO) {
-    const species = await this.prisma.petSpecies.findUnique({ where: { id: id } });
+    const species = await this.prisma.petSpecies.findUnique({
+      where: { id: id },
+    });
     if (!species) throw new NotFoundException('Species not found');
 
     try {
@@ -51,7 +57,9 @@ export class SpeciesService {
   }
 
   async remove(id: string) {
-    const species = await this.prisma.petSpecies.findUnique({ where: { id: id } });
+    const species = await this.prisma.petSpecies.findUnique({
+      where: { id: id },
+    });
     if (!species) throw new NotFoundException('Species not found');
 
     return `${species.name} has been deleted`;

@@ -122,7 +122,10 @@ export class UsersService {
   }
 
   async delete(id: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: id }, select: { id: true } });
+    const user = await this.prisma.user.findUnique({
+      where: { id: id },
+      select: { id: true },
+    });
 
     if (!user) {
       throw new NotFoundException(`User not found`);
@@ -192,7 +195,10 @@ export class UsersService {
   }
 
   async findOne(id: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: id }, select: { id: true } });
+    const user = await this.prisma.user.findUnique({
+      where: { id: id },
+      select: { id: true },
+    });
 
     if (!user) {
       throw new NotFoundException(`User not found`);
@@ -217,6 +223,20 @@ export class UsersService {
           updatedAt: true,
           adoptions: true,
           favoritePets: true,
+          shelter: {
+            select: {
+              id: true,
+              name: true,
+              country: true,
+              state: true,
+              city: true,
+              address: true,
+              phoneNumber: true,
+              website: true,
+              description: true,
+              createdAt: true,
+            },
+          },
         },
       });
 
