@@ -34,7 +34,7 @@ async function bootstrap() {
     exposedHeaders: ['Set-Cookie'],
   });
   app.setGlobalPrefix('api');
-
+  
   await app.listen(process.env.APP_PORT || 3000);
 }
 
