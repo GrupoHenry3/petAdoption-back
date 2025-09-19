@@ -166,6 +166,9 @@ model Donation {
   user                  User            @relation(fields: [userID], references: [id])
   shelterID             String          @map("shelter_id")
   shelter               Shelter         @relation(fields: [shelterID], references: [id])
+
+  @@index([userID])
+  @@map("pa_user_donations")
 }
 
 enum PetSize {
