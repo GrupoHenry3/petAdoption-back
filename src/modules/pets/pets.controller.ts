@@ -35,7 +35,7 @@ export class PetController {
   findAll(
     @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip: number,
     @Query('take', new DefaultValuePipe(10), ParseIntPipe) take: number,
-  ): Promise<PetWithRelations[]> {
+  ) {
     return this.petService.findAll({ skip, take });
   }
 

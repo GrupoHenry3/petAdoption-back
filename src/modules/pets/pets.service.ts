@@ -19,26 +19,23 @@ export class PetService {
     take?: number;
     where?: Prisma.PetWhereInput;
     orderBy?: Prisma.PetOrderByWithRelationInput;
-  }): Promise<PetWithRelations[]> {
+  }) {
     const { skip, take, where, orderBy } = params || {};
     return this.prisma.pet.findMany({
       skip,
       take,
       where: { ...(where || {}), isActive: true }, // solo activos
       orderBy,
-      include: {
+      select: {
+        id: true,
+        name: true,
         photos: true,
-        shelter: true,
-        breed: true,
-        species: true,
-        adoption: true,
-        favorites: true,
       },
     });
   }
 
   async findOne(id: string): Promise<PetWithRelations> {
-    const pet = await this.prisma.pet.findFirst({
+    const pet = await this.prisma.pet.findUnique({
       where: { id, isActive: true }, // solo activos
       include: {
         photos: true,
