@@ -9,6 +9,7 @@ import {
   Query,
   ParseIntPipe,
   DefaultValuePipe,
+  Patch,
 } from '@nestjs/common';
 import { PetService } from './pets.service';
 import { Pet, Prisma } from '@prisma/client';
@@ -16,7 +17,6 @@ import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@ne
 import { PetWithRelations } from './types/pet.types';
 
 @Controller('pets')
-@ApiTags('Pets - endpoints / routes')
 export class PetController {
   constructor(private readonly petService: PetService) {}
 
@@ -60,7 +60,7 @@ export class PetController {
     return this.petService.findOne(id);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a pet - ADMIN' })
   @ApiParam({ name: 'id', type: String })
