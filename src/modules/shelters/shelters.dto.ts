@@ -1,7 +1,6 @@
 import { IsNotEmpty, IsOptional, IsString, ValidateIf } from 'class-validator';
 
-// DTO simplificado para crear shelters (solo campos esenciales)
-export class CreateShelterDTO {
+export class ShelterDTO {
   @IsNotEmpty()
   @IsString()
   name: string;
@@ -26,12 +25,9 @@ export class CreateShelterDTO {
   @IsString()
   country: string;
 
-  // Rechazar explícitamente el campo 'phone' si se envía
-  @ValidateIf((o) => o.phone !== undefined)
   @IsString()
   phone?: never;
 }
-
 
 export class UpdateShelterDTO {
   @IsOptional()

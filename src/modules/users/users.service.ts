@@ -58,9 +58,7 @@ export class UsersService {
       };
     } catch (error) {
       this.logger.error(`Error creating user: ${error.message}`, error.stack);
-      throw new InternalServerErrorException(
-        'An unexpected error occurred during user creation'
-      );
+      throw new InternalServerErrorException('An unexpected error occurred during user creation');
     }
   }
 
@@ -115,14 +113,10 @@ export class UsersService {
         },
       });
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       const errorStack = error instanceof Error ? error.stack : undefined;
 
-      this.logger.error(
-        `Error updating user status: ${errorMessage}`,
-        errorStack
-      );
+      this.logger.error(`Error updating user status: ${errorMessage}`, errorStack);
       throw new BadRequestException('An error has ocurred');
     }
   }
@@ -241,7 +235,7 @@ export class UsersService {
               website: true,
               description: true,
               createdAt: true,
-            }
+            },
           },
         },
       });

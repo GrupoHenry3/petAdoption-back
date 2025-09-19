@@ -15,16 +15,14 @@ import { USER_TYPES_KEY } from '../decorators/user-type.decorator';
 export class UserTypeGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
-    private readonly reflector: Reflector
+    private readonly reflector: Reflector,
   ) {}
 
-  canActivate(
-    context: ExecutionContext
-  ): boolean | Promise<boolean> | Observable<boolean> {
-    const requiredUserTypes = this.reflector.getAllAndOverride<UserType[]>(
-      USER_TYPES_KEY,
-      [context.getHandler(), context.getClass()]
-    );
+  canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
+    const requiredUserTypes = this.reflector.getAllAndOverride<UserType[]>(USER_TYPES_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
     const request = context.switchToHttp().getRequest();
     let token = request?.cookies?.access_token;
@@ -45,11 +43,7 @@ export class UserTypeGuard implements CanActivate {
         secret: `${process.env.JWT_SECRET_TOKEN}`,
       });
 
-      if (
-        !decodedToken ||
-        typeof decodedToken !== 'object' ||
-        !('userType' in decodedToken)
-      ) {
+      if (!decodedToken || typeof decodedToken !== 'object' || !('userType' in decodedToken)) {
         throw new ForbiddenException();
       }
 

@@ -20,13 +20,7 @@ import { UsersService } from '../users/users.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [
-    AuthService,
-    PrismaService,
-    UsersService,
-    JwtStrategy,
-    GoogleStrategy,
-  ],
+  providers: [AuthService, PrismaService, UsersService, JwtStrategy, GoogleStrategy],
   exports: [PassportModule, JwtModule, JwtStrategy],
 })
 export class AuthModule {}

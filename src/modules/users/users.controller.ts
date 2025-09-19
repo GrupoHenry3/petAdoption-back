@@ -24,7 +24,7 @@ import { AdminGuard } from '../auth/guards/admin.guard';
 @ApiBearerAuth()
 export class UsersController {
   private readonly logger = new Logger(UsersController.name);
-  constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
 
   // @Post()
   // @HttpCode(HttpStatus.CREATED)

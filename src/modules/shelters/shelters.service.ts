@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateShelterDTO, GetSheltersDTO, UpdateShelterDTO } from './shelters.dto';
+import { ShelterDTO, GetSheltersDTO, UpdateShelterDTO } from './shelters.dto';
 import { Prisma, UserType } from '@prisma/client';
 
 @Injectable()
@@ -14,13 +14,12 @@ export class SheltersService {
   private readonly logger = new Logger(SheltersService.name);
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(payload: CreateShelterDTO, userID: string) {
+  async create(payload: ShelterDTO, userID: string) {
     const existingShelter = await this.prisma.shelter.findUnique({
       where: { userID: userID },
     });
 
-    if (existingShelter)
-      throw new ConflictException('This user already manages a shelter');
+    if (existingShelter) throw new ConflictException('This user already manages a shelter');
 
     try {
       const tx = await this.prisma.$transaction(async (prisma) => {

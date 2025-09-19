@@ -13,7 +13,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { SheltersService } from './shelters.service';
-import { CreateShelterDTO, GetSheltersDTO, UpdateShelterDTO } from './shelters.dto';
+import { ShelterDTO, GetSheltersDTO, UpdateShelterDTO } from './shelters.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 
 @Controller('shelters')
@@ -23,7 +23,7 @@ export class SheltersController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @UseGuards(JwtAuthGuard)
-  async create(@Body() payload: CreateShelterDTO, @Req() req: any) {
+  async create(@Body() payload: ShelterDTO, @Req() req: any) {
     return await this.sheltersService.create(payload, req.user.id);
   }
 
