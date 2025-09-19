@@ -5,8 +5,9 @@ import { PetModule } from './modules/pets/pets.module';
 import { SheltersModule } from './modules/shelters/shelters.module';
 import { SpeciesModule } from './modules/species/species.module';
 import { BreedsModule } from './modules/breeds/breeds.module';
+import { DonationsModule } from './modules/donations/donations.module';
 
 @Module({
-  imports: [UsersModule, AuthModule, PetModule, SheltersModule, SpeciesModule, BreedsModule],
+  imports: [UsersModule, AuthModule, PetModule, SheltersModule, SpeciesModule, BreedsModule, DonationsModule],
 })
 export class AppModule {}

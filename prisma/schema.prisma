@@ -16,7 +16,7 @@ model User {
   country               String?
   city                  String?
   address               String?
-  phoneNumber           String?
+  phoneNumber           String?         @map("phone_number")
   avatarURL             String?         @map("avatar_url")
   userType              UserType        @default(User) @map("user_type")
   siteAdmin             Boolean         @default(false) @map("site_admin")
@@ -27,6 +27,7 @@ model User {
   shelter               Shelter?
   favoritePets          FavoritePets[]
   adoptions             Adoption[]
+  donations             Donation[]
 
   @@index([id, email])
   @@map("pa_users")
@@ -34,9 +35,9 @@ model User {
 
 model FavoritePets {
   id                    String          @id @default(cuid(2))
-  userID                String          
+  userID                String          @map("user_id")
   user                  User            @relation(fields: [userID], references: [id])
-  petID                 String          
+  petID                 String          @map("pet_id")
   pet                   Pet             @relation(fields: [petID], references: [id])
   createdAt             DateTime        @default(now()) @map("created_at")
 
@@ -54,8 +55,8 @@ model Shelter {
   phoneNumber           String          @map("phone_number")
   website               String?
   description           String?
-  isVerified            Boolean         @default(false)
-  isActive              Boolean         @default(true)
+  isVerified            Boolean         @default(false) @map("is_verified")
+  isActive              Boolean         @default(true)  @map("is_active")
   createdAt             DateTime        @default(now()) @map("created_at")
   updatedAt             DateTime        @updatedAt @map("updated_at")
 
@@ -63,6 +64,7 @@ model Shelter {
   user                  User            @relation(fields: [userID], references: [id])
   pets                  Pet[]
   adoptions             Adoption[]
+  donations             Donation[]
 
   @@index([name, country, city, state])
   @@map("pa_shelters")
@@ -74,21 +76,21 @@ model Pet {
   age                   Int
   gender                PetGender       @default(Male)
   size                  PetSize         @default(Small)
-  adoptionFee           Int
-  avatarURL             String          
+  adoptionFee           Int             @map("adoption_fee")
+  avatarURL             String          @map("avatar_url")
   neutered              Boolean         @default(false)
   isAdopted             Boolean         @default(false) @map("is_adopted")
-  isActive              Boolean         @default(true)
+  isActive              Boolean         @default(true)  @map("is_active")
   createdAt             DateTime        @default(now()) @map("created_at")
   updatedAt             DateTime        @updatedAt @map("updated_at")
 
-  shelterID             String           
+  shelterID             String          @map("shelter_id")
   shelter               Shelter         @relation(fields: [shelterID], references: [id])
-  breedID               String          
+  breedID               String          @map("breed_id")
   breed                 PetBreed        @relation(fields: [breedID], references: [id])
-  speciesID             String          
+  speciesID             String          @map("species_id")
   species               PetSpecies      @relation(fields: [speciesID], references: [id])
-  adoptionID            String?         
+  adoptionID            String?         @map("adoption_id")
   adoption              Adoption?       @relation(fields: [adoptionID], references: [id])
   favorites             FavoritePets[]
   photos                PetPhotos[]
@@ -102,7 +104,7 @@ model PetPhotos {
   image_url             String
   createdAt             DateTime        @default(now()) @map("created_at")
 
-  petID                 String          
+  petID                 String          @map("pet_id")
   pet                   Pet             @relation(fields: [petID], references: [id])
 
   @@index([petID])
@@ -118,7 +120,7 @@ model PetBreed {
   updatedAt             DateTime        @updatedAt
 
   pets                  Pet[]
-  speciesID             String          
+  speciesID             String          @map("species_id")
   species               PetSpecies      @relation(fields: [speciesID], references: [id])
 
   @@index([name])
@@ -140,12 +142,12 @@ model Adoption {
   id                    String          @id @default(cuid(2))
   questions             Json?
   status                AdoptionStatus  @default(Pending)
-  rejectionStatus       String?
+  rejectionStatus       String?         @map("rejection_status")
   pets                  Pet[]
   
-  userID                String          
+  userID                String          @map("user_id")
   user                  User            @relation(fields: [userID], references: [id])
-  shelterID             String          
+  shelterID             String          @map("shelter_id")
   shelter               Shelter         @relation(fields: [shelterID], references: [id])
 
   createdAt             DateTime        @default(now()) @map("created_at")
@@ -153,6 +155,17 @@ model Adoption {
 
   @@index([status])
   @@map("pa_adoptions")
+}
+
+model Donation {
+  id                    String          @id @default(cuid(2))
+  amount                Int
+  message               String?
+
+  userID                String          @map("user_id")
+  user                  User            @relation(fields: [userID], references: [id])
+  shelterID             String          @map("shelter_id")
+  shelter               Shelter         @relation(fields: [shelterID], references: [id])
 }
 
 enum PetSize {
