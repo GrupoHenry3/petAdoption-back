@@ -68,7 +68,7 @@ export class PetController {
   })
   async restore(@Param('id') id: string) {
     return this.petService.restore(id);
-  } //-------------//
+  }
   @Get(':id')
   @ApiOperation({ summary: 'Get a pet by ID' })
   @ApiParam({ name: 'id', type: String })
