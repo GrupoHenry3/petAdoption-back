@@ -17,6 +17,7 @@ import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@ne
 import { PetWithRelations } from './types/pet.types';
 
 @Controller('pets')
+@ApiTags('Pets - endpoints / routes')
 export class PetController {
   constructor(private readonly petService: PetService) {}
 
@@ -42,7 +43,7 @@ export class PetController {
   ///----- Admin ---//
   @Get('all')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get all pets (active and inactive) - ADMIN' })
+  @ApiOperation({ summary: 'Get all pets (active and inactive) - (admin only)' })
   @ApiResponse({ status: 200, description: 'List of pets returned.' })
   findAllWithInactive(
     @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip: number,
@@ -51,6 +52,25 @@ export class PetController {
     return this.petService.findAllWithInactive({ skip, take });
   }
 
+  @Patch('restore/:id')
+  @ApiOperation({ summary: 'Restore a soft-deleted pet (admin only)' })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'Unique identifier of the pet to restore',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Pet successfully restored and marked as active',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Pet not found',
+  })
+  async restore(@Param('id') id: string) {
+    return this.petService.restore(id);
+  }
+  //-------------//
   @Get(':id')
   @ApiOperation({ summary: 'Get a pet by ID' })
   @ApiParam({ name: 'id', type: String })
@@ -60,7 +80,7 @@ export class PetController {
     return this.petService.findOne(id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a pet - ADMIN' })
   @ApiParam({ name: 'id', type: String })
