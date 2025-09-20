@@ -1,52 +1,65 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsInt, IsBoolean, IsOptional, IsEnum } from 'class-validator';
+import { IsString, IsInt, IsBoolean, IsOptional, IsEnum, IsUUID, IsUrl } from 'class-validator';
 import { PetGender, PetSize } from '@prisma/client';
 
 export class CreatePetDto {
-  @ApiProperty({ example: 'Firulais' })
+  @ApiProperty({ description: 'Pet name', example: 'Firulais' })
   @IsString()
   name: string;
 
-  @ApiProperty({ example: 3 })
+  @ApiProperty({ description: 'Age in years', example: 3 })
   @IsInt()
   age: number;
 
-  @ApiProperty({ enum: PetGender, example: PetGender.Male })
+  @ApiProperty({ description: 'Gender of the pet', enum: PetGender, example: PetGender.Male })
   @IsEnum(PetGender)
   gender: PetGender;
 
-  @ApiProperty({ enum: PetSize, example: PetSize.Small })
+  @ApiProperty({ description: 'pet size', enum: PetSize, example: PetSize.Small })
   @IsEnum(PetSize)
   size: PetSize;
 
-  @ApiProperty({ example: 2000 })
+  @ApiProperty({ description: 'Adoption cost', example: 100 })
   @IsInt()
   adoptionFee: number;
 
-  @ApiProperty({ example: false })
+  @ApiProperty({ description: 'Avatar URL', example: 'https://example.com/dog.png' })
+  @IsUrl()
+  avatarURL: string;
+
+  @ApiProperty({
+    description: 'Indicates if he is neutered/neutered',
+    example: false,
+    default: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  neutered?: boolean;
+
+  @ApiProperty({ description: 'Indicates if it is adopted', example: false, default: false })
   @IsBoolean()
   @IsOptional()
   isAdopted?: boolean;
 
-  @ApiProperty({ example: true })
+  @ApiProperty({ description: 'Active or not in the system', example: true, default: true })
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
 
-  @ApiProperty({ example: 'shelter_cuid_123' })
-  @IsString()
+  @ApiProperty({ description: 'Associated Shelter ID', example: 'uuid-shelter-123' })
+  @IsUUID()
   shelterID: string;
 
-  @ApiProperty({ example: 'breed_cuid_456' })
-  @IsString()
+  @ApiProperty({ description: 'breed ID', example: 'uuid-breed-456' })
+  @IsUUID()
   breedID: string;
 
-  @ApiProperty({ example: 'species_cuid_789' })
-  @IsString()
+  @ApiProperty({ description: 'species ID', example: 'uuid-species-789' })
+  @IsUUID()
   speciesID: string;
 
-  @ApiProperty({ example: 'adoption_cuid_101', required: false })
-  @IsString()
+  @ApiProperty({ description: 'Adoption ID (optional)', required: false, example: null })
+  @IsUUID()
   @IsOptional()
   adoptionID?: string;
 }

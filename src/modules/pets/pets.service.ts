@@ -108,4 +108,34 @@ export class PetService {
       },
     });
   }
+  async restore(id: string): Promise<PetWithRelations> {
+    const pet = await this.prisma.pet.findUnique({
+      where: { id },
+      include: {
+        photos: true,
+        shelter: true,
+        breed: true,
+        species: true,
+        adoption: true,
+        favorites: true,
+      },
+    });
+
+    if (!pet) {
+      throw new NotFoundException(`Pet with ID ${id} not found`);
+    }
+
+    return this.prisma.pet.update({
+      where: { id },
+      data: { isActive: true },
+      include: {
+        photos: true,
+        shelter: true,
+        breed: true,
+        species: true,
+        adoption: true,
+        favorites: true,
+      },
+    });
+  }
 }
