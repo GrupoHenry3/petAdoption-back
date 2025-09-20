@@ -14,18 +14,16 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(_accessToken: string, _refreshToken: string, profile: Profile): Promise<any> {
-    const { id, name, emails, photos } = profile;
-
+  async validate(_accessToken: string, _refreshToken: string, profile: Profile) {
     const payload = {
-      sub: id,
-      email: emails[0].value,
-      name: `${name.givenName} ${name.familyName}`,
-      avatarURL: photos[0].value,
+      googleID: profile.id,
+      fullName: `${profile.name.givenName} ${profile.name.familyName}`,
+      email: profile.emails[0].value,
+      password: profile.id,
+      confirmedPassword: profile.id,
+      avatarURL: profile.photos[0].value,
     };
 
-    const user = await this.authService.validateGoogleUser(payload);
-
-    return user;
+    return await this.authService.validateGoogleUser(payload);
   }
 }
