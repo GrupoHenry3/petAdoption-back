@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+
 import { IsString, IsInt, IsBoolean, IsOptional, IsEnum, IsUUID, IsUrl } from 'class-validator';
 import { PetGender, PetSize } from '@prisma/client';
 
