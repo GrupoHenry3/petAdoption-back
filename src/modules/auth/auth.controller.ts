@@ -21,9 +21,7 @@ export class AuthController {
   @Post('signup')
   @HttpCode(HttpStatus.CREATED)
   async signUp(@Body() payload: CreateUserDTO) {
-    console.log('Signup payload received:', payload);
     const result = await this.authService.signUp(payload);
-    console.log('Signup result:', result);
     return result;
   }
 

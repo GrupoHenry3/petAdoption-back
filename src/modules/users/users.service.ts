@@ -11,11 +11,15 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDTO, GetUsersDTO, UpdateUserDTO } from './user.dto';
 import { Prisma } from '@prisma/client';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+  ) {}
 
   async create(payload: CreateUserDTO) {
     if (payload.password !== payload.confirmedPassword) {
@@ -47,6 +51,9 @@ export class UsersService {
       const user = await this.prisma.user.create({ data: newUser });
 
       this.logger.log('User created successfully');
+
+      await this.mailService.signUpConfirmation(user.fullName, user.email);
+
       return {
         statusCode: HttpStatus.CREATED,
         message: 'User created successfully',
