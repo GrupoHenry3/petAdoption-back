@@ -6,14 +6,14 @@ import {
 } from '@nestjs/common';
 import { DonationDTO } from './donations.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { MailService } from '../mail/mail.service';
+// import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class DonationsService {
   private readonly logger = new Logger(DonationsService.name);
   constructor(
     private readonly prisma: PrismaService,
-    private readonly mailService: MailService,
+    // private readonly mailService: MailService,
   ) {}
 
   async create(payload: DonationDTO) {
@@ -45,21 +45,21 @@ export class DonationsService {
         throw new NotFoundException('Shelter not fund');
       }
 
-      await this.mailService.shelterDonationConfirmation(
-        shelter.name,
-        shelter.user.email,
-        user.fullName,
-        donation.id,
-        donation.amount,
-        donation.message || '',
-      );
+      // await this.mailService.shelterDonationConfirmation(
+      //   shelter.name,
+      //   shelter.user.email,
+      //   user.fullName,
+      //   donation.id,
+      //   donation.amount,
+      //   donation.message || '',
+      // );
 
-      await this.mailService.userDonationConfirmation(
-        user.email,
-        user.fullName,
-        shelter.name,
-        donation.amount,
-      );
+      // await this.mailService.userDonationConfirmation(
+      //   user.email,
+      //   user.fullName,
+      //   shelter.name,
+      //   donation.amount,
+      // );
     } catch (error) {
       this.logger.error(`Error creating donation: ${error.message}`, error.stack);
       throw new InternalServerErrorException('An unexpected error has ocurred');
