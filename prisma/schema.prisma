@@ -12,7 +12,7 @@ model User {
   email                 String          @unique
   password              String          @unique
   googleID              String?         @unique @map("google_id")
-  fullName              String?         @map("full_name")
+  fullName              String          @map("full_name")
   country               String?
   city                  String?
   address               String?
