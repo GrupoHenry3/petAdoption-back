@@ -57,10 +57,7 @@ model Shelter {
   description           String?
   isVerified            Boolean         @default(false) @map("is_verified")
   isActive              Boolean         @default(true)  @map("is_active")
-<<<<<<< HEAD
 
-=======
->>>>>>> 533e2ef (pets/restore)
   createdAt             DateTime        @default(now()) @map("created_at")
   updatedAt             DateTime        @updatedAt @map("updated_at")
 
@@ -87,11 +84,6 @@ model Pet {
   isActive              Boolean         @default(true)  @map("is_active")
   createdAt             DateTime        @default(now()) @map("created_at")
   updatedAt             DateTime        @updatedAt @map("updated_at")
-
-<<<<<<< HEAD
-
-=======
->>>>>>> 533e2ef (pets/restore)
   shelterID             String          @map("shelter_id")
   shelter               Shelter         @relation(fields: [shelterID], references: [id])
   breedID               String          @map("breed_id")
@@ -99,10 +91,6 @@ model Pet {
   speciesID             String          @map("species_id")
   species               PetSpecies      @relation(fields: [speciesID], references: [id])
   adoptionID            String?         @map("adoption_id")
-<<<<<<< HEAD
-
-=======
->>>>>>> 533e2ef (pets/restore)
   adoption              Adoption?       @relation(fields: [adoptionID], references: [id])
   favorites             FavoritePets[]
   photos                PetPhotos[]
@@ -115,20 +103,11 @@ model PetPhotos {
   id                    String          @id @default(cuid(2))
   image_url             String
   createdAt             DateTime        @default(now()) @map("created_at")
-
-<<<<<<< HEAD
-
-=======
->>>>>>> 533e2ef (pets/restore)
   petID                 String          @map("pet_id")
   pet                   Pet             @relation(fields: [petID], references: [id])
 
   @@index([petID])
   @@map("pa_pet_photos")
-<<<<<<< HEAD
-
-=======
->>>>>>> 533e2ef (pets/restore)
 }
 
 model PetBreed {
@@ -140,13 +119,7 @@ model PetBreed {
   updatedAt             DateTime        @updatedAt
 
   pets                  Pet[]
-<<<<<<< HEAD
-
   speciesID             String          @map("species_id")
-
-=======
-  speciesID             String          @map("species_id")
->>>>>>> 533e2ef (pets/restore)
   species               PetSpecies      @relation(fields: [speciesID], references: [id])
 
   @@index([name])
