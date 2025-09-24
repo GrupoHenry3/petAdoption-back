@@ -1,9 +1,9 @@
-import { EAdoptionStatus } from '@prisma/client';
+import { AdoptionStatus } from '@prisma/client';
 
 // Convierte enum español a enum de Prisma
-export const EAdoptionStatusMapper: Record<EAdoptionStatus, EAdoptionStatus> = {
-  [EAdoptionStatus.PENDING]: EAdoptionStatus.PENDING,
-  [EAdoptionStatus.APPROVED]: EAdoptionStatus.APPROVED,
-  [EAdoptionStatus.REJECTED]: EAdoptionStatus.REJECTED,
-  [EAdoptionStatus.WITHDRAWN]: EAdoptionStatus.WITHDRAWN,
+export const EAdoptionStatusMapper: Record<AdoptionStatus, AdoptionStatus> = {
+  [AdoptionStatus.Pending]: AdoptionStatus.Pending,
+  [AdoptionStatus.Approved]: AdoptionStatus.Approved,
+  [AdoptionStatus.Rejected]: AdoptionStatus.Rejected,
+  [AdoptionStatus.Withdrawn]: AdoptionStatus.Withdrawn,
 };

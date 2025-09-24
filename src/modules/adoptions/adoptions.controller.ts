@@ -1,14 +1,23 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { AdoptionsService } from './adoptions.service';
 import { CreateAdoptionDto } from './dto/create-adoption.dto';
-import IAdoption from './interfaces/adoptions.interface';
-import { EAdoptionStatus } from '@prisma/client';
+import IAdoption from './adoptions.interface';
+import { AdoptionStatus } from '@prisma/client';
 
 @Controller('adoptions')
 export class AdoptionsController {
-  constructor(private readonly adoptionsService: AdoptionsService) { }
+  constructor(private readonly adoptionsService: AdoptionsService) {}
 
-  // -------------------- CREATE --------------------
   @Post('create')
   @HttpCode(HttpStatus.CREATED)
   async createAdoption(@Body() newAdoption: CreateAdoptionDto): Promise<object> {
@@ -18,9 +27,7 @@ export class AdoptionsController {
       data: adoption,
     };
   }
-  // -------------------- CREATE --------------------
 
-  // --------------------- READ ---------------------
   @Get('all')
   @HttpCode(HttpStatus.OK)
   async getAllAdoption(): Promise<object> {
@@ -40,41 +47,44 @@ export class AdoptionsController {
       data: adoption,
     };
   }
-  // --------------------- READ ---------------------
 
-  // ---------------- UPDATE STATUS -----------------
   @Patch('status/:id')
   @HttpCode(HttpStatus.OK)
-  async updateAdoptionStatus(@Param('id') id: string, @Body('status') status: EAdoptionStatus, @Body('rejectionReason') rejectionReason?: string): Promise<object> {
-    const adoption: IAdoption | null = await this.adoptionsService.updateAdoptionStatus(id, status, rejectionReason);
+  async updateAdoptionStatus(
+    @Param('id') id: string,
+    @Body('status') status: AdoptionStatus,
+    @Body('rejectionReason') rejectionReason?: string,
+  ): Promise<object> {
+    const adoption: IAdoption | null = await this.adoptionsService.updateAdoptionStatus(
+      id,
+      status,
+      rejectionReason,
+    );
     return {
       message: `Estado de la adopción actualizado a "${status}"`,
       data: adoption,
     };
   }
-  // ---------------- UPDATE STATUS -----------------
 
-  // -------------------- UPDATE --------------------
   @Patch('update/:id')
   @HttpCode(HttpStatus.OK)
-  async updateAdoption(@Param('id') id: string, @Body() updateData: Partial<IAdoption>): Promise<object> {
+  async updateAdoption(
+    @Param('id') id: string,
+    @Body() updateData: Partial<IAdoption>,
+  ): Promise<object> {
     const updated: IAdoption = await this.adoptionsService.updateAdoption(id, updateData);
     return {
       message: 'Adopción actualizada exitosamente',
       data: updated,
     };
   }
-  // -------------------- UPDATE --------------------
 
-  // -------------------- DELETE --------------------
   @Delete('delete/:id')
   @HttpCode(HttpStatus.OK)
   async deleteAdoption(@Param('id') id: string): Promise<object> {
     return await this.adoptionsService.deleteAdoption(id);
   }
-  // -------------------- DELETE --------------------
 
-  // ------------- ACTIVAR / DESACTIVAR -------------
   @Patch('active/:id')
   @HttpCode(HttpStatus.OK)
   async adoptionIsActive(@Param('id') id: string): Promise<object> {
@@ -84,5 +94,4 @@ export class AdoptionsController {
       data: adoption,
     };
   }
-  // ------------- ACTIVAR / DESACTIVAR -------------
 }

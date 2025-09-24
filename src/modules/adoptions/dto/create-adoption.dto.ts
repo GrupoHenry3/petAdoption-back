@@ -1,22 +1,33 @@
-import { IsString, IsDate, IsEnum, IsOptional, IsNumber, IsArray, Length, Min, IsDateString } from 'class-validator';
-import EHousingOwnership from "../enums/home-ownership.enum";
-import EHousingType from "../enums/housing-Type.enum";
-import EOuterSpace from "../enums/outer-space.enum";
-import EPetCareExperience from "../enums/petCare-experience.enum";
-import ETravelFrequency from "../enums/travel-frequency.enum";
-import EWalkingCommitment from "../enums/walking-commitment.enum";
-import EWorkSchedule from "../enums/work-schedule.enum";
-import EWalkingDisposition from '../enums/walking-disposition.enum';
-import EPetQuantity from '../enums/pet-quantity.enum';
+import {
+  IsString,
+  IsDate,
+  IsEnum,
+  IsOptional,
+  IsNumber,
+  IsArray,
+  Length,
+  Min,
+  IsDateString,
+} from 'class-validator';
+import {
+  EHousingOwnership,
+  EHousingType,
+  EOuterSpace,
+  EPetCareExperience,
+  EPetQuantity,
+  ETravelFrequency,
+  EWalkingCommitment,
+  EWalkingDisposition,
+  EWorkSchedule,
+} from '../adoptions.enum';
 
 export class CreateAdoptionDto {
-  // Información básica
   @IsString()
   @Length(6, 20)
   dni: string;
 
   @IsDateString()
-  birthdate: Date;
+  birthate: Date;
 
   @IsString()
   mainReason: string;
@@ -27,7 +38,6 @@ export class CreateAdoptionDto {
   @IsEnum(EPetCareExperience, { message: 'La experiencia previa no es válida' })
   previousExperience: EPetCareExperience;
 
-  // Condiciones del hogar
   @IsEnum(EHousingType, { message: 'El tipo de vivienda no es válido' })
   housingType: EHousingType;
 
@@ -37,7 +47,6 @@ export class CreateAdoptionDto {
   @IsEnum(EOuterSpace, { message: 'El espacio exterior no es válido' })
   outerSpace: EOuterSpace;
 
-  // Estilo de vida
   @IsEnum(EWorkSchedule, { message: 'El horario laboral no es válido' })
   workSchedule: EWorkSchedule;
 
@@ -53,7 +62,6 @@ export class CreateAdoptionDto {
   @IsEnum(ETravelFrequency, { message: 'La frecuencia de viajes no es válida' })
   travelFrequency: ETravelFrequency;
 
-  // Familia y otras mascotas
   @IsNumber()
   @Min(1)
   householdMembers: number;
@@ -77,7 +85,6 @@ export class CreateAdoptionDto {
   @IsString()
   additionalInformation: string;
 
-  // Identificadores de relaciones
   @IsString()
   petID: string;
 
@@ -87,19 +94,3 @@ export class CreateAdoptionDto {
   @IsString()
   shelterID: string;
 }
-
-
-
-// export class CreateAdoptionDto {
-//   @IsUUID()
-//   userID: string;
-
-//   @IsUUID()
-//   shelterID: string;
-
-//   @IsNotEmpty({ each: true })
-//   pets: string;
-
-//   @IsNotEmpty()
-//   questions: string;
-// }

@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import IAdoption from './interfaces/adoptions.interface';
+import IAdoption from './adoptions.interface';
 import { CreateAdoptionDto } from './dto/create-adoption.dto';
 import { EAdoptionStatus } from '@prisma/client'; // ✅ Usar el enum generado por Prisma
 import { AdoptionsRepository } from './adoptions.repository';
