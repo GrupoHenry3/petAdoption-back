@@ -138,4 +138,18 @@ export class PetService {
       },
     });
   }
+
+  async findAllByShelter(id: string): Promise<PetWithRelations[]> {
+    return this.prisma.pet.findMany({
+      where: { shelterID: id, isActive: true },
+      include: {
+        photos: true,
+        shelter: true,
+        breed: true,
+        species: true,
+        adoption: true,
+        favorites: true,
+      },
+    });
+  }
 }
