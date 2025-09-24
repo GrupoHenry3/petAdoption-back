@@ -6,6 +6,7 @@ import { SheltersModule } from './modules/shelters/shelters.module';
 import { SpeciesModule } from './modules/species/species.module';
 import { BreedsModule } from './modules/breeds/breeds.module';
 import { DonationsModule } from './modules/donations/donations.module';
+import { MailModule } from './modules/mail/mail.module';
 import { CloudinaryModule } from './modules/cloudinary/coudinary.module';
 
 @Module({
@@ -17,7 +18,9 @@ import { CloudinaryModule } from './modules/cloudinary/coudinary.module';
     SpeciesModule,
     BreedsModule,
     DonationsModule,
+    MailModule,
     CloudinaryModule,
+
   ],
 })
 export class AppModule {}

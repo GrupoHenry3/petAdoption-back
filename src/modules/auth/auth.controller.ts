@@ -21,9 +21,7 @@ export class AuthController {
   @Post('signup')
   @HttpCode(HttpStatus.CREATED)
   async signUp(@Body() payload: CreateUserDTO) {
-    console.log('Signup payload received:', payload);
     const result = await this.authService.signUp(payload);
-    console.log('Signup result:', result);
     return result;
   }
 
@@ -35,7 +33,7 @@ export class AuthController {
     res.cookie('access_token', result.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'none',
       maxAge: 60 * 60 * 1000,
     });
 

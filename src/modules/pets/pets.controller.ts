@@ -136,4 +136,12 @@ export class PetController {
     const pet = await this.petService.remove(id);
     return { message: `Pet with ID ${id} marked as inactive.`, pet };
   }
+
+  @Get('shelter/:id')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get all pets by shelter (active and inactive)' })
+  @ApiResponse({ status: 200, description: 'List of pets returned.' })
+  findAllByShelter(@Param('id') id: string): Promise<PetWithRelations[]> {
+    return this.petService.findAllByShelter(id);
+  }
 }
