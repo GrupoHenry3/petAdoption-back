@@ -1,27 +1,54 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
-import { UserDTO } from './types/user';
+import { compare } from 'bcrypt';
+import { UsersService } from '../users/users.service';
+import { CreateUserDTO, SignInDTO } from '../users/user.dto';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly usersService: UsersService,
   ) {}
 
-  // Local Auth
-  async userSignIn(payload: { email: string; password: string }) {
-    // Check if email exists
-    const user = await this.prisma.user.findUnique({ where: { email: payload.email } });
+  async validateUser(id: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: id },
+      select: { id: true },
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    try {
+      const res = await this.prisma.user.findUnique({
+        where: { id: user.id },
+        select: {
+          id: true,
+          userType: true,
+          isActive: true,
+          siteAdmin: true,
+        },
+      });
+
+      return res;
+    } catch (error) {
+      this.logger.error(`Error validating user: ${error.message}`, error.stack);
+    }
+  }
+
+  async signIn(payload: SignInDTO) {
+    const user = await this.prisma.user.findUnique({
+      where: { email: payload.email },
+    });
 
     if (!user) {
       throw new NotFoundException(`${payload.email} not found`);
     }
 
-    // Check if password is valid
-    const isPasswordValid = await bcrypt.compare(payload.password, user.password);
+    const isPasswordValid = await compare(payload.password, user.password);
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid password');
@@ -29,90 +56,56 @@ export class AuthService {
 
     const jwt = {
       sub: user.id,
-      email: user.email,
-      type: user.userType,
-      site_admin: user.siteAdmin,
+      userType: user.userType,
+      siteAdmin: user.siteAdmin,
+      isActive: user.isActive,
     };
+
+    this.logger.log(`User '${user.fullName}' has logged in`);
 
     return {
-      statusCode: 200,
-      acessToken: await this.jwtService.signAsync(jwt),
+      accessToken: await this.jwtService.signAsync(jwt),
     };
   }
 
-  async userSignUp(payload: UserDTO) {
-    try {
-      // Check if mail already exists
-      const email = await this.prisma.user.findUnique({
-        where: { email: payload.email },
-      });
-
-      if (email) {
-        return {
-          statusCode: 409,
-          message: 'Email already in use',
-        };
-      }
-
-      const hashPassword = await bcrypt.hash(payload.password, 10);
-
-      await this.prisma.user.create({
-        data: {
-          email: payload.email,
-          password: hashPassword,
-        },
-      });
-
-      return {
-        statusCode: 201,
-        message: 'User created successfully',
-      };
-    } catch (error) {
-      return {
-        statusCode: 400,
-        message: 'Error during user creation',
-      };
-    }
+  async signUp(payload: CreateUserDTO) {
+    return await this.usersService.create(payload);
   }
 
-  // Google Auth
-  async validateGoogleUser(payload: {
-    sub: string;
-    email: string;
-    name: string;
-    avatarURL?: string;
-  }) {
-    // Check if google id or email exist
-    const user = await this.prisma.user.findFirst({
-      where: { OR: [{ googleID: payload.sub }, { email: payload.email }] },
-    });
+  async googleSignIn(id: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: id } });
 
-    // If user doesn't exist create new
     if (!user) {
-      const hashedPassword = await bcrypt.hash(payload.sub, 10);
-
-      const res = await this.prisma.user.create({
-        data: {
-          fullName: payload.name,
-          email: payload.email,
-          password: hashedPassword,
-          googleID: payload.sub,
-        },
-      });
-
-      return res;
+      throw new NotFoundException('User not found');
     }
 
     const jwt = {
       sub: user.id,
-      email: user.email,
-      type: user.userType,
-      site_admin: user.siteAdmin,
+      userType: user.userType,
+      siteAdmin: user.siteAdmin,
+      isActive: user.isActive,
     };
 
     return {
-      statusCode: 200,
-      acessToken: await this.jwtService.signAsync(jwt),
+      accessToken: await this.jwtService.signAsync(jwt),
     };
+  }
+
+  async validateGoogleUser(payload: CreateUserDTO) {
+    const user = await this.prisma.user.findFirst({
+      where: { OR: [{ googleID: payload.googleID }, { email: payload.email }] },
+      select: {
+        id: true,
+        userType: true,
+        isActive: true,
+        siteAdmin: true,
+      },
+    });
+
+    if (!user) {
+      return await this.usersService.create(payload);
+    }
+
+    return user;
   }
 }

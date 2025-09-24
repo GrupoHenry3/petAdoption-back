@@ -10,33 +10,67 @@ import {
   Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { UserDTO } from './types/user';
 import { GoogleAuthGuard } from './guards/google.guard';
+import { CreateUserDTO, SignInDTO } from '../users/user.dto';
+import type { Request, Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('signin')
-  @HttpCode(HttpStatus.ACCEPTED)
-  userSignIn(@Body() payload: { email: string; password: string }) {
-    return this.authService.userSignIn(payload);
-  }
-
   @Post('signup')
   @HttpCode(HttpStatus.CREATED)
-  userSignUp(@Body() payload: UserDTO) {
-    return this.authService.userSignUp(payload);
+  async signUp(@Body() payload: CreateUserDTO) {
+    const result = await this.authService.signUp(payload);
+    return result;
+  }
+
+  @Post('signin')
+  @HttpCode(HttpStatus.ACCEPTED)
+  async signIn(@Res({ passthrough: true }) res: Response, @Body() payload: SignInDTO) {
+    const result = await this.authService.signIn(payload);
+
+    res.cookie('access_token', result.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'none',
+      maxAge: 60 * 60 * 1000,
+    });
+
+    return {
+      statusCode: 202,
+      message: 'Login successful',
+      accessToken: result.accessToken,
+    };
+  }
+
+  @Post('signout')
+  @HttpCode(HttpStatus.OK)
+  async signOut(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie('access_token');
+
+    return {
+      statusCode: 200,
+      message: 'Logged out successfully',
+    };
   }
 
   @Get('google')
   @UseGuards(GoogleAuthGuard)
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   async googleAuth() {}
 
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
-  async googleCB(@Req() req, @Res() res) {
-    console.log(req.user);
+  async googleCallback(@Req() req, @Res() res) {
+    const result = await this.authService.googleSignIn(req.user.id);
+
+    res.cookie('access_token', result.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 1000,
+    });
+
+    res.redirect(`${process.env.FRONTEND_URL}`);
   }
 }

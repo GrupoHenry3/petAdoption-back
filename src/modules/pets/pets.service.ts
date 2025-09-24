@@ -19,26 +19,23 @@ export class PetService {
     take?: number;
     where?: Prisma.PetWhereInput;
     orderBy?: Prisma.PetOrderByWithRelationInput;
-  }): Promise<PetWithRelations[]> {
+  }) {
     const { skip, take, where, orderBy } = params || {};
     return this.prisma.pet.findMany({
       skip,
       take,
       where: { ...(where || {}), isActive: true }, // solo activos
       orderBy,
-      include: {
+      select: {
+        id: true,
+        name: true,
         photos: true,
-        shelter: true,
-        breed: true,
-        species: true,
-        adoption: true,
-        favorites: true,
       },
     });
   }
 
   async findOne(id: string): Promise<PetWithRelations> {
-    const pet = await this.prisma.pet.findFirst({
+    const pet = await this.prisma.pet.findUnique({
       where: { id, isActive: true }, // solo activos
       include: {
         photos: true,
@@ -101,6 +98,50 @@ export class PetService {
       take,
       where, //no filtramos por isActive
       orderBy,
+      include: {
+        photos: true,
+        shelter: true,
+        breed: true,
+        species: true,
+        adoption: true,
+        favorites: true,
+      },
+    });
+  }
+  async restore(id: string): Promise<PetWithRelations> {
+    const pet = await this.prisma.pet.findUnique({
+      where: { id },
+      include: {
+        photos: true,
+        shelter: true,
+        breed: true,
+        species: true,
+        adoption: true,
+        favorites: true,
+      },
+    });
+
+    if (!pet) {
+      throw new NotFoundException(`Pet with ID ${id} not found`);
+    }
+
+    return this.prisma.pet.update({
+      where: { id },
+      data: { isActive: true },
+      include: {
+        photos: true,
+        shelter: true,
+        breed: true,
+        species: true,
+        adoption: true,
+        favorites: true,
+      },
+    });
+  }
+
+  async findAllByShelter(id: string): Promise<PetWithRelations[]> {
+    return this.prisma.pet.findMany({
+      where: { shelterID: id, isActive: true },
       include: {
         photos: true,
         shelter: true,
