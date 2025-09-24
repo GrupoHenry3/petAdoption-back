@@ -84,8 +84,7 @@ export class PetService {
         favorites: true,
       },
     });
-  }
-  //-----ADMIN--------//
+  } //-----ADMIN--------//
   async findAllWithInactive(params?: {
     skip?: number;
     take?: number;

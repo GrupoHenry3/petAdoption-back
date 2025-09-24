@@ -2,7 +2,8 @@
 /dist
 /node_modules
 /build
-
+#
+src/modules/pets/dto/
 # Logs
 logs
 *.log

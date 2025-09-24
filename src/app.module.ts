@@ -7,6 +7,7 @@ import { SpeciesModule } from './modules/species/species.module';
 import { BreedsModule } from './modules/breeds/breeds.module';
 import { DonationsModule } from './modules/donations/donations.module';
 import { MailModule } from './modules/mail/mail.module';
+import { CloudinaryModule } from './modules/cloudinary/coudinary.module';
 
 @Module({
   imports: [
@@ -18,6 +19,8 @@ import { MailModule } from './modules/mail/mail.module';
     BreedsModule,
     DonationsModule,
     MailModule,
+    CloudinaryModule,
+
   ],
 })
 export class AppModule {}

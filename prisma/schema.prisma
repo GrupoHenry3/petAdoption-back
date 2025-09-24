@@ -57,6 +57,7 @@ model Shelter {
   description           String?
   isVerified            Boolean         @default(false) @map("is_verified")
   isActive              Boolean         @default(true)  @map("is_active")
+
   createdAt             DateTime        @default(now()) @map("created_at")
   updatedAt             DateTime        @updatedAt @map("updated_at")
 
@@ -83,7 +84,6 @@ model Pet {
   isActive              Boolean         @default(true)  @map("is_active")
   createdAt             DateTime        @default(now()) @map("created_at")
   updatedAt             DateTime        @updatedAt @map("updated_at")
-
   shelterID             String          @map("shelter_id")
   shelter               Shelter         @relation(fields: [shelterID], references: [id])
   breedID               String          @map("breed_id")
@@ -103,7 +103,6 @@ model PetPhotos {
   id                    String          @id @default(cuid(2))
   image_url             String
   createdAt             DateTime        @default(now()) @map("created_at")
-
   petID                 String          @map("pet_id")
   pet                   Pet             @relation(fields: [petID], references: [id])
 
