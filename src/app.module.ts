@@ -8,6 +8,7 @@ import { BreedsModule } from './modules/breeds/breeds.module';
 import { DonationsModule } from './modules/donations/donations.module';
 import { MailModule } from './modules/mail/mail.module';
 import { CloudinaryModule } from './modules/cloudinary/coudinary.module';
+import { AdoptionsModule } from './modules/adoptions/adoptions.module';
 
 @Module({
   imports: [
@@ -20,7 +21,7 @@ import { CloudinaryModule } from './modules/cloudinary/coudinary.module';
     DonationsModule,
     MailModule,
     CloudinaryModule,
-
+    AdoptionsModule,
   ],
 })
 export class AppModule {}

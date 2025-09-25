@@ -57,7 +57,6 @@ model Shelter {
   description           String?
   isVerified            Boolean         @default(false) @map("is_verified")
   isActive              Boolean         @default(true)  @map("is_active")
-
   createdAt             DateTime        @default(now()) @map("created_at")
   updatedAt             DateTime        @updatedAt @map("updated_at")
 
@@ -84,16 +83,16 @@ model Pet {
   isActive              Boolean         @default(true)  @map("is_active")
   createdAt             DateTime        @default(now()) @map("created_at")
   updatedAt             DateTime        @updatedAt @map("updated_at")
+
   shelterID             String          @map("shelter_id")
   shelter               Shelter         @relation(fields: [shelterID], references: [id])
   breedID               String          @map("breed_id")
   breed                 PetBreed        @relation(fields: [breedID], references: [id])
   speciesID             String          @map("species_id")
   species               PetSpecies      @relation(fields: [speciesID], references: [id])
-  adoptionID            String?         @map("adoption_id")
-  adoption              Adoption?       @relation(fields: [adoptionID], references: [id])
   favorites             FavoritePets[]
   photos                PetPhotos[]
+  adoption              Adoption?
 
   @@index([name, gender, size, breedID, speciesID])
   @@map("pa_pets")
@@ -103,6 +102,7 @@ model PetPhotos {
   id                    String          @id @default(cuid(2))
   image_url             String
   createdAt             DateTime        @default(now()) @map("created_at")
+
   petID                 String          @map("pet_id")
   pet                   Pet             @relation(fields: [petID], references: [id])
 
@@ -139,20 +139,38 @@ model PetSpecies {
 
 model Adoption {
   id                    String          @id @default(cuid(2))
-  questions             Json?
+  dni                   String
+  birthdate             String
+  mainReason            String          @map("main_reason")
+  expectatives          String
+  previousPetExp        previousPetExp  @default(None) @map("previous_pet_experience")
+  houseType             houseType       @default(House) @map("house_type")
+  houseOwnership        houseOwnership  @default(Owned) @map("house_ownership")
+  houseOuterSpace       houseOuterSpace @default(None) @map("house_outher_space")
+  houseMembers          String          @map("house_members")
+  livingSpace           String          @map("living_space")
+  workingHours          String          @map("working_hours")
+  dailyRoutine          String          @map("daily_routine")
+  houseKidsAges         String?         @map("house_kids_ages")
+  houseCurrentPets      String?         @map("house_current_pets")
+  dailyExcercise        String?         @map("daily_excercise")
+  travelFrequency       String?         @map("travel_frequency")
+  petHistory            String?         @map("pet_history")
+  additionalInfo        String?         @map("additional_information")
   status                AdoptionStatus  @default(Pending)
-  rejectionStatus       String?         @map("rejection_status")
-  pets                  Pet[]
+  rejectionReason       String?         @map("rejection_reason")
+  isActive              Boolean         @default(true) @map("is_active")
+  createdAt             DateTime        @default(now()) @map("created_at")
+  updatedAt             DateTime        @updatedAt @map("updated_at")
   
   userID                String          @map("user_id")
   user                  User            @relation(fields: [userID], references: [id])
   shelterID             String          @map("shelter_id")
   shelter               Shelter         @relation(fields: [shelterID], references: [id])
+  petID                 String          @unique @map("pet_id")
+  pet                   Pet             @relation(fields: [petID], references: [id])
 
-  createdAt             DateTime        @default(now()) @map("created_at")
-  updatedAt             DateTime        @updatedAt @map("updated_at")
-
-  @@index([status])
+  @@index([status, userID, shelterID])
   @@map("pa_adoptions")
 }
 
@@ -168,6 +186,11 @@ model Donation {
 
   @@index([userID])
   @@map("pa_user_donations")
+}
+
+enum UserType {
+  User
+  Shelter
 }
 
 enum PetSize {
@@ -187,7 +210,27 @@ enum AdoptionStatus {
   Withdrawn
 }
 
-enum UserType {
-  User
-  Shelter
+enum previousPetExp {
+  None
+  Basic
+  Moderate
+  Experienced
+}
+
+enum houseOwnership {
+  Owned
+  Rented
+}
+
+enum houseType {
+  House
+  Apartment
+  Farm
+}
+
+enum houseOuterSpace {
+  None
+  Small
+  Medium
+  Large
 }
