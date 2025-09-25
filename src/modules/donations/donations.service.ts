@@ -8,6 +8,7 @@ import { DonationDTO } from './donations.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import Stripe from 'stripe';
+import { StripeService } from '../stripe/stripe.service';
 
 @Injectable()
 export class DonationsService {
@@ -15,6 +16,7 @@ export class DonationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
+    private readonly stripeService: StripeService,
   ) {}
 
   async create(userId: string, payload: DonationDTO) {
@@ -38,36 +40,14 @@ export class DonationsService {
       throw new InternalServerErrorException('Invalid donation amount');
     }
 
-    const stripe = new Stripe(`${process.env.STRIPE_SECRET_KEY}`, {
-      apiVersion: '2025-08-27.basil',
-    });
-
     try {
-      const checkoutSession = await stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
-        line_items: [
-          {
-            price_data: {
-              currency: 'usd',
-              product_data: {
-                name: 'Donation',
-              },
-              unit_amount: payload.amount * 100,
-            },
-            quantity: 1,
-          },
-        ],
-        mode: 'payment',
-        success_url: `${process.env.FRONTEND_URL}/donation/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.FRONTEND_URL}/donation/cancel`,
-      });
-
-      this.logger.log('Checkout session created:', checkoutSession.id);
+      const checkout = await this.stripeService.checkoutSession(payload.amount);
+      this.logger.log('Checkout session created:', checkout.id);
 
       const donation = await this.prisma.donation.create({
         data: {
           userID: userId,
-          sessionID: checkoutSession.id,
+          sessionID: checkout.id,
           ...payload,
         },
       });
@@ -111,7 +91,7 @@ export class DonationsService {
         donation.amount,
       );
 
-      return checkoutSession.url;
+      return checkout.url;
     } catch (error) {
       this.logger.error(`Error creating donation: ${error.message}`, error.stack);
       throw new InternalServerErrorException('An unexpected error has ocurred');
