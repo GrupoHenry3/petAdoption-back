@@ -111,8 +111,6 @@ export class DonationsService {
         donation.amount,
       );
 
-      console.log(donation, checkoutSession.url);
-
       return checkoutSession.url;
     } catch (error) {
       this.logger.error(`Error creating donation: ${error.message}`, error.stack);
