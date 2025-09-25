@@ -7,6 +7,8 @@ import {
 import { DonationDTO } from './donations.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
+import Stripe from 'stripe';
+import { StripeService } from '../stripe/stripe.service';
 
 @Injectable()
 export class DonationsService {
@@ -14,12 +16,40 @@ export class DonationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
+    private readonly stripeService: StripeService,
   ) {}
 
-  async create(payload: DonationDTO) {
+  async create(userId: string, payload: DonationDTO) {
+    const isUserValid = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!isUserValid) {
+      throw new NotFoundException('User not found');
+    }
+
+    const isShelterValid = await this.prisma.shelter.findUnique({
+      where: { id: payload.shelterID },
+    });
+
+    if (!isShelterValid) {
+      throw new NotFoundException('Shelter not found');
+    }
+
+    if (!payload.amount || payload.amount <= 0) {
+      throw new InternalServerErrorException('Invalid donation amount');
+    }
+
     try {
+      const checkout = await this.stripeService.checkoutSession(payload.amount);
+      this.logger.log('Checkout session created:', checkout.id);
+
       const donation = await this.prisma.donation.create({
-        data: payload,
+        data: {
+          userID: userId,
+          sessionID: checkout.id,
+          ...payload,
+        },
       });
 
       const user = await this.prisma.user.findUnique({
@@ -60,6 +90,8 @@ export class DonationsService {
         shelter.name,
         donation.amount,
       );
+
+      return checkout.url;
     } catch (error) {
       this.logger.error(`Error creating donation: ${error.message}`, error.stack);
       throw new InternalServerErrorException('An unexpected error has ocurred');
