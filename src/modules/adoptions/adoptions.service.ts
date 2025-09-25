@@ -83,7 +83,7 @@ export class AdoptionsService {
     }
 
     try {
-      const deletedAdoption = await this.prisma.adoption.update({
+      await this.prisma.adoption.update({
         where: { id: id },
         data: {
           isActive: false,
