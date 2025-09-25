@@ -162,7 +162,7 @@ model Adoption {
   isActive              Boolean         @default(true) @map("is_active")
   createdAt             DateTime        @default(now()) @map("created_at")
   updatedAt             DateTime        @updatedAt @map("updated_at")
-  
+
   userID                String          @map("user_id")
   user                  User            @relation(fields: [userID], references: [id])
   shelterID             String          @map("shelter_id")
@@ -178,6 +178,7 @@ model Donation {
   id                    String          @id @default(cuid(2))
   amount                Int
   message               String?
+  sessionID             String          @map("session_id")
 
   userID                String          @map("user_id")
   user                  User            @relation(fields: [userID], references: [id])

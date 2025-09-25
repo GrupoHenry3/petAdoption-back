@@ -10,9 +10,5 @@ export class DonationDTO {
 
   @IsString()
   @IsNotEmpty()
-  userID: string;
-
-  @IsString()
-  @IsNotEmpty()
   shelterID: string;
 }
