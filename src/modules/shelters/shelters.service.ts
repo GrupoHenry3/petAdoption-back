@@ -267,6 +267,7 @@ export class SheltersService {
           phoneNumber: true,
           website: true,
           description: true,
+          isVerified: true,
         },
       });
 
@@ -297,6 +298,8 @@ export class SheltersService {
           phoneNumber: true,
           website: true,
           description: true,
+          isActive: true,
+          isVerified: true,
           adoptions: true,
           donations: true,
         },
