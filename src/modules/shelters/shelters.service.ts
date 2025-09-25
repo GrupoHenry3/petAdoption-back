@@ -169,7 +169,7 @@ export class SheltersService {
           },
         });
 
-        const updateUser = await prisma.user.update({
+        await prisma.user.update({
           where: { id: shelter.userID },
           data: { userType: 'User' },
         });

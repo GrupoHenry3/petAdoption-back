@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
-import { CreateAdoptionDto } from "./dto/create-adoption.dto";
+import { CreateAdoptionDto } from "./adoptions.dto";
 import IAdoption from "./adoptions.interface";
 import { EAdoptionStatusMapper } from "./mappers/adoption-status.mapper";
 import { Prisma, EAdoptionStatus } from '@prisma/client';
