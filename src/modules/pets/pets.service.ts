@@ -29,21 +29,66 @@ export class PetService {
       select: {
         id: true,
         name: true,
-        photos: true,
+        avatarURL: true,
+        breed: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        species: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        shelter: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
   }
 
-  async findOne(id: string): Promise<PetWithRelations> {
+  async findOne(id: string) {
     const pet = await this.prisma.pet.findUnique({
       where: { id, isActive: true },
-      include: {
-        photos: true,
-        shelter: true,
-        breed: true,
-        species: true,
-        adoption: true,
-        favorites: true,
+      select: {
+        id: true,
+        name: true,
+        age: true,
+        gender: true,
+        size: true,
+        adoptionFee: true,
+        avatarURL: true,
+        neutered: true,
+        isAdopted: true,
+        isActive: true,
+        breed: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        photos: {
+          select: {
+            image_url: true,
+          },
+        },
+        shelter: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        adoption: {
+          select: {
+            id: true,
+            status: true,
+          },
+        },
       },
     });
     if (!pet) throw new NotFoundException(`Pet with ID ${id} not found or inactive`);
@@ -138,16 +183,34 @@ export class PetService {
     });
   }
 
-  async findAllByShelter(id: string): Promise<PetWithRelations[]> {
+  async findAllByShelter(id: string) {
     return this.prisma.pet.findMany({
       where: { shelterID: id, isActive: true },
-      include: {
-        photos: true,
-        shelter: true,
-        breed: true,
-        species: true,
-        adoption: true,
-        favorites: true,
+      select: {
+        id: true,
+        name: true,
+        age: true,
+        gender: true,
+        size: true,
+        avatarURL: true,
+        isAdopted: true,
+        createdAt: true,
+        breed: {
+          select: {
+            name: true,
+          },
+        },
+        adoption: {
+          select: {
+            status: true,
+          },
+        },
+        shelter: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
   }
