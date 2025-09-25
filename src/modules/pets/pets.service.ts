@@ -24,7 +24,7 @@ export class PetService {
     return this.prisma.pet.findMany({
       skip,
       take,
-      where: { ...(where || {}), isActive: true }, // solo activos
+      where: { ...(where || {}), isActive: true },
       orderBy,
       select: {
         id: true,
@@ -36,7 +36,7 @@ export class PetService {
 
   async findOne(id: string): Promise<PetWithRelations> {
     const pet = await this.prisma.pet.findUnique({
-      where: { id, isActive: true }, // solo activos
+      where: { id, isActive: true },
       include: {
         photos: true,
         shelter: true,
@@ -51,7 +51,6 @@ export class PetService {
   }
 
   async update(id: string, data: Prisma.PetUpdateInput): Promise<PetWithRelations> {
-    // valida existencia y activo
     await this.findOne(id);
 
     return this.prisma.pet.update({
@@ -69,7 +68,6 @@ export class PetService {
   }
 
   async remove(id: string): Promise<PetWithRelations> {
-    // soft delete
     await this.findOne(id);
 
     return this.prisma.pet.update({
@@ -85,7 +83,7 @@ export class PetService {
       },
     });
   }
-  //-----ADMIN--------//
+
   async findAllWithInactive(params?: {
     skip?: number;
     take?: number;
@@ -108,6 +106,7 @@ export class PetService {
       },
     });
   }
+
   async restore(id: string): Promise<PetWithRelations> {
     const pet = await this.prisma.pet.findUnique({
       where: { id },

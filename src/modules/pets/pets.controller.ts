@@ -13,7 +13,14 @@ import {
 } from '@nestjs/common';
 import { PetService } from './pets.service';
 import { Pet, Prisma } from '@prisma/client';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { PetWithRelations } from './types/pet.types';
 
 @Controller('pets')
@@ -25,6 +32,37 @@ export class PetController {
   @ApiOperation({ summary: 'Create a new pet' })
   @ApiResponse({ status: 201, description: 'Pet created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid data.' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', example: 'Firulais' },
+        age: { type: 'integer', example: 3 },
+        gender: { type: 'string', example: 'Male' },
+        size: { type: 'string', example: 'Small' },
+        adoptionFee: { type: 'integer', example: 100 },
+        avatarURL: {
+          type: 'string',
+          example: 'https://res.cloudinary.com/demo/image/upload/v123456789/pet.jpg',
+          description: 'Secure URL returned from Cloudinary',
+        },
+        shelterID: { type: 'string', example: 'shltr123' },
+        breedID: { type: 'string', example: 'brd456' },
+        speciesID: { type: 'string', example: 'spc789' },
+      },
+      required: [
+        'name',
+        'age',
+        'gender',
+        'size',
+        'adoptionFee',
+        'avatarURL',
+        'shelterID',
+        'breedID',
+        'speciesID',
+      ],
+    },
+  })
   create(@Body() data: Prisma.PetCreateInput): Promise<Pet> {
     return this.petService.create(data);
   }
@@ -38,9 +76,8 @@ export class PetController {
     @Query('take', new DefaultValuePipe(10), ParseIntPipe) take: number,
   ) {
     return this.petService.findAll({ skip, take });
-  }
+  } ///----- Admin ---//
 
-  ///----- Admin ---//
   @Get('all')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all pets (active and inactive) - (admin only)' })
@@ -70,7 +107,6 @@ export class PetController {
   async restore(@Param('id') id: string) {
     return this.petService.restore(id);
   }
-  //-------------//
   @Get(':id')
   @ApiOperation({ summary: 'Get a pet by ID' })
   @ApiParam({ name: 'id', type: String })
