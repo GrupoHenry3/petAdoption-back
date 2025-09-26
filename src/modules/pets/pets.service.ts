@@ -34,6 +34,29 @@ export class PetService {
     });
   }
 
+  async findAllWithRelations(params?: {
+    skip?: number;
+    take?: number;
+    where?: Prisma.PetWhereInput;
+    orderBy?: Prisma.PetOrderByWithRelationInput;
+  }): Promise<PetWithRelations[]> {
+    const { skip, take, where, orderBy } = params || {};
+    return this.prisma.pet.findMany({
+      skip,
+      take,
+      where: { ...(where || {}), isActive: true },
+      orderBy,
+      include: {
+        photos: true,
+        shelter: true,
+        breed: true,
+        species: true,
+        adoption: true,
+        favorites: true,
+      },
+    });
+  }
+
   async findOne(id: string): Promise<PetWithRelations> {
     const pet = await this.prisma.pet.findUnique({
       where: { id, isActive: true },

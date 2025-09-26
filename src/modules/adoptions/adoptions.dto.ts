@@ -1,11 +1,33 @@
 import {
   AdoptionStatus,
-  houseOuterSpace,
-  houseOwnership,
-  houseType,
-  previousPetExp,
 } from '@prisma/client';
 import { IsString, IsEnum, IsOptional, Length } from 'class-validator';
+
+// Enums que coinciden con el esquema de Prisma
+enum previousPetExp {
+  None = 'None',
+  Basic = 'Basic',
+  Moderate = 'Moderate',
+  Experienced = 'Experienced',
+}
+
+enum houseType {
+  House = 'House',
+  Apartment = 'Apartment',
+  Farm = 'Farm',
+}
+
+enum houseOwnership {
+  Owned = 'Owned',
+  Rented = 'Rented',
+}
+
+enum houseOuterSpace {
+  None = 'None',
+  Small = 'Small',
+  Medium = 'Medium',
+  Large = 'Large',
+}
 
 export class AdoptionDTO {
   @IsString()

@@ -76,6 +76,17 @@ export class PetController {
     @Query('take', new DefaultValuePipe(10), ParseIntPipe) take: number,
   ) {
     return this.petService.findAll({ skip, take });
+  }
+
+  @Get('with-relations')
+  @ApiOperation({ summary: 'Get all active pets with full relations (public)' })
+  @ApiResponse({ status: 200, description: 'List of active pets with relations returned.' })
+  @ApiResponse({ status: 204, description: 'No pets found.' })
+  findAllWithRelations(
+    @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip: number,
+    @Query('take', new DefaultValuePipe(10), ParseIntPipe) take: number,
+  ): Promise<PetWithRelations[]> {
+    return this.petService.findAllWithRelations({ skip, take });
   } ///----- Admin ---//
 
   @Get('all')

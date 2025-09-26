@@ -17,7 +17,7 @@ import { AdoptionStatus } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 
 @Controller('adoptions')
-// @UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard)
 export class AdoptionsController {
   constructor(private readonly adoptionsService: AdoptionsService) {}
 
@@ -26,7 +26,7 @@ export class AdoptionsController {
   async create(@Req() req, @Body() payload: AdoptionDTO) {
     const { id } = req.user;
 
-    await this.adoptionsService.create(id, payload);
+    return await this.adoptionsService.create(id, payload);
   }
 
   @Patch(':id')
