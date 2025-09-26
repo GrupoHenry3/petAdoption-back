@@ -228,7 +228,39 @@ export class UsersService {
           isActive: true,
           createdAt: true,
           updatedAt: true,
-          adoptions: true,
+          adoptions: {
+            include: {
+              pet: {
+                select: {
+                  id: true,
+                  name: true,
+                  age: true,
+                  gender: true,
+                  size: true,
+                  avatarURL: true,
+                  breed: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                  species: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
+              shelter: {
+                select: {
+                  id: true,
+                  name: true,
+                  city: true,
+                  state: true,
+                  country: true,
+                },
+              },
+            },
+          },
           favoritePets: true,
           shelter: {
             select: {

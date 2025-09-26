@@ -129,16 +129,113 @@ export class AdoptionsService {
     try {
       const adoption = await this.prisma.adoption.findUnique({
         where: { id: isAdoptionValid.id },
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              phoneNumber: true,
+              avatarURL: true,
+            },
+          },
+          pet: {
+            select: {
+              id: true,
+              name: true,
+              age: true,
+              gender: true,
+              size: true,
+              avatarURL: true,
+              breed: {
+                select: {
+                  name: true,
+                },
+              },
+              species: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+          shelter: {
+            select: {
+              id: true,
+              name: true,
+              city: true,
+              state: true,
+              country: true,
+            },
+          },
+        },
       });
 
-      this.logger.log('Adoptions fetched successfully.');
+      this.logger.log('Adoption fetched successfully with relations.');
 
       return {
         statusCode: HttpStatus.OK,
         data: adoption,
       };
     } catch (error) {
-      this.logger.error('Error fetching adoptions.');
+      this.logger.error('Error fetching adoption.');
+    }
+  }
+
+  async findByShelter(shelterId: string) {
+    try {
+      const adoptions = await this.prisma.adoption.findMany({
+        where: { shelterID: shelterId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              phoneNumber: true,
+              avatarURL: true,
+            },
+          },
+          pet: {
+            select: {
+              id: true,
+              name: true,
+              age: true,
+              gender: true,
+              size: true,
+              avatarURL: true,
+              breed: {
+                select: {
+                  name: true,
+                },
+              },
+              species: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+          shelter: {
+            select: {
+              id: true,
+              name: true,
+              city: true,
+              state: true,
+              country: true,
+            },
+          },
+        },
+      });
+
+      this.logger.log(`Adoptions for shelter ${shelterId} fetched successfully with relations.`);
+
+      return {
+        statusCode: HttpStatus.OK,
+        data: adoptions,
+      };
+    } catch (error) {
+      this.logger.error('Error fetching adoptions by shelter.');
     }
   }
 

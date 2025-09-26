@@ -245,6 +245,39 @@ export class SheltersService {
           phoneNumber: true,
           website: true,
           description: true,
+          adoptions: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  fullName: true,
+                  email: true,
+                  phoneNumber: true,
+                  avatarURL: true,
+                },
+              },
+              pet: {
+                select: {
+                  id: true,
+                  name: true,
+                  age: true,
+                  gender: true,
+                  size: true,
+                  avatarURL: true,
+                  breed: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                  species: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       });
 

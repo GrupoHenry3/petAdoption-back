@@ -17,7 +17,7 @@ import { AdoptionStatus } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 
 @Controller('adoptions')
-// @UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard)
 export class AdoptionsController {
   constructor(private readonly adoptionsService: AdoptionsService) {}
 
@@ -30,7 +30,7 @@ export class AdoptionsController {
   }
 
   @Patch(':id')
-  async patch(@Param('id') id: string, payload: UpdateAdoptionDTO) {
+  async patch(@Param('id') id: string, @Body() payload: UpdateAdoptionDTO) {
     return await this.adoptionsService.updateStatus(id, payload);
   }
 
@@ -42,6 +42,11 @@ export class AdoptionsController {
   @Get()
   async findAll() {
     return await this.adoptionsService.findAll();
+  }
+
+  @Get('shelter/:shelterId')
+  async findByShelter(@Param('shelterId') shelterId: string) {
+    return await this.adoptionsService.findByShelter(shelterId);
   }
 
   @Get(':id')
