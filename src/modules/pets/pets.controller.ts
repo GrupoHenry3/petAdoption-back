@@ -112,7 +112,7 @@ export class PetController {
   @ApiParam({ name: 'id', type: String })
   @ApiResponse({ status: 200, description: 'Pet found.' })
   @ApiResponse({ status: 404, description: 'Pet not found.' })
-  findOne(@Param('id') id: string): Promise<PetWithRelations> {
+  findOne(@Param('id') id: string) {
     return this.petService.findOne(id);
   }
 
@@ -122,7 +122,7 @@ export class PetController {
   @ApiParam({ name: 'id', type: String })
   @ApiResponse({ status: 200, description: 'Updated pet.' })
   @ApiResponse({ status: 404, description: 'Pet not found.' })
-  update(@Param('id') id: string, @Body() data: Prisma.PetUpdateInput): Promise<PetWithRelations> {
+  update(@Param('id') id: string, @Body() data: Prisma.PetUpdateInput) {
     return this.petService.update(id, data);
   }
 
@@ -132,16 +132,15 @@ export class PetController {
   @ApiParam({ name: 'id', type: String })
   @ApiResponse({ status: 200, description: 'Pet disabled.' })
   @ApiResponse({ status: 404, description: 'Pet not found.' })
-  async remove(@Param('id') id: string): Promise<{ message: string; pet: PetWithRelations }> {
-    const pet = await this.petService.remove(id);
-    return { message: `Pet with ID ${id} marked as inactive.`, pet };
+  async remove(@Param('id') id: string) {
+    await this.petService.remove(id);
   }
 
   @Get('shelter/:id')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all pets by shelter (active and inactive)' })
   @ApiResponse({ status: 200, description: 'List of pets returned.' })
-  findAllByShelter(@Param('id') id: string): Promise<PetWithRelations[]> {
+  findAllByShelter(@Param('id') id: string) {
     return this.petService.findAllByShelter(id);
   }
 }

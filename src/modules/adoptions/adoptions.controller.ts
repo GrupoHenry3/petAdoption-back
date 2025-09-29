@@ -13,7 +13,6 @@ import {
 } from '@nestjs/common';
 import { AdoptionsService } from './adoptions.service';
 import { AdoptionDTO, UpdateAdoptionDTO } from './adoptions.dto';
-import { AdoptionStatus } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 
 @Controller('adoptions')

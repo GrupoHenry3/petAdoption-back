@@ -190,6 +190,23 @@ export class UsersService {
           isActive: true,
           createdAt: true,
           updatedAt: true,
+          adoptions: {
+            select: {
+              id: true,
+              pet: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+              shelter: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
         },
       });
 
@@ -228,6 +245,7 @@ export class UsersService {
           isActive: true,
           createdAt: true,
           updatedAt: true,
+<<<<<<< HEAD
           adoptions: {
             include: {
               pet: {
@@ -261,7 +279,28 @@ export class UsersService {
               },
             },
           },
+=======
+>>>>>>> origin/dev
           favoritePets: true,
+          adoptions: {
+            select: {
+              id: true,
+              status: true,
+              pet: {
+                select: {
+                  id: true,
+                  name: true,
+                  avatarURL: true,
+                },
+              },
+              shelter: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
           shelter: {
             select: {
               id: true,
@@ -290,4 +329,6 @@ export class UsersService {
   async findByEmail(email: string) {
     return await this.prisma.user.findUnique({ where: { email: email } });
   }
+
+  async findCurrentUser(userId: string) {}
 }

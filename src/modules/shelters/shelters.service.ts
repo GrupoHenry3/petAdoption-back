@@ -17,9 +17,12 @@ export class SheltersService {
   async create(payload: ShelterDTO, userID: string) {
     const existingShelter = await this.prisma.shelter.findUnique({
       where: { userID: userID },
+      select: { id: true },
     });
 
-    if (existingShelter) throw new ConflictException('This user already manages a shelter');
+    if (existingShelter) {
+      throw new ConflictException('This user already manages a shelter');
+    }
 
     try {
       const tx = await this.prisma.$transaction(async (prisma) => {
@@ -65,13 +68,18 @@ export class SheltersService {
   }
 
   async update(id: string, payload: UpdateShelterDTO) {
-    const shelter = await this.prisma.shelter.findUnique({ where: { id: id } });
+    const shelter = await this.prisma.shelter.findUnique({
+      where: { id: id },
+      select: { id: true },
+    });
 
-    if (!shelter) throw new NotFoundException();
+    if (!shelter) {
+      throw new NotFoundException('Shelter not found');
+    }
 
     try {
       const updatedShelter = await this.prisma.shelter.update({
-        where: { id: id },
+        where: { id: shelter.id },
         data: { ...payload },
         select: {
           id: true,
@@ -101,7 +109,10 @@ export class SheltersService {
       where: { id: id },
       select: { id: true, userID: true, name: true, isActive: true },
     });
-    if (!shelter) throw new NotFoundException('Shelter not found');
+
+    if (!shelter) {
+      throw new NotFoundException('Shelter not found');
+    }
 
     const user = await this.prisma.user.findUnique({
       where: { id: shelter.userID },
@@ -151,52 +162,56 @@ export class SheltersService {
     }
   }
 
-  async verifyShelter(id: string) {
+
+  async verify(id: string) {
     const shelter = await this.prisma.shelter.findUnique({
       where: { id: id },
-      select: { id: true, name: true, isVerified: true },
+      select: {
+        id: true,
+        name: true,
+        isVerified: true,
+      },
     });
 
-    if (!shelter) throw new NotFoundException('Shelter not found');
+    if (!shelter) {
+      throw new NotFoundException('Shelter not found');
+    }
 
-    const newVerificationStatus = !shelter.isVerified;
+    let status = shelter.isVerified;
 
     try {
-      const updatedShelter = await this.prisma.shelter.update({
+      const verifiedShelter = await this.prisma.shelter.update({
         where: { id: shelter.id },
         data: {
-          isVerified: newVerificationStatus,
-        },
-        select: {
-          id: true,
-          name: true,
-          isVerified: true,
-          updatedAt: true,
+          isActive: !status,
         },
       });
 
-      this.logger.log(`Shelter ${shelter.name} verification status updated to ${newVerificationStatus}`);
+      this.logger.log(`Shelter ${shelter.name} verified successfully`);
 
       return {
-        statusCode: HttpStatus.ACCEPTED,
-        message: `Shelter ${newVerificationStatus ? 'verified' : 'unverified'} successfully`,
-        shelter: updatedShelter,
+        statusCode: HttpStatus.OK,
+        data: verifiedShelter,
       };
     } catch (error) {
-      this.logger.error(`Error updating shelter verification status ${shelter.id}`, error.stack);
-      throw new Error('An error occurred while updating shelter verification status');
+      this.logger.error(`Error verifying shelter ${shelter.name}`);
     }
   }
 
   async delete(id: string) {
-    const shelter = await this.prisma.shelter.findUnique({ where: { id: id } });
+    const shelter = await this.prisma.shelter.findUnique({
+      where: { id: id },
+      select: { id: true, userID: true, name: true },
+    });
 
-    if (!shelter) throw new NotFoundException('Shelter not found');
+    if (!shelter) {
+      throw new NotFoundException('Shelter not found');
+    }
 
     try {
       const tx = await this.prisma.$transaction(async (prisma) => {
         const updatedShelter = await prisma.shelter.update({
-          where: { id: shelter?.id },
+          where: { id: shelter.id },
           data: {
             isActive: false,
           },
@@ -254,9 +269,6 @@ export class SheltersService {
           website: true,
           description: true,
           isVerified: true,
-          isActive: true,
-          createdAt: true,
-          updatedAt: true,
         },
       });
 
@@ -269,6 +281,7 @@ export class SheltersService {
   async findOne(id: string) {
     const isShelter = await this.prisma.shelter.findUnique({
       where: { id: id },
+      select: { id: true },
     });
 
     if (!isShelter) throw new NotFoundException('Shelter not found');

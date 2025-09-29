@@ -42,9 +42,11 @@ export class SheltersController {
 
   @Patch(':id/verify')
   @HttpCode(HttpStatus.ACCEPTED)
-  @UseGuards(JwtAuthGuard, AdminGuard)
-  async verifyShelter(@Param('id') id: string) {
-    return await this.sheltersService.verifyShelter(id);
+
+  @UseGuards(AdminGuard)
+  async verify(@Param('id') id: string) {
+    return await this.sheltersService.verify(id);
+
   }
 
   @Delete(':id')

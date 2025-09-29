@@ -91,7 +91,10 @@ export class DonationsService {
         donation.amount,
       );
 
-      return checkout.url;
+      return {
+        sessionUrl: checkout.url,
+        sessionId: checkout.id,
+      };
     } catch (error) {
       this.logger.error(`Error creating donation: ${error.message}`, error.stack);
       throw new InternalServerErrorException('An unexpected error has ocurred');
