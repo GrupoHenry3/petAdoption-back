@@ -54,6 +54,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid password');
     }
 
+    // Verificar si el usuario está activo
+    if (!user.isActive) {
+      throw new UnauthorizedException('User account is deactivated');
+    }
+
     const jwt = {
       sub: user.id,
       userType: user.userType,
@@ -77,6 +82,11 @@ export class AuthService {
 
     if (!user) {
       throw new NotFoundException('User not found');
+    }
+
+    // Verificar si el usuario está activo
+    if (!user.isActive) {
+      throw new UnauthorizedException('User account is deactivated');
     }
 
     const jwt = {

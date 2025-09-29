@@ -151,6 +151,43 @@ export class SheltersService {
     }
   }
 
+  async verifyShelter(id: string) {
+    const shelter = await this.prisma.shelter.findUnique({
+      where: { id: id },
+      select: { id: true, name: true, isVerified: true },
+    });
+
+    if (!shelter) throw new NotFoundException('Shelter not found');
+
+    const newVerificationStatus = !shelter.isVerified;
+
+    try {
+      const updatedShelter = await this.prisma.shelter.update({
+        where: { id: shelter.id },
+        data: {
+          isVerified: newVerificationStatus,
+        },
+        select: {
+          id: true,
+          name: true,
+          isVerified: true,
+          updatedAt: true,
+        },
+      });
+
+      this.logger.log(`Shelter ${shelter.name} verification status updated to ${newVerificationStatus}`);
+
+      return {
+        statusCode: HttpStatus.ACCEPTED,
+        message: `Shelter ${newVerificationStatus ? 'verified' : 'unverified'} successfully`,
+        shelter: updatedShelter,
+      };
+    } catch (error) {
+      this.logger.error(`Error updating shelter verification status ${shelter.id}`, error.stack);
+      throw new Error('An error occurred while updating shelter verification status');
+    }
+  }
+
   async delete(id: string) {
     const shelter = await this.prisma.shelter.findUnique({ where: { id: id } });
 
@@ -216,6 +253,10 @@ export class SheltersService {
           phoneNumber: true,
           website: true,
           description: true,
+          isVerified: true,
+          isActive: true,
+          createdAt: true,
+          updatedAt: true,
         },
       });
 
@@ -245,6 +286,10 @@ export class SheltersService {
           phoneNumber: true,
           website: true,
           description: true,
+          isVerified: true,
+          isActive: true,
+          createdAt: true,
+          updatedAt: true,
           adoptions: {
             include: {
               user: {

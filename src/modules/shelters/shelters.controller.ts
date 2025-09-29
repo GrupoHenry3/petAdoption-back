@@ -15,6 +15,7 @@ import {
 import { SheltersService } from './shelters.service';
 import { ShelterDTO, GetSheltersDTO, UpdateShelterDTO } from './shelters.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
+import { AdminGuard } from '../auth/guards/admin.guard';
 
 @Controller('shelters')
 export class SheltersController {
@@ -37,6 +38,13 @@ export class SheltersController {
   @HttpCode(HttpStatus.ACCEPTED)
   async updateStatus(@Param('id') id: string) {
     return await this.sheltersService.updateStatus(id);
+  }
+
+  @Patch(':id/verify')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async verifyShelter(@Param('id') id: string) {
+    return await this.sheltersService.verifyShelter(id);
   }
 
   @Delete(':id')
