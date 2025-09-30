@@ -14,7 +14,7 @@ import { MailService } from '../mail/mail.service';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       global: true,
-      useFactory: async () => ({
+      useFactory: () => ({
         secret: `${process.env.JWT_SECRET_TOKEN}`,
         signOptions: { expiresIn: '1h' },
       }),

@@ -21,7 +21,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { PetWithRelations } from './types/pet.types';
+import { PetWithRelations } from './pet.types';
 
 @Controller('pets')
 @ApiTags('Pets - endpoints / routes')

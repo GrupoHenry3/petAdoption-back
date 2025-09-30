@@ -12,7 +12,7 @@ import {
 import { AuthService } from './auth.service';
 import { GoogleAuthGuard } from './guards/google.guard';
 import { CreateUserDTO, SignInDTO } from '../users/user.dto';
-import type { Request, Response } from 'express';
+import type { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -61,7 +61,7 @@ export class AuthController {
 
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
-  async googleCallback(@Req() req, @Res() res) {
+  async googleCallback(@Req() req, @Res() res: Response) {
     const result = await this.authService.googleSignIn(req.user.id);
 
     res.cookie('access_token', result.accessToken, {
