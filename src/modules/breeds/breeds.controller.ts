@@ -1,8 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { BreedsService } from './breeds.service';
 import { BreedDTO, UpdateBreedDTO } from './breeds.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt.guard';
+import { UserTypeGuard } from '../auth/guards/user-type.guard';
+import { UserTypes } from '../auth/auth.decorator';
+import { UserType } from '@prisma/client';
 
 @Controller('breeds')
+@UseGuards(JwtAuthGuard, UserTypeGuard)
+@UserTypes(UserType.Shelter)
 export class BreedsController {
   constructor(private readonly breedsService: BreedsService) {}
 

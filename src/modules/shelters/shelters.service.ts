@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ShelterDTO, GetSheltersDTO, UpdateShelterDTO } from './shelters.dto';
-import { Prisma } from '@prisma/client';
+import { Prisma, UserType } from '@prisma/client';
 import { MailService } from '../mail/mail.service';
 
 @Injectable()
@@ -127,7 +127,7 @@ export class SheltersService {
     if (!user) throw new NotFoundException('User not found');
 
     const shelterStatus = !shelter.isActive;
-    let userType: any;
+    let userType: UserType;
 
     if (user.userType === 'Shelter') {
       userType = 'User';
@@ -192,7 +192,7 @@ export class SheltersService {
         },
       });
 
-      this.logger.log(`Shelter ${shelter.name} verified successfully`);
+      this.logger.log(`Verified shelter ${shelter.id}`);
 
       await this.mailService.shelterVerificationConfirmation(shelter.user.email, shelter.name);
 
@@ -236,7 +236,7 @@ export class SheltersService {
         return { updatedShelter };
       });
 
-      this.logger.log(`Shelter ${shelter.name} deactivated successfully`);
+      this.logger.log(`Disabled shelter ${shelter.id}`);
 
       return {
         statusCode: HttpStatus.ACCEPTED,

@@ -10,17 +10,23 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
   Patch,
+  UseGuards,
 } from '@nestjs/common';
 import { PetService } from './pets.service';
-import { Pet, Prisma } from '@prisma/client';
+import { Pet, Prisma, UserType } from '@prisma/client';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { PetWithRelations } from './pet.types';
+import { JwtAuthGuard } from '../auth/guards/jwt.guard';
+import { UserTypeGuard } from '../auth/guards/user-type.guard';
+import { UserTypes } from '../auth/auth.decorator';
 
 @Controller('pets')
 export class PetController {
   constructor(private readonly petService: PetService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard, UserTypeGuard)
+  @UserTypes(UserType.Shelter)
   @ApiOperation({ summary: 'Create a new pet' })
   @ApiResponse({ status: 201, description: 'Pet created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid data.' })
@@ -60,6 +66,7 @@ export class PetController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard, UserTypeGuard)
   @ApiOperation({ summary: 'Get all active pets (public)' })
   @ApiResponse({ status: 200, description: 'List of active pets returned.' })
   @ApiResponse({ status: 204, description: 'No pets found.' })
@@ -82,6 +89,8 @@ export class PetController {
   }
 
   @Patch('restore/:id')
+  @UseGuards(JwtAuthGuard, UserTypeGuard)
+  @UserTypes(UserType.Shelter)
   @ApiOperation({ summary: 'Restore a soft-deleted pet (admin only)' })
   @ApiParam({
     name: 'id',
@@ -99,6 +108,7 @@ export class PetController {
   async restore(@Param('id') id: string) {
     return this.petService.restore(id);
   }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a pet by ID' })
   @ApiParam({ name: 'id', type: String })
@@ -119,6 +129,8 @@ export class PetController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, UserTypeGuard)
+  @UserTypes(UserType.Shelter)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Deactivate (soft delete) a pet - ADMIN' })
   @ApiParam({ name: 'id', type: String })

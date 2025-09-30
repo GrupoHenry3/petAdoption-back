@@ -50,9 +50,15 @@ export class UserTypeGuard implements CanActivate {
       }
 
       const userType = decodedToken.type as UserType;
+      const siteAdmin = decodedToken.siteAdmin as boolean;
 
       if (!requiredUserTypes.includes(userType)) {
         throw new ForbiddenException('This user is not managing a shelter');
+      }
+
+      // Ignore if user is site admin
+      if (siteAdmin === true) {
+        return true;
       }
 
       return true;

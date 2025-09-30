@@ -16,14 +16,18 @@ import { SheltersService } from './shelters.service';
 import { ShelterDTO, GetSheltersDTO, UpdateShelterDTO } from './shelters.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { AdminGuard } from '../auth/guards/admin.guard';
+import { UserTypeGuard } from '../auth/guards/user-type.guard';
+import { UserTypes } from '../auth/auth.decorator';
+import { UserType } from '@prisma/client';
 
 @Controller('shelters')
+@UseGuards(JwtAuthGuard, UserTypeGuard)
 export class SheltersController {
   constructor(private readonly sheltersService: SheltersService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @UseGuards(JwtAuthGuard)
+  @UserTypes(UserType.User)
   async create(@Body() payload: ShelterDTO, @Req() req: any) {
     return await this.sheltersService.create(payload, req.user.id);
   }
@@ -49,6 +53,7 @@ export class SheltersController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(AdminGuard)
   async delete(@Param('id') id: string) {
     return await this.sheltersService.delete(id);
   }
