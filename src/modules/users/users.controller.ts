@@ -34,8 +34,7 @@ export class UsersController {
 
   @Patch()
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AdminGuard)
-  async update(@Req() req, @Body() payload: UpdateUserDTO) {
+  async update(@Req() req: any, @Body() payload: UpdateUserDTO) {
     return await this.usersService.update(req.user.id, payload);
   }
 
