@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ConflictException,
   HttpStatus,
   Injectable,
@@ -39,7 +38,7 @@ export class AdoptionsService {
         data: newAdoption,
       };
     } catch (error) {
-      this.logger.error('Error creating adoption application.');
+      this.logger.error(`Error creating adoption application: ${error.message}`, error.stack);
     }
   }
 
@@ -68,7 +67,7 @@ export class AdoptionsService {
         data: updatedAdoption,
       };
     } catch (error) {
-      this.logger.error('Error updating adoption status');
+      this.logger.error(`Error updating adoption status: ${error.message}`, error.stack);
     }
   }
 
@@ -79,7 +78,7 @@ export class AdoptionsService {
     });
 
     if (!isAdoptionValid) {
-      throw new NotFoundException('Adoption not found');
+      throw new NotFoundException(`Adoption with id ${id} not found`);
     }
 
     try {
@@ -97,7 +96,7 @@ export class AdoptionsService {
         message: 'Adoption deleted sucessfully',
       };
     } catch (error) {
-      this.logger.error('Error deleting adoption');
+      this.logger.error(`Error deleting adoption: ${error.message}`, error.stack);
     }
   }
 
@@ -112,7 +111,7 @@ export class AdoptionsService {
         data: adoptions,
       };
     } catch (error) {
-      this.logger.error('Error fetching adoptions.');
+      this.logger.error(`Error fetching adoptions: ${error.message}`, error.stack);
     }
   }
 
@@ -138,104 +137,7 @@ export class AdoptionsService {
         data: adoption,
       };
     } catch (error) {
-      this.logger.error('Error fetching adoptions.');
+      this.logger.error(`Error fetching adoption: ${error.message}`, error.stack);
     }
   }
-
-  // async createAdoption(newAdoption: CreateAdoptionDto): Promise<IAdoption> {
-  //   const adoptions: IAdoption[] = await this.adoptionsRepository.getAllAdoption();
-  //   const existingPending: IAdoption | null =
-  //     adoptions.find(
-  //       (adoption) =>
-  //         (adoption.userID === newAdoption.userID || adoption.dni === newAdoption.dni) &&
-  //         adoption.status === AdoptionStatus.Pending,
-  //     ) || null;
-
-  //   if (existingPending) {
-  //     throw new BadRequestException(
-  //       'Ya existe una solicitud de adopción pendiente para este usuario.',
-  //     );
-  //   }
-
-  //   const now: Date = new Date();
-  //   const sixMonthsAgo: Date = new Date();
-  //   sixMonthsAgo.setMonth(now.getMonth() - 6);
-
-  //   const rejectionCount: number = adoptions.filter(
-  //     (adoption) =>
-  //       adoption.userID === newAdoption.userID &&
-  //       adoption.status === AdoptionStatus.Rejected &&
-  //       adoption.rejectedAt &&
-  //       adoption.rejectedAt >= sixMonthsAgo,
-  //   ).length;
-
-  //   if (rejectionCount >= 3) {
-  //     throw new BadRequestException(
-  //       'Has alcanzado 3 rechazos en los últimos 6 meses. No puedes realizar nuevas solicitudes hasta que pase ese periodo.',
-  //     );
-  //   }
-
-  //   return await this.adoptionsRepository.createAdoption(newAdoption);
-  // }
-
-  // async updateAdoptionStatus(
-  //   id: string,
-  //   status: AdoptionStatus,
-  //   rejectionReason?: string,
-  // ): Promise<IAdoption | null> {
-  //   // 1️⃣ Verificar existencia
-  //   const adoption: IAdoption | null = await this.adoptionsRepository.getByIdAdoption(id);
-  //   if (!adoption) {
-  //     throw new NotFoundException(`No se encontró la adopción con id ${id}`);
-  //   }
-
-  //   // 2️⃣ Validar transición de estado
-  //   const validTransitions: Record<EAdoptionStatus, EAdoptionStatus[]> = {
-  //     [EAdoptionStatus.PENDING]: [EAdoptionStatus.APPROVED, EAdoptionStatus.REJECTED, EAdoptionStatus.WITHDRAWN],
-  //     [EAdoptionStatus.APPROVED]: [EAdoptionStatus.WITHDRAWN],
-  //     [EAdoptionStatus.REJECTED]: [],
-  //     [EAdoptionStatus.WITHDRAWN]: [],
-  //   };
-
-  //   const allowedNext: EAdoptionStatus[] = validTransitions[adoption.status] || [];
-  //   if (!allowedNext.includes(status)) {
-  //     throw new BadRequestException(`No es posible cambiar de estado "${adoption.status}" a "${status}"`);
-  //   }
-
-  //   // 3️⃣ Validar razón de rechazo
-  //   if (status === EAdoptionStatus.REJECTED && !rejectionReason) {
-  //     throw new BadRequestException('Debe proporcionar una razón de rechazo al rechazar la solicitud.');
-  //   }
-
-  //   // 4️⃣ Actualizar
-  //   return await this.adoptionsRepository.updateAdoptionStatus(id, status, rejectionReason);
-  // }
-
-  // async updateAdoption(id: string, updateData: Partial<IAdoption>): Promise<IAdoption> {
-  //   if (!updateData || Object.keys(updateData).length === 0) {
-  //     throw new BadRequestException('Debe enviar al menos un campo para actualizar.');
-  //   }
-
-  //   const updated: IAdoption | null = await this.adoptionsRepository.updateAdoption(id, updateData);
-  //   if (!updated) {
-  //     throw new NotFoundException(`No se encontró la adopción con ID ${id}`);
-  //   }
-  //   return updated;
-  // }
-
-  // async deleteAdoption(id: string): Promise<object> {
-  //   const deleted: boolean = await this.adoptionsRepository.deleteAdoption(id);
-  //   if (!deleted) {
-  //     throw new NotFoundException(`No se encontró la adopción con ID ${id}`);
-  //   }
-  //   return { message: `La adopción con ID ${id} ha sido eliminada exitosamente` };
-  // }
-
-  // async adoptionIsActive(id: string): Promise<IAdoption> {
-  //   const updated: IAdoption | null = await this.adoptionsRepository.adoptionIsActive(id);
-  //   if (!updated) {
-  //     throw new NotFoundException(`No se encontró la adopción con ID ${id}`);
-  //   }
-  //   return updated;
-  // }
 }
