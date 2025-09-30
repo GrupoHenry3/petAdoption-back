@@ -20,7 +20,9 @@ export class AuthService {
       select: { id: true },
     });
 
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
 
     try {
       const res = await this.prisma.user.findUnique({
@@ -46,6 +48,10 @@ export class AuthService {
 
     if (!user) {
       throw new NotFoundException(`${payload.email} not found`);
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException('User is inactive');
     }
 
     const isPasswordValid = await compare(payload.password, user.password);
@@ -77,6 +83,10 @@ export class AuthService {
 
     if (!user) {
       throw new NotFoundException('User not found');
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException('User is inactive');
     }
 
     const jwt = {

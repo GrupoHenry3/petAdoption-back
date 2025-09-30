@@ -139,7 +139,7 @@ export class PetService {
     return this.prisma.pet.findMany({
       skip,
       take,
-      where, //no filtramos por isActive
+      where,
       orderBy,
       include: {
         photos: true,

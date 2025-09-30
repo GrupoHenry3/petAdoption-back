@@ -13,18 +13,10 @@ import {
 } from '@nestjs/common';
 import { PetService } from './pets.service';
 import { Pet, Prisma } from '@prisma/client';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiOperation,
-  ApiParam,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { PetWithRelations } from './pet.types';
 
 @Controller('pets')
-@ApiTags('Pets - endpoints / routes')
 export class PetController {
   constructor(private readonly petService: PetService) {}
 
@@ -76,7 +68,7 @@ export class PetController {
     @Query('take', new DefaultValuePipe(10), ParseIntPipe) take: number,
   ) {
     return this.petService.findAll({ skip, take });
-  } ///----- Admin ---//
+  }
 
   @Get('all')
   @ApiBearerAuth()
