@@ -46,7 +46,7 @@ export class AuthController {
 
   @Post('signout')
   @HttpCode(HttpStatus.OK)
-  async signOut(@Res({ passthrough: true }) res: Response) {
+  signOut(@Res({ passthrough: true }) res: Response) {
     res.clearCookie('access_token');
 
     return {
@@ -67,7 +67,7 @@ export class AuthController {
     res.cookie('access_token', result.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'none',
       maxAge: 60 * 60 * 1000,
     });
 

@@ -29,21 +29,25 @@ export class AdoptionsController {
   }
 
   @Patch(':id')
+  @HttpCode(HttpStatus.OK)
   async patch(@Param('id') id: string, payload: UpdateAdoptionDTO) {
     return await this.adoptionsService.updateStatus(id, payload);
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.OK)
   async delete(@Param('id') id: string) {
     return await this.adoptionsService.delete(id);
   }
 
   @Get()
+  @HttpCode(HttpStatus.OK)
   async findAll() {
     return await this.adoptionsService.findAll();
   }
 
   @Get(':id')
+  @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
     return await this.adoptionsService.findOne(id);
   }
