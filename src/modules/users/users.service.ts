@@ -49,9 +49,7 @@ export class UsersService {
 
     try {
       const user = await this.prisma.user.create({ data: newUser });
-
       this.logger.log('User created successfully');
-
       await this.mailService.signUpConfirmation(user.fullName, user.email);
 
       return {
@@ -64,7 +62,7 @@ export class UsersService {
         },
       };
     } catch (error) {
-      this.logger.error(`Error creating user: ${error.message}`, error.stack);
+      this.logger.error('Failed to create user', error);
       throw new InternalServerErrorException('An unexpected error occurred during user creation');
     }
   }
@@ -100,7 +98,7 @@ export class UsersService {
 
       return user;
     } catch (error) {
-      this.logger.error(`Error creating user: ${error.message}`, error.stack);
+      this.logger.error(`Failed to update user: ${id}`, error);
       throw new BadRequestException('An error has ocurred');
     }
   }
@@ -120,10 +118,7 @@ export class UsersService {
         },
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-
-      this.logger.error(`Error updating user status: ${errorMessage}`, errorStack);
+      this.logger.error(`Failed to update status for user: ${id}`, error);
       throw new BadRequestException('An error has ocurred');
     }
   }
@@ -210,11 +205,12 @@ export class UsersService {
         },
       });
 
-      this.logger.log('Fetched information for all users');
+      this.logger.log('Fetched data for all users');
 
       return users;
     } catch (error) {
-      this.logger.error(`Error fetching users: ${error.message}`, error.stack);
+      this.logger.error(`Failed to fetch data for all users`, error);
+      throw new BadRequestException('An error has ocurred');
     }
   }
 
@@ -282,17 +278,12 @@ export class UsersService {
         },
       });
 
-      this.logger.log(`Fetched information for user ${id}`);
+      this.logger.log(`Fetched data for user ${id}`);
 
       return user;
     } catch (error) {
-      this.logger.error(`Error fetching user: ${error.message}`, error.stack);
+      this.logger.error(`Failed to fetch data for user: ${id}`, error);
+      throw new BadRequestException('An error has ocurred');
     }
   }
-
-  async findByEmail(email: string) {
-    return await this.prisma.user.findUnique({ where: { email: email } });
-  }
-
-  async findCurrentUser(userId: string) {}
 }

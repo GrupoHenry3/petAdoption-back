@@ -25,13 +25,6 @@ export class UsersController {
   private readonly logger = new Logger(UsersController.name);
   constructor(private readonly usersService: UsersService) {}
 
-  // @Post()
-  // @HttpCode(HttpStatus.CREATED)
-  // @UseGuards(AdminGuard)
-  // async create(@Body() payload: CreateUserDTO) {
-  //   return await this.usersService.create(payload);
-  // }
-
   @Patch(':id/status')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AdminGuard)

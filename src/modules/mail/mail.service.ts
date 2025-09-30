@@ -17,6 +17,18 @@ export class MailService {
     });
   }
 
+  async shelterVerificationConfirmation(shelterEmail: string, shelterName: string) {
+    await this.mailerService.sendMail({
+      to: shelterEmail,
+      from: `Pet Adoption ${process.env.GMAIL_USER}`,
+      subject: 'Shelter Verification Confirmation',
+      template: 'shelterVerificationConfirmation',
+      context: {
+        shelterName: shelterName,
+      },
+    });
+  }
+
   async shelterAdoptionRequest(shelterEmail: string, shelterName: string, requestId: string) {
     await this.mailerService.sendMail({
       to: shelterEmail,
