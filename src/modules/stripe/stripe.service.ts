@@ -29,6 +29,14 @@ export class StripeService {
       mode: 'payment',
       success_url: `${process.env.FRONTEND_URL}/donation/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.FRONTEND_URL}/donation/cancel`,
+      payment_intent_data: {
+        capture_method: 'automatic',
+      },
+      allow_promotion_codes: false,
+      billing_address_collection: 'auto',
+      custom_fields: [],
+      submit_type: 'donate',
+      ui_mode: 'hosted',
     });
 
     return res;
