@@ -60,7 +60,8 @@ export class UserTypeGuard implements CanActivate {
         throw new ForbiddenException('This user is not managing a shelter');
       }
 
-      return true;
+      const hasRequiredType = requiredUserTypes.some((type) => userType === type);
+      return hasRequiredType;
     } catch (error) {
       if (error instanceof JsonWebTokenError) {
         throw new ForbiddenException('Invalid token');
