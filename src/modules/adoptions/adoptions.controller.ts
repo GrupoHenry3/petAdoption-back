@@ -26,6 +26,7 @@ import {
   ApiUnauthorizedResponse,
   ApiNotFoundResponse,
   ApiBearerAuth,
+  ApiNoContentResponse,
 } from '@nestjs/swagger';
 
 @Controller('adoptions')
@@ -76,6 +77,15 @@ export class AdoptionsController {
   @UserTypes(UserType.Shelter)
   async findAll() {
     return await this.adoptionsService.findAll();
+  }
+
+  @ApiOperation({ summary: 'List all adoptions by shelter' })
+  @ApiOkResponse({ description: 'List of all adoption applications', type: [Adoption] })
+  @ApiBadRequestResponse()
+  @Get('shelter/:id')
+  @HttpCode(HttpStatus.OK)
+  async findByShelter(@Param('id') id: string) {
+    return await this.adoptionsService.findByShelter(id);
   }
 
   @ApiOperation({ summary: 'Get a specific adoption application' })

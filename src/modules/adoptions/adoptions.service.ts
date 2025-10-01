@@ -144,6 +144,32 @@ export class AdoptionsService {
     }
   }
 
+  async findByShelter(shelterId: string) {
+    const isShelterValid = await this.prisma.shelter.findUnique({
+      where: { id: shelterId },
+      select: { id: true },
+    });
+
+    if (!isShelterValid) {
+      throw new NotFoundException('Shelter not found');
+    }
+
+    try {
+      const adoptions = await this.prisma.adoption.findMany({
+        where: { shelterID: isShelterValid.id },
+      });
+
+      this.logger.log('Adoptions fetched successfully.');
+
+      return {
+        statusCode: HttpStatus.OK,
+        data: adoptions,
+      };
+    } catch (error) {
+      this.logger.error(`Error fetching adoption: ${error.message}`, error.stack);
+    }
+  }
+
   async findOne(id: string) {
     const isAdoptionValid = await this.prisma.adoption.findUnique({
       where: { id: id },
