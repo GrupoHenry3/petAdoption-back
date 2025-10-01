@@ -30,15 +30,15 @@ import { AdminGuard } from '../auth/guards/admin.guard';
 @Controller('users')
 @UseGuards(JwtAuthGuard)
 @ApiOkResponse()
-@ApiUnauthorizedResponse()
-@ApiBadRequestResponse()
-@ApiNotFoundResponse()
+@ApiUnauthorizedResponse({ description: 'Unauthorized' })
+@ApiBadRequestResponse({ description: 'Bad request' })
 @ApiBearerAuth()
 export class UsersController {
   private readonly logger = new Logger(UsersController.name);
   constructor(private readonly usersService: UsersService) {}
 
   @ApiOperation({ summary: 'Activate or deactivate an user (Admin)' })
+  @ApiOkResponse({ description: 'User updated successfully' })
   @Patch(':id/status')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AdminGuard)
@@ -46,7 +46,8 @@ export class UsersController {
     return await this.usersService.updateUserStatus(id);
   }
 
-  @ApiOperation({ summary: 'Activate or deactivate an user (Admin)' })
+  @ApiOperation({ summary: 'Update current user' })
+  @ApiOkResponse({ description: 'User updated successfully' })
   @Patch()
   @HttpCode(HttpStatus.OK)
   async update(@Req() req: any, @Body() payload: UpdateUserDTO) {
@@ -54,13 +55,15 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'Delete an user' })
+  @ApiOkResponse({ description: 'User deleted successfully' })
+  @ApiNotFoundResponse({ description: 'User not found' })
   @Delete()
   @HttpCode(HttpStatus.OK)
   async delete(@Param('id') id: string, @Req() req) {
     return await this.usersService.delete(req.user.id);
   }
 
-  @ApiOperation({ summary: 'List all users' })
+  @ApiOperation({ summary: 'List all users (Admin)' })
   @Get()
   @HttpCode(HttpStatus.OK)
   @UseGuards(AdminGuard)

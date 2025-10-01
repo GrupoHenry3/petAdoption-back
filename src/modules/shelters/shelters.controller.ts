@@ -29,7 +29,6 @@ import {
 } from '@nestjs/swagger';
 
 @Controller('shelters')
-@UseGuards(JwtAuthGuard, UserTypeGuard)
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
 @ApiBadRequestResponse({ description: 'Bad request' })
 export class SheltersController {
@@ -40,6 +39,7 @@ export class SheltersController {
   @ApiOkResponse({ description: 'Shelter application submitted successfully' })
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @UseGuards(JwtAuthGuard, UserTypeGuard)
   @UserTypes(UserType.User)
   async create(@Body() payload: ShelterDTO, @Req() req: any) {
     return await this.sheltersService.create(payload, req.user.id);
@@ -53,6 +53,7 @@ export class SheltersController {
   @ApiOkResponse({ description: 'Shelter updated successfully', type: Shelter })
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(UserTypeGuard)
   @UserTypes(UserType.Shelter)
   async update(@Param('id') id: string, @Body() payload: UpdateShelterDTO) {
     return await this.sheltersService.update(id, payload);
@@ -63,6 +64,7 @@ export class SheltersController {
   @ApiOkResponse({ description: 'Shelter deactivated successfully' })
   @Patch(':id/status')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(UserTypeGuard)
   @UserTypes(UserType.Shelter)
   async updateStatus(@Param('id') id: string) {
     return await this.sheltersService.updateStatus(id);

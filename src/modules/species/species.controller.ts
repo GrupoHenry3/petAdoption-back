@@ -29,8 +29,6 @@ import {
 } from '@nestjs/swagger';
 
 @Controller('species')
-@UseGuards(JwtAuthGuard, UserTypeGuard)
-@UserTypes(UserType.Shelter)
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
 @ApiBadRequestResponse({ description: 'Bad request' })
@@ -43,6 +41,8 @@ export class SpeciesController {
   })
   @ApiOkResponse({ description: 'Species created successfully' })
   @Post()
+  @UseGuards(JwtAuthGuard, UserTypeGuard)
+  @UserTypes(UserType.Shelter)
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() payload: SpeciesDTO) {
     return this.speciesService.create(payload);
@@ -71,7 +71,7 @@ export class SpeciesController {
   @ApiNotFoundResponse({ description: 'Species not found' })
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AdminGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async update(@Param('id') id: string, @Body() payload: SpeciesDTO) {
     return this.speciesService.update(id, payload);
   }
@@ -81,7 +81,7 @@ export class SpeciesController {
   @ApiNotFoundResponse({ description: 'Species not found' })
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AdminGuard)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async remove(@Param('id') id: string) {
     return this.speciesService.remove(id);
   }
