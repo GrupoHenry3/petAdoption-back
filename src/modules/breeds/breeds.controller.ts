@@ -16,8 +16,6 @@ import {
 } from '@nestjs/swagger';
 
 @Controller('breeds')
-@UseGuards(JwtAuthGuard, UserTypeGuard)
-@UserTypes(UserType.Shelter)
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
 @ApiBadRequestResponse({ description: 'Bad request' })
 export class BreedsController {
@@ -36,6 +34,8 @@ export class BreedsController {
     },
   })
   @ApiOkResponse({ description: 'Breed created successfully', type: Breed })
+  @UseGuards(JwtAuthGuard, UserTypeGuard)
+  @UserTypes(UserType.Shelter)
   @Post()
   async create(@Body() payload: BreedDTO) {
     return this.breedsService.create(payload);
@@ -63,6 +63,8 @@ export class BreedsController {
   })
   @ApiOkResponse({ description: 'Breed updated successfully', type: Breed })
   @ApiNotFoundResponse({ description: 'Breed not found' })
+  @UseGuards(JwtAuthGuard, UserTypeGuard)
+  @UserTypes(UserType.Shelter)
   @Patch(':id')
   async update(@Param('id') id: string, @Body() payload: UpdateBreedDTO) {
     return this.breedsService.update(id, payload);
@@ -71,6 +73,8 @@ export class BreedsController {
   @ApiOperation({ summary: 'Delete a breed' })
   @ApiOkResponse({ description: 'Breed deleted successfully' })
   @ApiNotFoundResponse({ description: 'Breed not found' })
+  @UseGuards(JwtAuthGuard, UserTypeGuard)
+  @UserTypes(UserType.Shelter)
   @Delete(':id')
   async remove(@Param('id') id: string) {
     return this.breedsService.remove(id);
