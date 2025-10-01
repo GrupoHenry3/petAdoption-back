@@ -41,15 +41,13 @@ export class UserTypeGuard implements CanActivate {
     }
 
     try {
-      const decodedToken = this.jwtService.verify(token, {
+      const decodedToken: Record<string, TokenType> = this.jwtService.verify(token, {
         secret: `${process.env.JWT_SECRET_TOKEN}`,
       });
 
       if (!decodedToken || typeof decodedToken !== 'object') {
         throw new ForbiddenException();
       }
-
-      console.log(decodedToken);
 
       const userType = decodedToken.userType as UserType;
       const siteAdmin = decodedToken.siteAdmin as boolean;
