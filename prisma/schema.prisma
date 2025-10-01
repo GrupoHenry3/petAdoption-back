@@ -184,6 +184,8 @@ model Donation {
   user                  User            @relation(fields: [userID], references: [id])
   shelterID             String          @map("shelter_id")
   shelter               Shelter         @relation(fields: [shelterID], references: [id])
+  createdAt             DateTime        @default(now()) @map("created_at")
+  updatedAt             DateTime        @updatedAt @map("updated_at")
 
   @@index([userID])
   @@map("pa_user_donations")

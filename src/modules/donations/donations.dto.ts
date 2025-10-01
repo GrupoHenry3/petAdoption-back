@@ -15,6 +15,12 @@ export class Donation {
 
   @IsString()
   userID: string;
+
+  @IsString()
+  createdAt: string;
+
+  @IsString()
+  updatedAt: string;
 }
 
 export class DonationDTO {
