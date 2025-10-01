@@ -30,6 +30,9 @@ export class PetService {
         id: true,
         name: true,
         avatarURL: true,
+        age: true,
+        size: true,
+        isActive: true,
         breed: {
           select: {
             id: true,
@@ -46,6 +49,9 @@ export class PetService {
           select: {
             id: true,
             name: true,
+            city: true,
+            state: true,
+            country: true,
           },
         },
       },
@@ -81,6 +87,10 @@ export class PetService {
           select: {
             id: true,
             name: true,
+            city: true,
+            state: true,
+            country: true,
+            phoneNumber: true,
           },
         },
         adoption: {
