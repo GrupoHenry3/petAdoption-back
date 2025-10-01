@@ -1,0 +1,165 @@
+<html>
+  <head>
+    <style>
+      :root {
+        --color-accent: rgba(220, 38, 38, 1);
+        --color-background: rgba(255, 255, 255, 1);
+        --color-background-muted: rgba(250, 250, 250, 1);
+        --color-foreground: rgba(34, 34, 34, 1);
+        --color-foreground-muted: rgba(0, 0, 0, 0.5);
+        --color-border: rgba(237, 237, 237, 1);
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        background: #fafafa;
+        color: #0a0a0a;
+      }
+
+      .table {
+        text-align: left;
+        padding: 0;
+        margin: 0;
+        border: 0;
+        min-width: 480px;
+        width: 100%;
+        background: #fafafa;
+      }
+
+      .topline {
+        height: 2px;
+        background: #dc2626;
+      }
+
+      .container {
+        text-align: left;
+        background: #fff;
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 24px;
+        border: 1px solid #ededed;
+      }
+
+      h1 {
+        font-size: 18px;
+        margin-bottom: 16px;
+        color: #dc2626;
+      }
+
+      p {
+        margin: 0;
+        color: #9e9e9e;
+        line-height: 1.5;
+      }
+
+      p:not(:last-of-type) {
+        margin-bottom: 12px;
+      }
+
+      a {
+        color: #dc2626;
+        text-decoration: underline;
+      }
+
+      .button {
+        margin-top: 24px;
+        display: inline-block;
+        border: 0;
+        background: #dc2626;
+        color: #ffffff;
+        border-radius: 4px;
+        padding: 12px 32px;
+        cursor: pointer;
+        font-weight: bold;
+        text-decoration: none;
+      }
+
+      .header {
+        padding: 24px 0;
+        text-align: center;
+      }
+
+      .header > img {
+        border-radius: 4px;
+      }
+
+      .footer {
+        padding: 24px 0;
+        text-align: center;
+      }
+
+      .content {
+        text-align: left;
+        background: #fef2f2;
+        max-width: 95%;
+        margin: 0 auto;
+        padding: 12px;
+        margin-top: 12px;
+        border-left: 4px solid #dc2626;
+      }
+
+      .content p {
+        margin: 0;
+        color: #991b1b;
+      }
+
+      .content p:not(:last-of-type) {
+        margin-bottom: 6px;
+      }
+
+      .content p b {
+        color: #7f1d1d;
+      }
+
+      .error-icon {
+        color: #dc2626;
+        font-size: 24px;
+        margin-bottom: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <table class='table'>
+      <tbody>
+        <tr>
+          <td class='topline'></td>
+        </tr>
+        <tr>
+          <td class='header'>
+            <img alt='logo' src='https://i.imgur.com/Lp4051N.jpeg' height='64' width='64' />
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <div class='container'>
+              <div class='error-icon'>⚠️</div>
+              <h1>Pago no procesado</h1>
+              <p>Hola {{userName}},</p>
+              <p>Lamentamos informarte que tu donación de ${{donationAmount}} para <b>{{shelterName}}</b> no pudo ser procesada.</p>
+              
+              <div class='content'>
+                <p><b>Motivo:</b> {{errorReason}}</p>
+                <p><b>Monto:</b> ${{donationAmount}}</p>
+                <p><b>Refugio:</b> {{shelterName}}</p>
+                <p><b>Fecha:</b> {{donationDate}}</p>
+              </div>
+
+              <p>Por favor, verifica la información de tu tarjeta y vuelve a intentar. Si el problema persiste, contacta a tu banco.</p>
+              
+              <a href='/dashboard/donation' class='button'>Intentar nuevamente</a>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td class='footer'>
+            <p>Si tienes alguna pregunta, no dudes en contactarnos.</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>

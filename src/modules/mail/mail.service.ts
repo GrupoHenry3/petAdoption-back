@@ -84,4 +84,26 @@ export class MailService {
       },
     });
   }
+
+  async paymentFailedNotification(
+    userEmail: string,
+    userName: string,
+    shelterName: string,
+    donationAmount: number,
+    errorReason: string,
+  ) {
+    await this.mailerService.sendMail({
+      to: userEmail,
+      from: `Pet Adoption ${process.env.GMAIL_USER}`,
+      subject: 'Payment failed - Donation not processed',
+      template: 'paymentFailed',
+      context: {
+        userName: userName,
+        shelterName: shelterName,
+        donationAmount: donationAmount,
+        errorReason: errorReason,
+        donationDate: new Date().toLocaleDateString('es-ES'),
+      },
+    });
+  }
 }

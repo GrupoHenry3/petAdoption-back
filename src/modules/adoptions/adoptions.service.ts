@@ -9,11 +9,15 @@ import {
 import { AdoptionDTO, UpdateAdoptionDTO } from './adoptions.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AdoptionStatus } from '@prisma/client';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AdoptionsService {
   private readonly logger = new Logger(AdoptionsService.name);
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+  ) {}
 
   async create(userId: string, payload: AdoptionDTO) {
     const hasAdoptionOpen = await this.prisma.adoption.findFirst({
@@ -34,12 +38,59 @@ export class AdoptionsService {
 
       this.logger.log('Adoption application created successfully.');
 
+      // Obtener información del usuario, mascota y refugio para los emails
+      const adoptionWithRelations = await this.prisma.adoption.findUnique({
+        where: { id: newAdoption.id },
+        include: {
+          user: {
+            select: {
+              fullName: true,
+              email: true,
+            },
+          },
+          pet: {
+            select: {
+              name: true,
+            },
+          },
+          shelter: {
+            select: {
+              name: true,
+              user: {
+                select: {
+                  email: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (adoptionWithRelations) {
+        // Enviar email al refugio
+        await this.mailService.shelterAdoptionRequest(
+          adoptionWithRelations.shelter.user.email,
+          adoptionWithRelations.shelter.name,
+          newAdoption.id,
+        );
+
+        // Enviar email de confirmación al usuario
+        await this.mailService.userAdoptionConfirmation(
+          adoptionWithRelations.user.email,
+          adoptionWithRelations.user.fullName,
+          newAdoption.id,
+        );
+
+        this.logger.log('Adoption emails sent successfully.');
+      }
+
       return {
         statusCode: HttpStatus.CREATED,
         data: newAdoption,
       };
     } catch (error) {
       this.logger.error('Error creating adoption application.');
+      throw error;
     }
   }
 
@@ -103,13 +154,55 @@ export class AdoptionsService {
 
   async findAll() {
     try {
-      const adoptions = await this.prisma.adoption.findMany();
+      const adoptions = await this.prisma.adoption.findMany({
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              phoneNumber: true,
+              avatarURL: true,
+            },
+          },
+          pet: {
+            select: {
+              id: true,
+              name: true,
+              age: true,
+              gender: true,
+              size: true,
+              avatarURL: true,
+              breed: {
+                select: {
+                  name: true,
+                },
+              },
+              species: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+          shelter: {
+            select: {
+              id: true,
+              name: true,
+              city: true,
+              state: true,
+              country: true,
+            },
+          },
+        },
+      });
 
       this.logger.log('Adoptions fetched successfully.');
 
       return {
         statusCode: HttpStatus.OK,
         data: adoptions,
+        
       };
     } catch (error) {
       this.logger.error('Error fetching adoptions.');
@@ -214,15 +307,6 @@ export class AdoptionsService {
                   name: true,
                 },
               },
-            },
-          },
-          shelter: {
-            select: {
-              id: true,
-              name: true,
-              city: true,
-              state: true,
-              country: true,
             },
           },
         },

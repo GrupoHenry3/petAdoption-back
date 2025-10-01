@@ -41,7 +41,6 @@ export class UsersController {
 
   @Patch()
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AdminGuard)
   async update(@Req() req, @Body() payload: UpdateUserDTO) {
     return await this.usersService.update(req.user.id, payload);
   }
@@ -62,7 +61,7 @@ export class UsersController {
   @Get('me')
   @HttpCode(HttpStatus.OK)
   async getCurrentUser(@Req() req) {
-    return await this.usersService.findOne(req.user.id);
+    return await this.usersService.findCurrentUser(req.user.id);
   }
 
   @Get(':id')

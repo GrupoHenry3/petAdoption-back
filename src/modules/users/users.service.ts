@@ -245,7 +245,6 @@ export class UsersService {
           isActive: true,
           createdAt: true,
           updatedAt: true,
-<<<<<<< HEAD
           adoptions: {
             include: {
               pet: {
@@ -279,42 +278,7 @@ export class UsersService {
               },
             },
           },
-=======
->>>>>>> origin/dev
           favoritePets: true,
-          adoptions: {
-            select: {
-              id: true,
-              status: true,
-              pet: {
-                select: {
-                  id: true,
-                  name: true,
-                  avatarURL: true,
-                },
-              },
-              shelter: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-            },
-          },
-          shelter: {
-            select: {
-              id: true,
-              name: true,
-              country: true,
-              state: true,
-              city: true,
-              address: true,
-              phoneNumber: true,
-              website: true,
-              description: true,
-              createdAt: true,
-            },
-          },
         },
       });
 
@@ -330,5 +294,86 @@ export class UsersService {
     return await this.prisma.user.findUnique({ where: { email: email } });
   }
 
-  async findCurrentUser(userId: string) {}
+  async findCurrentUser(userId: string) {
+    try {
+      const currentUser = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          email: true,
+          fullName: true,
+          country: true,
+          city: true,
+          address: true,
+          phoneNumber: true,
+          avatarURL: true,
+          userType: true,
+          siteAdmin: true,
+          isActive: true,
+          createdAt: true,
+          updatedAt: true,
+          adoptions: {
+            include: {
+              pet: {
+                select: {
+                  id: true,
+                  name: true,
+                  age: true,
+                  gender: true,
+                  size: true,
+                  avatarURL: true,
+                  breed: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                  species: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
+              shelter: {
+                select: {
+                  id: true,
+                  name: true,
+                  city: true,
+                  state: true,
+                  country: true,
+                },
+              },
+            },
+          },
+          favoritePets: true,
+          shelter: {
+            select: {
+              id: true,
+              name: true,
+              country: true,
+              state: true,
+              city: true,
+              address: true,
+              phoneNumber: true,
+              website: true,
+              description: true,
+              isVerified: true,
+              createdAt: true,
+            },
+          },
+        },
+      });
+
+      this.logger.log(`Fetched current user information for ${userId}`);
+
+      if (!currentUser) {
+        throw new NotFoundException('User not found');
+      }
+
+      return currentUser;
+    } catch (error) {
+      this.logger.error(`Error fetching current user: ${error.message}`, error.stack);
+      throw new InternalServerErrorException('An error occurred while fetching user information');
+    }
+  }
 }

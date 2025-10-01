@@ -111,4 +111,136 @@ export class DonationsService {
       );
     }
   }
+
+  async findByUser(userId: string) {
+    try {
+      const donations = await this.prisma.donation.findMany({
+        where: { userID: userId },
+        include: {
+          shelter: {
+            select: {
+              id: true,
+              name: true,
+              city: true,
+              state: true,
+              country: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+      this.logger.log(`Donations for user ${userId} fetched successfully.`);
+      return donations;
+    } catch (error) {
+      this.logger.error(`Error fetching user donations: ${error.message}`, error.stack);
+      throw new InternalServerErrorException(
+        'An unexpected error has ocurred while fetching user donations',
+      );
+    }
+  }
+
+  async findByShelter(shelterId: string) {
+    try {
+      const donations = await this.prisma.donation.findMany({
+        where: { shelterID: shelterId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+      this.logger.log(`Donations for shelter ${shelterId} fetched successfully.`);
+      return donations;
+    } catch (error) {
+      this.logger.error(`Error fetching shelter donations: ${error.message}`, error.stack);
+      throw new InternalServerErrorException(
+        'An unexpected error has ocurred while fetching shelter donations',
+      );
+    }
+  }
+
+  async findUserShelter(userId: string) {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+          shelter: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      });
+
+      return user;
+    } catch (error) {
+      this.logger.error(`Error fetching user shelter: ${error.message}`, error.stack);
+      throw new InternalServerErrorException(
+        'An unexpected error has ocurred while fetching user shelter',
+      );
+    }
+  }
+
+  async handlePaymentFailure(sessionId: string, errorReason: string) {
+    try {
+      // Buscar la donación por sessionID
+      const donation = await this.prisma.donation.findFirst({
+        where: { sessionID: sessionId },
+        include: {
+          user: {
+            select: {
+              fullName: true,
+              email: true,
+            },
+          },
+          shelter: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      });
+
+      if (!donation) {
+        throw new NotFoundException('Donation not found');
+      }
+
+      // Enviar email de notificación de fallo
+      await this.mailService.paymentFailedNotification(
+        donation.user.email,
+        donation.user.fullName,
+        donation.shelter.name,
+        donation.amount,
+        errorReason,
+      );
+
+      this.logger.log(`Payment failure notification sent for donation ${donation.id}`);
+
+      return {
+        message: 'Payment failure notification sent successfully',
+        donation: {
+          id: donation.id,
+          amount: donation.amount,
+          shelterName: donation.shelter.name,
+        },
+      };
+    } catch (error) {
+      this.logger.error(`Error handling payment failure: ${error.message}`, error.stack);
+      throw new InternalServerErrorException(
+        'An unexpected error has ocurred while handling payment failure',
+      );
+    }
+  }
 }
