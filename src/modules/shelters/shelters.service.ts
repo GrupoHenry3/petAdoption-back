@@ -96,8 +96,6 @@ export class SheltersService {
           website: true,
           phoneNumber: true,
           description: true,
-          createdAt: true,
-          updatedAt: true,
         },
       });
 

@@ -13,11 +13,23 @@ import { AuthService } from './auth.service';
 import { GoogleAuthGuard } from './guards/google.guard';
 import { CreateUserDTO, SignInDTO } from '../users/user.dto';
 import type { Response } from 'express';
+import { ApiBody } from '@nestjs/swagger';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @ApiBody({
+    schema: {
+      properties: {
+        fullName: { type: 'string', example: 'Alice' },
+        email: { type: 'string', example: 'name@example.com' },
+        password: { type: 'string', example: 'mypassword123' },
+        confirmedPassword: { type: 'string', example: 'mypassword123' },
+      },
+      required: ['fullName', 'email', 'password', 'confirmedPassword'],
+    },
+  })
   @Post('signup')
   @HttpCode(HttpStatus.CREATED)
   async signUp(@Body() payload: CreateUserDTO) {

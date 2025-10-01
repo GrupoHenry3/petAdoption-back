@@ -1,5 +1,34 @@
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
+export class Shelter {
+  @IsString()
+  id: string;
+
+  @IsString()
+  name: string;
+
+  @IsString()
+  country: string;
+
+  @IsString()
+  state: string;
+
+  @IsString()
+  city: string;
+
+  @IsString()
+  address: string;
+
+  @IsString()
+  phoneNumber: string;
+
+  @IsString()
+  website: string;
+
+  @IsString()
+  description: string;
+}
+
 export class ShelterDTO {
   @IsNotEmpty()
   @IsString()

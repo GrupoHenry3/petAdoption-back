@@ -42,6 +42,35 @@ export class AdoptionsService {
     }
   }
 
+  async withdrawApplication(id: string) {
+    const isAdoptionValid = await this.prisma.adoption.findUnique({
+      where: { id: id },
+      select: { id: true },
+    });
+
+    if (!isAdoptionValid) {
+      throw new NotFoundException('Adoption not found');
+    }
+
+    try {
+      const withdrawnAdoption = await this.prisma.adoption.update({
+        where: { id: id },
+        data: {
+          status: AdoptionStatus.Withdrawn,
+        },
+      });
+
+      this.logger.log('Adoption application withdrawn successfully.');
+
+      return {
+        statusCode: HttpStatus.OK,
+        data: withdrawnAdoption,
+      };
+    } catch (error) {
+      this.logger.error(`Failed to withdraw application: ${id}`, error);
+    }
+  }
+
   async updateStatus(id: string, payload: UpdateAdoptionDTO) {
     const isAdoptionValid = await this.prisma.adoption.findUnique({
       where: { id: id },
@@ -67,7 +96,7 @@ export class AdoptionsService {
         data: updatedAdoption,
       };
     } catch (error) {
-      this.logger.error(`Error updating adoption status: ${error.message}`, error.stack);
+      this.logger.error(`Failed to update application: ${id}`, error);
     }
   }
 

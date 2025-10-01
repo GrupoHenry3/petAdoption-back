@@ -14,13 +14,26 @@ import {
 } from '@nestjs/common';
 import { PetService } from './pets.service';
 import { Pet, Prisma, UserType } from '@prisma/client';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { PetWithRelations } from './pet.types';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { UserTypeGuard } from '../auth/guards/user-type.guard';
 import { UserTypes } from '../auth/auth.decorator';
 
 @Controller('pets')
+@ApiUnauthorizedResponse({ description: 'Unauthorized' })
+@ApiBadRequestResponse({ description: 'Bad request' })
 export class PetController {
   constructor(private readonly petService: PetService) {}
 
@@ -32,7 +45,6 @@ export class PetController {
   @ApiResponse({ status: 400, description: 'Invalid data.' })
   @ApiBody({
     schema: {
-      type: 'object',
       properties: {
         name: { type: 'string', example: 'Firulais' },
         age: { type: 'integer', example: 3 },
@@ -61,14 +73,15 @@ export class PetController {
       ],
     },
   })
+  @ApiBearerAuth()
   create(@Body() data: Prisma.PetCreateInput): Promise<Pet> {
     return this.petService.create(data);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all active pets (public)' })
-  @ApiResponse({ status: 200, description: 'List of active pets returned.' })
-  @ApiResponse({ status: 204, description: 'No pets found.' })
+  @ApiOperation({ summary: 'List all pets' })
+  @ApiResponse({ status: 200, description: 'List of all active pets' })
+  @ApiNoContentResponse({ description: 'No pets found' })
   findAll(
     @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip: number,
     @Query('take', new DefaultValuePipe(10), ParseIntPipe) take: number,
@@ -92,39 +105,26 @@ export class PetController {
   @Patch('restore/:id')
   @UseGuards(JwtAuthGuard, UserTypeGuard)
   @UserTypes(UserType.Shelter)
-  @ApiOperation({ summary: 'Restore a soft-deleted pet (admin only)' })
-  @ApiParam({
-    name: 'id',
-    type: String,
-    description: 'Unique identifier of the pet to restore',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Pet successfully restored and marked as active',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Pet not found',
-  })
+  @ApiOperation({ summary: 'Restore a soft-deleted pet (Admin)' })
+  @ApiOkResponse({ description: 'Pet successfully restored and marked as active' })
+  @ApiNotFoundResponse({ description: 'Pet not found' })
   async restore(@Param('id') id: string) {
     return this.petService.restore(id);
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a pet by ID' })
-  @ApiParam({ name: 'id', type: String })
-  @ApiResponse({ status: 200, description: 'Pet found.' })
-  @ApiResponse({ status: 404, description: 'Pet not found.' })
+  @ApiOperation({ summary: 'Get a specific pet' })
+  @ApiOkResponse({ description: 'Pet details fetched successfully' })
+  @ApiNotFoundResponse({ description: 'Pet not found' })
   findOne(@Param('id') id: string) {
     return this.petService.findOne(id);
   }
 
   @Put(':id')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Update a pet - ADMIN' })
-  @ApiParam({ name: 'id', type: String })
-  @ApiResponse({ status: 200, description: 'Updated pet.' })
-  @ApiResponse({ status: 404, description: 'Pet not found.' })
+  @ApiOperation({ summary: 'Update a pet (Shelter / Admin)' })
+  @ApiOkResponse({ description: 'Pet updated successfully' })
+  @ApiNotFoundResponse({ description: 'Pet not found' })
   update(@Param('id') id: string, @Body() data: Prisma.PetUpdateInput) {
     return this.petService.update(id, data);
   }
@@ -133,10 +133,10 @@ export class PetController {
   @UseGuards(JwtAuthGuard, UserTypeGuard)
   @UserTypes(UserType.Shelter)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Deactivate (soft delete) a pet - ADMIN' })
+  @ApiOperation({ summary: 'Delete a pet (Shelter / Admin)' })
   @ApiParam({ name: 'id', type: String })
-  @ApiResponse({ status: 200, description: 'Pet disabled.' })
-  @ApiResponse({ status: 404, description: 'Pet not found.' })
+  @ApiResponse({ status: 200, description: 'Pet deleted successfully' })
+  @ApiNotFoundResponse({ description: 'Pet not found' })
   async remove(@Param('id') id: string) {
     await this.petService.remove(id);
   }
@@ -146,7 +146,7 @@ export class PetController {
   @UserTypes(UserType.Shelter)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all pets by shelter (active and inactive)' })
-  @ApiResponse({ status: 200, description: 'List of pets returned.' })
+  @ApiOkResponse({ description: 'List of pets returned' })
   findAllByShelter(@Param('id') id: string) {
     return this.petService.findAllByShelter(id);
   }

@@ -12,7 +12,16 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiConflictResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { GetUsersDTO, UpdateUserDTO } from './user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
@@ -20,11 +29,16 @@ import { AdminGuard } from '../auth/guards/admin.guard';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
+@ApiOkResponse()
+@ApiUnauthorizedResponse()
+@ApiBadRequestResponse()
+@ApiNotFoundResponse()
 @ApiBearerAuth()
 export class UsersController {
   private readonly logger = new Logger(UsersController.name);
   constructor(private readonly usersService: UsersService) {}
 
+  @ApiOperation({ summary: 'Activate or deactivate an user (Admin)' })
   @Patch(':id/status')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AdminGuard)
@@ -32,18 +46,21 @@ export class UsersController {
     return await this.usersService.updateUserStatus(id);
   }
 
+  @ApiOperation({ summary: 'Activate or deactivate an user (Admin)' })
   @Patch()
   @HttpCode(HttpStatus.OK)
   async update(@Req() req: any, @Body() payload: UpdateUserDTO) {
     return await this.usersService.update(req.user.id, payload);
   }
 
+  @ApiOperation({ summary: 'Delete an user' })
   @Delete()
   @HttpCode(HttpStatus.OK)
   async delete(@Param('id') id: string, @Req() req) {
     return await this.usersService.delete(req.user.id);
   }
 
+  @ApiOperation({ summary: 'List all users' })
   @Get()
   @HttpCode(HttpStatus.OK)
   @UseGuards(AdminGuard)
@@ -51,12 +68,14 @@ export class UsersController {
     return await this.usersService.findAll(filters);
   }
 
+  @ApiOperation({ summary: 'Get current user' })
   @Get('me')
   @HttpCode(HttpStatus.OK)
   async getCurrentUser(@Req() req) {
-    return await this.usersService.findOne(req.user.id);
+    return await this.usersService.findCurrentUser(req.user.id);
   }
 
+  @ApiOperation({ summary: 'Get a specific user' })
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
