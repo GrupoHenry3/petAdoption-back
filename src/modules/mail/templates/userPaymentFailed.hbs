@@ -23,7 +23,7 @@
 
       .topline {
         height: 2px;
-        background: #00c950;
+        background: #dc2626;
       }
 
       .container {
@@ -38,6 +38,7 @@
       h1 {
         font-size: 18px;
         margin-bottom: 16px;
+        color: #dc2626;
       }
 
       p {
@@ -51,7 +52,7 @@
       }
 
       a {
-        color: #00c950;
+        color: #dc2626;
         text-decoration: underline;
       }
 
@@ -59,7 +60,7 @@
         margin-top: 24px;
         display: inline-block;
         border: 0;
-        background: #00c950;
+        background: #dc2626;
         color: #ffffff;
         border-radius: 4px;
         padding: 12px 32px;
@@ -81,6 +82,24 @@
         padding: 24px 0;
         text-align: center;
       }
+
+      .content {
+        text-align: left;
+        background: #fef2f2;
+        max-width: 95%;
+        margin: 12px auto;
+        padding: 12px;
+        border-left: 4px solid #dc2626;
+      }
+
+      .content p {
+        margin: 0;
+        color: #991b1b;
+      }
+
+      .content p:not(:last-of-type) {
+        margin-bottom: 6px;
+      }
     </style>
   </head>
   <body>
@@ -97,12 +116,20 @@
         <tr>
           <td>
             <div class='container'>
-              <h1>Dear, {{userName}}</h1>
-              <p>Your adoption application has been submmited, the shelter staff will contact you to
-                schedule a meeting or proceed with the next steps in your adoption process.
-              </p>
-              <p>If desired, your application can be withdrawn at any time.</p>
-              <a href='/{{requestId}}' class='button'>Review application</a>
+              <h1>Payment Rejected</h1>
+              <p>Dear, {{userName}}.</p>
+              <p>We're sorry to inform you that your donation to
+                {{shelterName}}
+                has been rejected.</p>
+              <div class='content'>
+                <p><b>Reason:</b> {{errorReason}}</p>
+                <p><b>Shelter:</b> {{shelterName}}</p>
+                <p><b>Amount:</b> ${{donationAmount}}</p>
+                <p><b>Date:</b> {{donationDate}}</p>
+              </div>
+              <p>Please, verify that the information you have provided is correct and try again. If
+                the issue persists, contact your bank for more information.</p>
+              <a href='/dashboard/donation' class='button'>Try Again</a>
             </div>
           </td>
         </tr>
