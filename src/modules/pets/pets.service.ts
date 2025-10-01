@@ -2,16 +2,19 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma, Pet } from '@prisma/client';
 import { PetWithRelations } from './pet.types';
+import { CreatePetDTO } from './pets.dto';
 
 @Injectable()
 export class PetService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  async create(data: Prisma.PetCreateInput): Promise<Pet> {
-    return this.prisma.pet.create({
-      data,
-      include: { photos: true },
-    });
+  async create(payload: CreatePetDTO) {
+    try {
+      const pet = await this.prisma.pet.create({ data: payload });
+      return pet;
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async findAll(params?: {

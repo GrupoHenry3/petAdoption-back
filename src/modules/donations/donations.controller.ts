@@ -30,6 +30,7 @@ export class DonationsController {
   })
   @ApiCreatedResponse({ description: 'Donation submitted successfully' })
   @Post()
+  @UseGuards(UserTypeGuard)
   @UserTypes(UserType.User)
   async create(@Req() req, @Body() payload: DonationDTO) {
     const { id } = req.user;
@@ -59,6 +60,7 @@ export class DonationsController {
 
   @ApiOperation({ summary: 'Get current user donations' })
   @ApiOkResponse({ description: 'Donation details fetched successfully', type: [Donation] })
+  @UseGuards(UserTypeGuard)
   @UserTypes(UserType.User)
   @Get('my')
   async findMyDonations(@Req() req) {
@@ -69,6 +71,7 @@ export class DonationsController {
 
   @ApiOperation({ summary: 'List all donations by shelter' })
   @ApiOkResponse({ description: 'List of all donations', type: [Donation] })
+  @UseGuards(UserTypeGuard)
   @UserTypes(UserType.Shelter)
   @Get('shelter')
   async findByshelter(@Req() req) {

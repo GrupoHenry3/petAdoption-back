@@ -30,6 +30,7 @@ import { PetWithRelations } from './pet.types';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { UserTypeGuard } from '../auth/guards/user-type.guard';
 import { UserTypes } from '../auth/auth.decorator';
+import { CreatePetDTO } from './pets.dto';
 
 @Controller('pets')
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
@@ -44,38 +45,11 @@ export class PetController {
   @ApiResponse({ status: 201, description: 'Pet created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid data.' })
   @ApiBody({
-    schema: {
-      properties: {
-        name: { type: 'string', example: 'Firulais' },
-        age: { type: 'integer', example: 3 },
-        gender: { type: 'string', example: 'Male' },
-        size: { type: 'string', example: 'Small' },
-        adoptionFee: { type: 'integer', example: 100 },
-        avatarURL: {
-          type: 'string',
-          example: 'https://res.cloudinary.com/demo/image/upload/v123456789/pet.jpg',
-          description: 'Secure URL returned from Cloudinary',
-        },
-        shelterID: { type: 'string', example: 'shltr123' },
-        breedID: { type: 'string', example: 'brd456' },
-        speciesID: { type: 'string', example: 'spc789' },
-      },
-      required: [
-        'name',
-        'age',
-        'gender',
-        'size',
-        'adoptionFee',
-        'avatarURL',
-        'shelterID',
-        'breedID',
-        'speciesID',
-      ],
-    },
+    type: CreatePetDTO,
   })
   @ApiBearerAuth()
-  create(@Body() data: Prisma.PetCreateInput): Promise<Pet> {
-    return this.petService.create(data);
+  async create(@Body() payload: CreatePetDTO) {
+    return await this.petService.create(payload);
   }
 
   @Get()
