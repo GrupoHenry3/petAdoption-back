@@ -41,24 +41,25 @@ export class UserTypeGuard implements CanActivate {
     }
 
     try {
-      const decodedToken: Record<string, TokenType> = this.jwtService.verify(token, {
+      const decodedToken = this.jwtService.verify(token, {
         secret: `${process.env.JWT_SECRET_TOKEN}`,
       });
 
-      if (!decodedToken || typeof decodedToken !== 'object' || !('userType' in decodedToken)) {
+      if (!decodedToken || typeof decodedToken !== 'object') {
         throw new ForbiddenException();
       }
 
-      const userType = decodedToken.type as UserType;
+      console.log(decodedToken);
+
+      const userType = decodedToken.userType as UserType;
       const siteAdmin = decodedToken.siteAdmin as boolean;
+
+      if (siteAdmin === true) {
+        return true;
+      }
 
       if (!requiredUserTypes.includes(userType)) {
         throw new ForbiddenException('This user is not managing a shelter');
-      }
-
-      // Ignore if user is site admin
-      if (siteAdmin === true) {
-        return true;
       }
 
       return true;
