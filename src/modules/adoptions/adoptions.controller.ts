@@ -84,6 +84,7 @@ export class AdoptionsController {
   @ApiBadRequestResponse()
   @Get('shelter/:id')
   @HttpCode(HttpStatus.OK)
+  @UserTypes(UserType.Shelter)
   async findByShelter(@Param('id') id: string) {
     return await this.adoptionsService.findByShelter(id);
   }
