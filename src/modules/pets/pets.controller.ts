@@ -66,7 +66,6 @@ export class PetController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard, UserTypeGuard)
   @ApiOperation({ summary: 'Get all active pets (public)' })
   @ApiResponse({ status: 200, description: 'List of active pets returned.' })
   @ApiResponse({ status: 204, description: 'No pets found.' })
@@ -78,6 +77,8 @@ export class PetController {
   }
 
   @Get('all')
+  @UseGuards(JwtAuthGuard, UserTypeGuard)
+  @UserTypes(UserType.Shelter)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all pets (active and inactive) - (admin only)' })
   @ApiResponse({ status: 200, description: 'List of pets returned.' })
@@ -141,6 +142,8 @@ export class PetController {
   }
 
   @Get('shelter/:id')
+  @UseGuards(JwtAuthGuard, UserTypeGuard)
+  @UserTypes(UserType.Shelter)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all pets by shelter (active and inactive)' })
   @ApiResponse({ status: 200, description: 'List of pets returned.' })
