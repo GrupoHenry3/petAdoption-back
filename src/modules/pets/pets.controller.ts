@@ -30,7 +30,7 @@ import { PetWithRelations } from './pet.types';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { UserTypeGuard } from '../auth/guards/user-type.guard';
 import { UserTypes } from '../auth/auth.decorator';
-import { CreatePetDTO } from './pets.dto';
+import { CreatePetDTO, UpdatePetDTO } from './pets.dto';
 
 @Controller('pets')
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
@@ -94,13 +94,16 @@ export class PetController {
     return this.petService.findOne(id);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Update a pet (Shelter / Admin)' })
+  @ApiOperation({ summary: 'Update a specific pet (Shelter / Admin)' })
+  @ApiBody({
+    type: UpdatePetDTO,
+  })
   @ApiOkResponse({ description: 'Pet updated successfully' })
   @ApiNotFoundResponse({ description: 'Pet not found' })
-  update(@Param('id') id: string, @Body() data: Prisma.PetUpdateInput) {
-    return this.petService.update(id, data);
+  update(@Param('id') id: string, @Body() payload: UpdatePetDTO) {
+    return this.petService.update(id, payload);
   }
 
   @Delete(':id')

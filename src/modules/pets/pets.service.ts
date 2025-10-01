@@ -32,10 +32,16 @@ export class PetService {
       select: {
         id: true,
         name: true,
-        avatarURL: true,
         age: true,
+        gender: true,
         size: true,
-        isActive: true,
+        adoptionFee: true,
+        avatarURL: true,
+        neutered: true,
+        trained: true,
+        goodWithKids: true,
+        goodWithPets: true,
+        isAdopted: true,
         breed: {
           select: {
             id: true,
@@ -108,21 +114,26 @@ export class PetService {
     return pet;
   }
 
-  async update(id: string, data: Prisma.PetUpdateInput): Promise<PetWithRelations> {
-    await this.findOne(id);
-
-    return this.prisma.pet.update({
-      where: { id },
-      data,
-      include: {
-        photos: true,
-        shelter: true,
-        breed: true,
-        species: true,
-        adoption: true,
-        favorites: true,
-      },
+  async update(id: string, payload: Prisma.PetUpdateInput) {
+    const isPetValid = await this.prisma.pet.findUnique({
+      where: { id: id },
+      select: { id: true },
     });
+
+    if (!isPetValid) {
+      throw new NotFoundException(`Pet not found ${id}`);
+    }
+
+    try {
+      const updatedPet = await this.prisma.pet.update({
+        where: { id: isPetValid.id },
+        data: { ...payload },
+      });
+
+      return updatedPet;
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async remove(id: string): Promise<PetWithRelations> {

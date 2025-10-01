@@ -80,6 +80,7 @@ model Pet {
   avatarURL             String          @map("avatar_url")
   neutered              Boolean?        @default(false)
   trained               Boolean?        @default(false)
+  vaccinated            Boolean?        @default(false)
   goodWithKids          Boolean?        @default(false) @map("good_with_kids")
   goodWithPets          Boolean?        @default(false) @map("good_with_pets")
   isAdopted             Boolean         @default(false) @map("is_adopted")
