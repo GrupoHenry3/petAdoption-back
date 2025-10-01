@@ -39,8 +39,7 @@ export class PetController {
   constructor(private readonly petService: PetService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, UserTypeGuard)
-  @UserTypes(UserType.Shelter)
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Create a new pet' })
   @ApiResponse({ status: 201, description: 'Pet created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid data.' })
