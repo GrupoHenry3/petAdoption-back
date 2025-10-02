@@ -71,11 +71,7 @@ export class AdoptionsService {
         tx.adoption.id,
       );
 
-      await this.mail.userAdoptionConfirmation(
-        tx.user.email, 
-        tx.user.fullName, 
-        tx.adoption.id
-      );
+      await this.mail.userAdoptionConfirmation(tx.user.email, tx.user.fullName, tx.adoption.id);
 
       return {
         statusCode: HttpStatus.CREATED,
@@ -175,14 +171,58 @@ export class AdoptionsService {
 
   async findAll() {
     try {
-      const adoptions = await this.prisma.adoption.findMany();
+      const adoptions = await this.prisma.adoption.findMany({
+        omit: {
+          petID: true,
+          userID: true,
+          shelterID: true,
+        },
+        include: {
+          pet: {
+            omit: {
+              shelterID: true,
+              breedID: true,
+              speciesID: true,
+            },
+            include: {
+              breed: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+              species: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+            },
+          },
+          shelter: {
+            select: {
+              id: true,
+              name: true,
+              user: {
+                select: {
+                  avatarURL: true,
+                },
+              },
+            },
+          },
+        },
+      });
 
       this.logger.log('Adoptions fetched successfully.');
 
-      return {
-        statusCode: HttpStatus.OK,
-        data: adoptions,
-      };
+      return adoptions;
     } catch (error) {
       this.logger.error(`Error fetching adoptions: ${error.message}`, error.stack);
     }
