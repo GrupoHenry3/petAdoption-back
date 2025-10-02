@@ -26,10 +26,11 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { PetWithRelations } from './pet.types';
-// import { JwtAuthGuard } from '../auth/guards/jwt.guard';
-// import { UserTypeGuard } from '../auth/guards/user-type.guard';
-// import { UserTypes } from '../auth/auth.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt.guard';
+import { UserTypeGuard } from '../auth/guards/user-type.guard';
+import { UserTypes } from '../auth/auth.decorator';
 import { CreatePetDTO, UpdatePetDTO } from './pets.dto';
+import { UserType } from '@prisma/client';
 
 @Controller('pets')
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
@@ -38,7 +39,8 @@ export class PetController {
   constructor(private readonly petService: PetService) {}
 
   @Post()
-  // @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, UserTypeGuard)
+  @UserTypes(UserType.Shelter)
   @ApiOperation({ summary: 'Create a new pet' })
   @ApiResponse({ status: 201, description: 'Pet created successfully.' })
   @ApiResponse({ status: 400, description: 'Invalid data.' })
@@ -62,8 +64,8 @@ export class PetController {
   }
 
   @Get('all')
-  // @UseGuards(JwtAuthGuard, UserTypeGuard)
-  // @UserTypes(UserType.Shelter)
+  @UseGuards(JwtAuthGuard, UserTypeGuard)
+  @UserTypes(UserType.Shelter)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all pets (active and inactive) - (admin only)' })
   @ApiResponse({ status: 200, description: 'List of pets returned.' })
@@ -75,8 +77,8 @@ export class PetController {
   }
 
   @Patch('restore/:id')
-  // @UseGuards(JwtAuthGuard, UserTypeGuard)
-  // @UserTypes(UserType.Shelter)
+  @UseGuards(JwtAuthGuard, UserTypeGuard)
+  @UserTypes(UserType.Shelter)
   @ApiOperation({ summary: 'Restore a soft-deleted pet (Admin)' })
   @ApiOkResponse({ description: 'Pet successfully restored and marked as active' })
   @ApiNotFoundResponse({ description: 'Pet not found' })
@@ -105,8 +107,8 @@ export class PetController {
   }
 
   @Delete(':id')
-  // @UseGuards(JwtAuthGuard, UserTypeGuard)
-  // @UserTypes(UserType.Shelter)
+  @UseGuards(JwtAuthGuard, UserTypeGuard)
+  @UserTypes(UserType.Shelter)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a pet (Shelter / Admin)' })
   @ApiParam({ name: 'id', type: String })
@@ -117,8 +119,8 @@ export class PetController {
   }
 
   @Get('shelter/:id')
-  // @UseGuards(JwtAuthGuard, UserTypeGuard)
-  // @UserTypes(UserType.Shelter)
+  @UseGuards(JwtAuthGuard, UserTypeGuard)
+  @UserTypes(UserType.Shelter)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all pets by shelter (active and inactive)' })
   @ApiOkResponse({ description: 'List of pets returned' })
