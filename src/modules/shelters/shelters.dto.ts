@@ -55,6 +55,24 @@ export class Shelter {
   })
   @IsString()
   description: string;
+
+  @ApiProperty({
+    type: 'string',
+  })
+  @IsString()
+  avatarURL: string;
+
+  @ApiProperty({
+    type: 'string',
+  })
+  @IsString()
+  createdAt: string;
+
+  @ApiProperty({
+    type: 'string',
+  })
+  @IsString()
+  updatedAt: string;
 }
 
 export class ShelterDTO {
@@ -99,6 +117,27 @@ export class ShelterDTO {
   @IsNotEmpty()
   @IsString()
   country: string;
+
+  @ApiProperty({
+    type: 'string',
+  })
+  @IsString()
+  @IsOptional()
+  website: string;
+
+  @ApiProperty({
+    type: 'string',
+  })
+  @IsString()
+  @IsOptional()
+  description: string;
+
+  @ApiProperty({
+    type: 'string',
+  })
+  @IsString()
+  @IsOptional()
+  avatarURL: string;
 }
 
 export class UpdateShelterDTO {
@@ -157,6 +196,13 @@ export class UpdateShelterDTO {
   @IsOptional()
   @IsString()
   description?: string;
+
+  @ApiProperty({
+    type: 'string',
+  })
+  @IsOptional()
+  @IsString()
+  avatarURL?: string;
 }
 
 export class GetSheltersDTO {

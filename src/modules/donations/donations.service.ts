@@ -48,6 +48,7 @@ export class DonationsService {
         data: {
           userID: userId,
           sessionID: checkout.id,
+          paymentIntentId: checkout.payment_intent as string,
           ...payload,
         },
       });
@@ -165,12 +166,7 @@ export class DonationsService {
               googleID: true,
             },
           },
-          shelter: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
+          shelter: true,
         },
       });
       return donations;
@@ -282,13 +278,11 @@ export class DonationsService {
         throw new NotFoundException('Donation not found');
       }
 
-      // Actualizar el estado de la donación
       await this.prisma.donation.update({
         where: { id: donation.id },
         data: { status: 'completed' },
       });
 
-      // Enviar emails de confirmación
       await this.mailService.shelterDonationConfirmation(
         donation.shelter.name,
         donation.shelter.user.email,
@@ -330,13 +324,11 @@ export class DonationsService {
         throw new NotFoundException('Donation not found');
       }
 
-      // Actualizar el estado de la donación
       await this.prisma.donation.update({
         where: { id: donation.id },
         data: { status: 'expired' },
       });
 
-      // Enviar email de notificación de expiración
       await this.mailService.userPaymentExpired(
         donation.user.email,
         donation.user.fullName,
@@ -370,13 +362,11 @@ export class DonationsService {
         throw new NotFoundException('Donation not found');
       }
 
-      // Actualizar el estado de la donación
       await this.prisma.donation.update({
         where: { id: donation.id },
-        data: { status: 'failed' },
+        data: { status: 'failed', paymentIntentId: errorReason },
       });
 
-      // Enviar email de notificación de fallo
       await this.mailService.userFailedPayment(
         donation.user.email,
         donation.user.fullName,
@@ -389,6 +379,18 @@ export class DonationsService {
       this.logger.log(`Donation ${donation.id} marked as failed: ${errorReason}`);
     } catch (error) {
       this.logger.error(`Error marking donation as failed: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async findByPaymentIntentId(paymentIntentId: string) {
+    try {
+      const donation = await this.prisma.donation.findFirst({
+        where: { paymentIntentId: paymentIntentId },
+      });
+      return donation;
+    } catch (error) {
+      this.logger.error(`Error finding donation by payment intent ID: ${error.message}`);
       throw error;
     }
   }

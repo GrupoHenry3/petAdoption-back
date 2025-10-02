@@ -62,7 +62,7 @@ export class DonationsController {
   @ApiOkResponse({ description: 'Donation details fetched successfully', type: [Donation] })
   @UseGuards(UserTypeGuard)
   @UserTypes(UserType.User)
-  @Get('my')
+  @Get('me')
   async findMyDonations(@Req() req) {
     const { id } = req.user;
 

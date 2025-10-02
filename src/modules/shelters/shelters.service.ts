@@ -34,12 +34,7 @@ export class SheltersService {
         const newShelter = await prisma.shelter.create({
           data: {
             userID: userID,
-            name: payload.name,
-            country: payload.country,
-            state: payload.state,
-            city: payload.city,
-            address: payload.address,
-            phoneNumber: payload.phoneNumber,
+            ...payload,
           },
           omit: {
             userID: true,
@@ -79,6 +74,9 @@ export class SheltersService {
       const updatedShelter = await this.prisma.shelter.update({
         where: { id: shelter.id },
         data: { ...payload },
+        omit: {
+          userID: true,
+        },
       });
 
       this.logger.log(`Succesfully updated shelter (${shelter.id})`);

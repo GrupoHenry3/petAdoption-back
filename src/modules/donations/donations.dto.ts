@@ -99,5 +99,6 @@ export class DonationDTO {
     example: DonationStatus,
   })
   @IsEnum(DonationStatus)
+  @IsOptional()
   status: DonationStatus;
 }

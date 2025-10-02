@@ -184,7 +184,7 @@ model Donation {
   amount                Int
   message               String?
   sessionID             String          @map("session_id")
-  status                DonationStatus  @default(pending)
+  status                DonationStatus? @default(pending)
   paymentIntentId       String?         @map("payment_intent_id")
   failureReason         String?         @map("failure_reason")
 
