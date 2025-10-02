@@ -49,6 +49,8 @@ export class UserTypeGuard implements CanActivate {
         throw new ForbiddenException();
       }
 
+      console.log(decodedToken);
+
       const userType = decodedToken.userType as UserType;
       const siteAdmin = decodedToken.siteAdmin as boolean;
 
@@ -62,6 +64,7 @@ export class UserTypeGuard implements CanActivate {
       }
 
       const hasRequiredType = requiredUserTypes.some((type) => userType === type);
+
       return hasRequiredType;
     } catch (error) {
       if (error instanceof JsonWebTokenError) {
