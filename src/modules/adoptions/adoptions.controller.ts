@@ -16,7 +16,7 @@ import { Adoption, AdoptionDTO, UpdateAdoptionDTO } from './adoptions.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { UserTypeGuard } from '../auth/guards/user-type.guard';
 import { UserTypes } from '../auth/auth.decorator';
-import { AdoptionStatus, UserType } from '@prisma/client';
+import { UserType } from '@prisma/client';
 import {
   ApiBadRequestResponse,
   ApiBody,
@@ -26,7 +26,6 @@ import {
   ApiUnauthorizedResponse,
   ApiNotFoundResponse,
   ApiBearerAuth,
-  ApiNoContentResponse,
 } from '@nestjs/swagger';
 
 @Controller('adoptions')

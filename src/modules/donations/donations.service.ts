@@ -153,7 +153,22 @@ export class DonationsService {
 
   async findAll() {
     try {
-      return await this.prisma.donation.findMany();
+      const donations = await this.prisma.donation.findMany({
+        omit: {
+          userID: true,
+          shelterID: true,
+        },
+        include: {
+          user: true,
+          shelter: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      });
+      return donations;
     } catch (error) {
       this.logger.error(`Failed to fetch donations`, error);
       throw new InternalServerErrorException(
