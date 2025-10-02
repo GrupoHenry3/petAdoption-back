@@ -9,6 +9,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import Stripe from 'stripe';
 import { StripeService } from '../stripe/stripe.service';
+import { donationStatus } from '@prisma/client';
 
 @Injectable()
 export class DonationsService {
@@ -129,6 +130,7 @@ export class DonationsService {
         donation.user.fullName,
         donation.shelter.name,
         donation.amount,
+        donation.updatedAt,
         payload.errorReason,
       );
 
@@ -209,6 +211,135 @@ export class DonationsService {
       throw new InternalServerErrorException(
         'An unexpected error has ocurred while fetching donations',
       );
+    }
+  }
+
+  async markDonationAsCompleted(sessionId: string) {
+    try {
+      const donation = await this.prisma.donation.findFirst({
+        where: { sessionID: sessionId },
+        include: {
+          user: {
+            select: { fullName: true, email: true },
+          },
+          shelter: {
+            select: { name: true, user: { select: { email: true } } },
+          },
+        },
+      });
+
+      if (!donation) {
+        throw new NotFoundException('Donation not found');
+      }
+
+      // Actualizar el estado de la donación
+      await this.prisma.donation.update({
+        where: { id: donation.id },
+        data: { status: 'completed' },
+      });
+
+      // Enviar emails de confirmación
+      await this.mailService.shelterDonationConfirmation(
+        donation.shelter.name,
+        donation.shelter.user.email,
+        donation.user.fullName,
+        donation.id,
+        donation.amount,
+        donation.message || '',
+      );
+
+      await this.mailService.userDonationConfirmation(
+        donation.user.email,
+        donation.user.fullName,
+        donation.shelter.name,
+        donation.amount,
+      );
+
+      this.logger.log(`Donation ${donation.id} marked as completed`);
+    } catch (error) {
+      this.logger.error(`Error marking donation as completed: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async markDonationAsExpired(sessionId: string) {
+    try {
+      const donation = await this.prisma.donation.findFirst({
+        where: { sessionID: sessionId },
+        include: {
+          user: {
+            select: { fullName: true, email: true },
+          },
+          shelter: {
+            select: { name: true },
+          },
+        },
+      });
+
+      if (!donation) {
+        throw new NotFoundException('Donation not found');
+      }
+
+      // Actualizar el estado de la donación
+      await this.prisma.donation.update({
+        where: { id: donation.id },
+        data: { status: 'expired' },
+      });
+
+      // Enviar email de notificación de expiración
+      await this.mailService.userPaymentExpired(
+        donation.user.email,
+        donation.user.fullName,
+        donation.shelter.name,
+        donation.amount,
+        donation.updatedAt,
+      );
+
+      this.logger.log(`Donation ${donation.id} marked as expired`);
+    } catch (error) {
+      this.logger.error(`Error marking donation as expired: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async markDonationAsFailed(sessionId: string, errorReason: string) {
+    try {
+      const donation = await this.prisma.donation.findFirst({
+        where: { sessionID: sessionId },
+        include: {
+          user: {
+            select: { fullName: true, email: true },
+          },
+          shelter: {
+            select: { name: true },
+          },
+        },
+      });
+
+      if (!donation) {
+        throw new NotFoundException('Donation not found');
+      }
+
+      // Actualizar el estado de la donación
+      await this.prisma.donation.update({
+        where: { id: donation.id },
+        data: { status: 'failed' },
+      });
+
+      // Enviar email de notificación de fallo
+      await this.mailService.userFailedPayment(
+        donation.user.email,
+        donation.user.fullName,
+        donation.shelter.name,
+        donation.amount,
+        donation.updatedAt,
+        errorReason,
+      );
+
+      this.logger.log(`Donation ${donation.id} marked as failed: ${errorReason}`);
+    } catch (error) {
+      this.logger.error(`Error marking donation as failed: ${error.message}`);
+      throw error;
     }
   }
 }

@@ -102,6 +102,7 @@ export class MailService {
     userName: string,
     shelterName: string,
     donationAmount: number,
+    donationDate: Date,
     errorReason: string,
   ) {
     await this.mailerService.sendMail({
@@ -114,7 +115,28 @@ export class MailService {
         shelterName: shelterName,
         donationAmount: donationAmount,
         errorReason: errorReason,
-        donationDate: new Date().toLocaleDateString('es-ES'),
+        donationDate: donationDate,
+      },
+    });
+  }
+
+  async userPaymentExpired(
+    userEmail: string,
+    userName: string,
+    shelterName: string,
+    donationAmount: number,
+    donationDate: Date,
+  ) {
+    await this.mailerService.sendMail({
+      to: userEmail,
+      from: `Pet Adoption ${process.env.GMAIL_USER}`,
+      subject: 'Donation Session Expired',
+      template: 'userPaymentExpired',
+      context: {
+        userName: userName,
+        shelterName: shelterName,
+        donationAmount: donationAmount,
+        donationDate: donationDate,
       },
     });
   }

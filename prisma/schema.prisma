@@ -183,7 +183,7 @@ model Donation {
   amount                Int
   message               String?
   sessionID             String          @map("session_id")
-  status                String
+  status                donationStatus  @default(pending)
 
   userID                String          @map("user_id")
   user                  User            @relation(fields: [userID], references: [id])
@@ -241,4 +241,11 @@ enum houseOuterSpace {
   Small
   Medium
   Large
+}
+
+enum donationStatus {
+  pending
+  completed
+  failed
+  expired
 }

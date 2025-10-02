@@ -36,6 +36,9 @@ export class Pet {
   neutered: boolean;
 
   @IsBoolean()
+  vaccinated: boolean;
+
+  @IsBoolean()
   trained: boolean;
 
   @IsBoolean()
@@ -102,6 +105,9 @@ export class CreatePetDTO {
   neutered: boolean;
 
   @IsBoolean()
+  vaccinated: boolean;
+
+  @IsBoolean()
   @IsOptional()
   trained: boolean;
 
@@ -154,6 +160,9 @@ export class UpdatePetDTO {
   @IsBoolean()
   @IsOptional()
   neutered: boolean;
+
+  @IsBoolean()
+  vaccinated: boolean;
 
   @IsBoolean()
   @IsOptional()

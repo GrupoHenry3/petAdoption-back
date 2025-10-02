@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { donationStatus } from '@prisma/client';
+import { IsEnum, isEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class Donation {
   @IsNumber()
@@ -15,6 +16,9 @@ export class Donation {
 
   @IsString()
   userID: string;
+
+  @IsEnum(donationStatus)
+  status: donationStatus;
 
   @IsString()
   createdAt: string;
@@ -34,4 +38,7 @@ export class DonationDTO {
   @IsString()
   @IsNotEmpty()
   shelterID: string;
+
+  @IsEnum(donationStatus)
+  status: donationStatus;
 }
