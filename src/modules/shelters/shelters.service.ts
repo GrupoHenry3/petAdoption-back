@@ -6,7 +6,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { ShelterDTO, GetSheltersDTO, UpdateShelterDTO } from './shelters.dto';
 import { Prisma, UserType } from '@prisma/client';
 import { MailService } from '../mail/mail.service';

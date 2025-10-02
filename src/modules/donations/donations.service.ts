@@ -5,9 +5,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { DonationDTO } from './donations.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
-import Stripe from 'stripe';
 import { StripeService } from '../stripe/stripe.service';
 
 @Injectable()
