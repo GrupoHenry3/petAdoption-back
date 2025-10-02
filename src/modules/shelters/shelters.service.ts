@@ -41,15 +41,8 @@ export class SheltersService {
             address: payload.address,
             phoneNumber: payload.phoneNumber,
           },
-          select: {
-            id: true,
-            name: true,
-            country: true,
-            state: true,
-            city: true,
-            address: true,
-            phoneNumber: true,
-            createdAt: true,
+          omit: {
+            userID: true,
           },
         });
 
@@ -86,17 +79,6 @@ export class SheltersService {
       const updatedShelter = await this.prisma.shelter.update({
         where: { id: shelter.id },
         data: { ...payload },
-        select: {
-          id: true,
-          name: true,
-          country: true,
-          state: true,
-          city: true,
-          address: true,
-          website: true,
-          phoneNumber: true,
-          description: true,
-        },
       });
 
       this.logger.log(`Succesfully updated shelter (${shelter.id})`);
@@ -263,17 +245,8 @@ export class SheltersService {
     try {
       const shelters = await this.prisma.shelter.findMany({
         where: where,
-        select: {
-          id: true,
-          name: true,
-          country: true,
-          state: true,
-          city: true,
-          address: true,
-          phoneNumber: true,
-          website: true,
-          description: true,
-          isVerified: true,
+        omit: {
+          userID: true,
         },
       });
 
@@ -297,18 +270,10 @@ export class SheltersService {
     try {
       const shelter = await this.prisma.shelter.findUnique({
         where: { id: isShelter.id },
-        select: {
-          id: true,
-          name: true,
-          country: true,
-          state: true,
-          city: true,
-          address: true,
-          phoneNumber: true,
-          website: true,
-          description: true,
-          isActive: true,
-          isVerified: true,
+        omit: {
+          userID: true,
+        },
+        include: {
           adoptions: true,
           donations: true,
         },

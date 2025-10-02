@@ -23,6 +23,7 @@ import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiBody,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiUnauthorizedResponse,
@@ -51,6 +52,7 @@ export class SheltersController {
     type: UpdateShelterDTO,
   })
   @ApiOkResponse({ description: 'Shelter updated successfully', type: Shelter })
+  @ApiNotFoundResponse({ description: 'Shelter not found' })
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   @UseGuards(UserTypeGuard)
@@ -62,6 +64,7 @@ export class SheltersController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Deactivate a shelter' })
   @ApiOkResponse({ description: 'Shelter deactivated successfully' })
+  @ApiNotFoundResponse({ description: 'Shelter not found' })
   @Patch(':id/status')
   @HttpCode(HttpStatus.OK)
   @UseGuards(UserTypeGuard)

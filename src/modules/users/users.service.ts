@@ -78,19 +78,9 @@ export class UsersService {
       const user = await this.prisma.user.update({
         where: { id: userId },
         data: { ...payload },
-        select: {
-          email: true,
-          fullName: true,
-          country: true,
-          city: true,
-          address: true,
-          phoneNumber: true,
-          avatarURL: true,
-          userType: true,
-          siteAdmin: true,
-          isActive: true,
-          createdAt: true,
-          updatedAt: true,
+        omit: {
+          password: true,
+          googleID: true,
         },
       });
 
@@ -173,20 +163,11 @@ export class UsersService {
     try {
       const users = await this.prisma.user.findMany({
         where: where,
-        select: {
-          id: true,
-          email: true,
-          fullName: true,
-          country: true,
-          city: true,
-          address: true,
-          phoneNumber: true,
-          avatarURL: true,
-          userType: true,
-          siteAdmin: true,
-          isActive: true,
-          createdAt: true,
-          updatedAt: true,
+        omit: {
+          password: true,
+          googleID: true,
+        },
+        include: {
           adoptions: {
             select: {
               id: true,
@@ -229,21 +210,11 @@ export class UsersService {
     try {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
-        select: {
-          id: true,
-          email: true,
-          fullName: true,
-          country: true,
-          city: true,
-          address: true,
-          phoneNumber: true,
-          avatarURL: true,
-          userType: true,
-          siteAdmin: true,
-          isActive: true,
-          createdAt: true,
-          updatedAt: true,
-          favoritePets: true,
+        omit: {
+          password: true,
+          googleID: true,
+        },
+        include: {
           adoptions: {
             select: {
               id: true,
@@ -302,20 +273,11 @@ export class UsersService {
     try {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
-        select: {
-          id: true,
-          email: true,
-          fullName: true,
-          country: true,
-          city: true,
-          address: true,
-          phoneNumber: true,
-          avatarURL: true,
-          userType: true,
-          siteAdmin: true,
-          isActive: true,
-          createdAt: true,
-          updatedAt: true,
+        omit: {
+          password: true,
+          googleID: true,
+        },
+        include: {
           adoptions: {
             include: {
               pet: {
@@ -351,18 +313,8 @@ export class UsersService {
           },
           favoritePets: true,
           shelter: {
-            select: {
-              id: true,
-              name: true,
-              country: true,
-              state: true,
-              city: true,
-              address: true,
-              phoneNumber: true,
-              website: true,
-              description: true,
-              isVerified: true,
-              createdAt: true,
+            omit: {
+              userID: true,
             },
           },
         },

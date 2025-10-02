@@ -159,7 +159,12 @@ export class DonationsService {
           shelterID: true,
         },
         include: {
-          user: true,
+          user: {
+            omit: {
+              password: true,
+              googleID: true,
+            },
+          },
           shelter: {
             select: {
               id: true,
