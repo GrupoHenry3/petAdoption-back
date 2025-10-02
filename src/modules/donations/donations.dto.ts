@@ -1,5 +1,5 @@
 import { DonationStatus } from '@prisma/client';
-import { IsEnum, isEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class Donation {
   @IsNumber()
