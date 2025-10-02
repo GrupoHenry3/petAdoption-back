@@ -1,10 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   AdoptionStatus,
-  houseOuterSpace,
-  houseOwnership,
-  houseType,
-  previousPetExp,
+  HouseOuterSpace,
+  HouseOwnership,
+  HouseType,
+  PreviousPetExp,
 } from '@prisma/client';
 import { IsString, IsEnum, IsOptional, Length } from 'class-validator';
 
@@ -43,31 +43,31 @@ export class Adoption {
 
   @ApiProperty({
     type: 'string',
-    example: previousPetExp,
+    example: PreviousPetExp,
   })
-  @IsEnum(previousPetExp)
-  previousPetExp: previousPetExp;
+  @IsEnum(PreviousPetExp)
+  previousPetExp: PreviousPetExp;
 
   @ApiProperty({
     type: 'string',
-    example: houseType,
+    example: HouseType,
   })
-  @IsEnum(houseType)
-  houseType: houseType;
+  @IsEnum(HouseType)
+  houseType: HouseType;
 
   @ApiProperty({
     type: 'string',
-    example: houseOwnership,
+    example: HouseOwnership,
   })
-  @IsEnum(houseOwnership)
-  houseOwnership: houseOwnership;
+  @IsEnum(HouseOwnership)
+  houseOwnership: HouseOwnership;
 
   @ApiProperty({
     type: 'string',
-    example: houseOuterSpace,
+    example: HouseOuterSpace,
   })
-  @IsEnum(houseOuterSpace)
-  houseOuterSpace: houseOuterSpace;
+  @IsEnum(HouseOuterSpace)
+  houseOuterSpace: HouseOuterSpace;
 
   @ApiProperty({
     type: 'string',
@@ -176,31 +176,31 @@ export class AdoptionDTO {
 
   @ApiProperty({
     type: 'string',
-    example: previousPetExp,
+    example: PreviousPetExp,
   })
-  @IsEnum(previousPetExp, { message: 'La experiencia previa no es válida' })
-  previousPetExp: previousPetExp;
+  @IsEnum(PreviousPetExp, { message: 'La experiencia previa no es válida' })
+  previousPetExp: PreviousPetExp;
 
   @ApiProperty({
     type: 'string',
-    example: houseType,
+    example: HouseType,
   })
-  @IsEnum(houseType, { message: 'El tipo de vivienda no es válido' })
-  houseType: houseType;
+  @IsEnum(HouseType, { message: 'El tipo de vivienda no es válido' })
+  houseType: HouseType;
 
   @ApiProperty({
     type: 'string',
-    example: houseOwnership,
+    example: HouseOwnership,
   })
-  @IsEnum(houseOwnership, { message: 'La propiedad de la vivienda no es válida' })
-  houseOwnership: houseOwnership;
+  @IsEnum(HouseOwnership, { message: 'La propiedad de la vivienda no es válida' })
+  houseOwnership: HouseOwnership;
 
   @ApiProperty({
     type: 'string',
-    example: houseOuterSpace,
+    example: HouseOuterSpace,
   })
-  @IsEnum(houseOuterSpace, { message: 'El espacio exterior no es válido' })
-  houseOuterSpace: houseOuterSpace;
+  @IsEnum(HouseOuterSpace, { message: 'El espacio exterior no es válido' })
+  houseOuterSpace: HouseOuterSpace;
 
   @ApiProperty({
     type: 'string',

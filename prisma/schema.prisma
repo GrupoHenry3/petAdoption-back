@@ -147,10 +147,10 @@ model Adoption {
   birthdate             String
   mainReason            String          @map("main_reason")
   expectatives          String
-  previousPetExp        previousPetExp  @default(None) @map("previous_pet_experience")
-  houseType             houseType       @default(House) @map("house_type")
-  houseOwnership        houseOwnership  @default(Owned) @map("house_ownership")
-  houseOuterSpace       houseOuterSpace @default(None) @map("house_outher_space")
+  previousPetExp        PreviousPetExp  @default(None) @map("previous_pet_experience")
+  houseType             HouseType       @default(House) @map("house_type")
+  houseOwnership        HouseOwnership  @default(Owned) @map("house_ownership")
+  houseOuterSpace       HouseOuterSpace @default(None) @map("house_outher_space")
   houseMembers          String          @map("house_members")
   livingSpace           String          @map("living_space")
   workingHours          String          @map("working_hours")
@@ -183,7 +183,7 @@ model Donation {
   amount                Int
   message               String?
   sessionID             String          @map("session_id")
-  status                donationStatus  @default(pending)
+  status                DonationStatus  @default(pending)
 
   userID                String          @map("user_id")
   user                  User            @relation(fields: [userID], references: [id])
@@ -218,32 +218,32 @@ enum AdoptionStatus {
   Withdrawn
 }
 
-enum previousPetExp {
+enum PreviousPetExp {
   None
   Basic
   Moderate
   Experienced
 }
 
-enum houseOwnership {
+enum HouseOwnership {
   Owned
   Rented
 }
 
-enum houseType {
+enum HouseType {
   House
   Apartment
   Farm
 }
 
-enum houseOuterSpace {
+enum HouseOuterSpace {
   None
   Small
   Medium
   Large
 }
 
-enum donationStatus {
+enum DonationStatus {
   pending
   completed
   failed

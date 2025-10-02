@@ -8,7 +8,6 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { Species } from '../species/species.dto';
 
 export class Pet {
   @IsString()
