@@ -8,6 +8,7 @@ import {
   Get,
   Res,
   Req,
+  Logger,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { GoogleAuthGuard } from './guards/google.guard';
@@ -15,8 +16,16 @@ import { CreateUserDTO, SignInDTO } from '../users/user.dto';
 import type { Response } from 'express';
 import { ApiBody } from '@nestjs/swagger';
 
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: (process.env.NODE_ENV === 'production' ? 'none' : 'lax') as 'none' | 'lax',
+  maxAge: 60 * 60 * 1000,
+};
+
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
   constructor(private readonly authService: AuthService) {}
 
   @ApiBody({
@@ -41,13 +50,7 @@ export class AuthController {
   @HttpCode(HttpStatus.ACCEPTED)
   async signIn(@Res({ passthrough: true }) res: Response, @Body() payload: SignInDTO) {
     const result = await this.authService.signIn(payload);
-
-    res.cookie('access_token', result.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
-      maxAge: 60 * 60 * 1000,
-    });
+    res.cookie('access_token', result.accessToken, cookieOptions);
 
     return {
       statusCode: 202,
@@ -74,15 +77,13 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
   async googleCallback(@Req() req, @Res() res: Response) {
-    const result = await this.authService.googleSignIn(req.user.id);
-
-    res.cookie('access_token', result.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
-      maxAge: 60 * 60 * 1000,
-    });
-
-    res.redirect(`${process.env.FRONTEND_URL}`);
+    try {
+      const result = await this.authService.googleSignIn(req.user.id);
+      res.cookie('access_token', result.accessToken, cookieOptions);
+      res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
+    } catch (e) {
+      this.logger.error(e);
+      res.redirect(`${process.env.FRONTEND_URL}/auth?error=oauth_failed`);
+    }
   }
 }
