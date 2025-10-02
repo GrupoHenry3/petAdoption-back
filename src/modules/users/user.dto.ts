@@ -1,6 +1,8 @@
+import { All } from '@nestjs/common';
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
 import { UserType } from '@prisma/client';
 import {
+  Allow,
   IsBooleanString,
   IsEmail,
   IsEnum,
@@ -99,13 +101,13 @@ export class GetUsersDTO {
 }
 
 export class SignInDTO {
-  @ApiProperty()
-  @IsNotEmpty()
+  @ApiProperty({ example: 'mail@example.com' })
+  @Allow()
   @IsEmail()
   email: string;
 
-  @ApiProperty()
-  @IsNotEmpty()
+  @ApiProperty({ example: 'mypassword123' })
+  @Allow()
   @IsString()
   @MinLength(6)
   @MaxLength(60)

@@ -1,18 +1,23 @@
 import {
+  BadRequestException,
   ConflictException,
   HttpStatus,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { ShelterDTO, GetSheltersDTO, UpdateShelterDTO } from './shelters.dto';
 import { Prisma, UserType } from '@prisma/client';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class SheltersService {
   private readonly logger = new Logger(SheltersService.name);
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+  ) {}
 
   async create(payload: ShelterDTO, userID: string) {
     const existingShelter = await this.prisma.shelter.findUnique({
@@ -29,22 +34,10 @@ export class SheltersService {
         const newShelter = await prisma.shelter.create({
           data: {
             userID: userID,
-            name: payload.name,
-            country: payload.country,
-            state: payload.state,
-            city: payload.city,
-            address: payload.address,
-            phoneNumber: payload.phoneNumber,
+            ...payload,
           },
-          select: {
-            id: true,
-            name: true,
-            country: true,
-            state: true,
-            city: true,
-            address: true,
-            phoneNumber: true,
-            createdAt: true,
+          omit: {
+            userID: true,
           },
         });
 
@@ -63,7 +56,7 @@ export class SheltersService {
         shelter: tx.newShelter,
       };
     } catch (error) {
-      this.logger.error('Error creating shelter', error.stack);
+      this.logger.error('Failed to create shelter', error);
     }
   }
 
@@ -81,18 +74,8 @@ export class SheltersService {
       const updatedShelter = await this.prisma.shelter.update({
         where: { id: shelter.id },
         data: { ...payload },
-        select: {
-          id: true,
-          name: true,
-          country: true,
-          state: true,
-          city: true,
-          address: true,
-          website: true,
-          phoneNumber: true,
-          description: true,
-          createdAt: true,
-          updatedAt: true,
+        omit: {
+          userID: true,
         },
       });
 
@@ -100,7 +83,7 @@ export class SheltersService {
 
       return updatedShelter;
     } catch (error) {
-      this.logger.error(`Error updating shelter (${shelter.id})`);
+      this.logger.error(`Failed to update shelter (${shelter.id})`, error);
     }
   }
 
@@ -122,7 +105,7 @@ export class SheltersService {
     if (!user) throw new NotFoundException('User not found');
 
     const shelterStatus = !shelter.isActive;
-    let userType: any;
+    let userType: UserType;
 
     if (user.userType === 'Shelter') {
       userType = 'User';
@@ -158,7 +141,7 @@ export class SheltersService {
         shelter: tx.updatedShelter,
       };
     } catch (error) {
-      this.logger.error(`Error disabling shelter ${shelter.id}`, error.stack);
+      this.logger.error(`Failed to disable shelter ${shelter.id}`, error);
     }
   }
 
@@ -169,6 +152,7 @@ export class SheltersService {
         id: true,
         name: true,
         isVerified: true,
+        user: true,
       },
     });
 
@@ -176,7 +160,7 @@ export class SheltersService {
       throw new NotFoundException('Shelter not found');
     }
 
-    let status = shelter.isVerified;
+    const status = shelter.isVerified;
 
     try {
       const verifiedShelter = await this.prisma.shelter.update({
@@ -186,14 +170,16 @@ export class SheltersService {
         },
       });
 
-      this.logger.log(`Shelter ${shelter.name} verified successfully`);
+      this.logger.log(`Verified shelter ${shelter.id}`);
+
+      await this.mailService.shelterVerificationConfirmation(shelter.user.email, shelter.name);
 
       return {
         statusCode: HttpStatus.OK,
         data: verifiedShelter,
       };
     } catch (error) {
-      this.logger.error(`Error verifying shelter ${shelter.name}`);
+      this.logger.error(`Failed to verify shelter ${shelter.id}`, error);
     }
   }
 
@@ -220,7 +206,7 @@ export class SheltersService {
           },
         });
 
-        const updateUser = await prisma.user.update({
+        await prisma.user.update({
           where: { id: shelter.userID },
           data: { userType: 'User' },
         });
@@ -228,14 +214,14 @@ export class SheltersService {
         return { updatedShelter };
       });
 
-      this.logger.log(`Shelter ${shelter.name} deactivated successfully`);
+      this.logger.log(`Disabled shelter ${shelter.id}`);
 
       return {
         statusCode: HttpStatus.ACCEPTED,
         shelter: tx.updatedShelter,
       };
     } catch (error) {
-      this.logger.error(`Error disabling shelter ${shelter.id}`, error.stack);
+      this.logger.error(`Failed to disable shelter ${shelter.id}`, error);
     }
   }
 
@@ -257,23 +243,17 @@ export class SheltersService {
     try {
       const shelters = await this.prisma.shelter.findMany({
         where: where,
-        select: {
-          id: true,
-          name: true,
-          country: true,
-          state: true,
-          city: true,
-          address: true,
-          phoneNumber: true,
-          website: true,
-          description: true,
-          isVerified: true,
+        omit: {
+          userID: true,
         },
       });
 
+      this.logger.log('Fetched data for all shelters');
+
       return shelters;
     } catch (error) {
-      this.logger.error('Error fetching shelters', error.stack);
+      this.logger.error('Failed to fetch data for all shelters', error);
+      throw new BadRequestException('An error has ocurred');
     }
   }
 
@@ -288,26 +268,21 @@ export class SheltersService {
     try {
       const shelter = await this.prisma.shelter.findUnique({
         where: { id: isShelter.id },
-        select: {
-          id: true,
-          name: true,
-          country: true,
-          state: true,
-          city: true,
-          address: true,
-          phoneNumber: true,
-          website: true,
-          description: true,
-          isActive: true,
-          isVerified: true,
+        omit: {
+          userID: true,
+        },
+        include: {
           adoptions: true,
           donations: true,
         },
       });
 
+      this.logger.log(`Fetched data for user ${id}`);
+
       return shelter;
     } catch (error) {
-      this.logger.error('Error fetching shelters', error.stack);
+      this.logger.error(`Failed to fetch data for shelter ${id}`, error);
+      throw new BadRequestException('An error has ocurred');
     }
   }
 }

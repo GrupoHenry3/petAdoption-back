@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ConflictException,
   HttpStatus,
   Injectable,
@@ -7,13 +6,17 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { AdoptionDTO, UpdateAdoptionDTO } from './adoptions.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { AdoptionStatus } from '@prisma/client';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AdoptionsService {
   private readonly logger = new Logger(AdoptionsService.name);
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mail: MailService,
+  ) {}
 
   async create(userId: string, payload: AdoptionDTO) {
     const hasAdoptionOpen = await this.prisma.adoption.findFirst({
@@ -25,21 +28,86 @@ export class AdoptionsService {
     }
 
     try {
-      const newAdoption = await this.prisma.adoption.create({
-        data: {
-          userID: userId,
-          ...payload,
-        },
+      const tx = await this.prisma.$transaction(async (prisma) => {
+        const adoption = await prisma.adoption.create({
+          data: {
+            userID: userId,
+            ...payload,
+          },
+        });
+
+        const user = await prisma.user.findUnique({
+          where: { id: adoption.userID },
+          select: {
+            fullName: true,
+            email: true,
+          },
+        });
+
+        if (!user) {
+          throw new NotFoundException('User not found');
+        }
+
+        const shelter = await prisma.shelter.findUnique({
+          where: { id: adoption.shelterID },
+          select: {
+            name: true,
+            user: true,
+          },
+        });
+
+        if (!shelter) {
+          throw new NotFoundException('Shelter not found');
+        }
+
+        this.logger.log('Adoption application created successfully.');
+
+        return { adoption, user, shelter };
       });
 
-      this.logger.log('Adoption application created successfully.');
+      await this.mail.shelterAdoptionConfirmation(
+        tx.shelter.user.email,
+        tx.shelter.name,
+        tx.adoption.id,
+      );
+
+      await this.mail.userAdoptionConfirmation(tx.user.email, tx.user.fullName, tx.adoption.id);
 
       return {
         statusCode: HttpStatus.CREATED,
-        data: newAdoption,
+        data: tx.adoption,
       };
     } catch (error) {
-      this.logger.error('Error creating adoption application.');
+      this.logger.error(`Error creating adoption application: ${error.message}`, error.stack);
+    }
+  }
+
+  async withdrawApplication(id: string) {
+    const isAdoptionValid = await this.prisma.adoption.findUnique({
+      where: { id: id },
+      select: { id: true },
+    });
+
+    if (!isAdoptionValid) {
+      throw new NotFoundException('Adoption not found');
+    }
+
+    try {
+      const withdrawnAdoption = await this.prisma.adoption.update({
+        where: { id: id },
+        data: {
+          status: AdoptionStatus.Withdrawn,
+        },
+      });
+
+      this.logger.log('Adoption application withdrawn successfully.');
+
+      return {
+        statusCode: HttpStatus.OK,
+        data: withdrawnAdoption,
+      };
+    } catch (error) {
+      this.logger.error(`Failed to withdraw application: ${id}`, error);
     }
   }
 
@@ -68,7 +136,7 @@ export class AdoptionsService {
         data: updatedAdoption,
       };
     } catch (error) {
-      this.logger.error('Error updating adoption status');
+      this.logger.error(`Failed to update application: ${id}`, error);
     }
   }
 
@@ -79,7 +147,7 @@ export class AdoptionsService {
     });
 
     if (!isAdoptionValid) {
-      throw new NotFoundException('Adoption not found');
+      throw new NotFoundException(`Adoption with id ${id} not found`);
     }
 
     try {
@@ -97,13 +165,83 @@ export class AdoptionsService {
         message: 'Adoption deleted sucessfully',
       };
     } catch (error) {
-      this.logger.error('Error deleting adoption');
+      this.logger.error(`Error deleting adoption: ${error.message}`, error.stack);
     }
   }
 
   async findAll() {
     try {
-      const adoptions = await this.prisma.adoption.findMany();
+      const adoptions = await this.prisma.adoption.findMany({
+        omit: {
+          petID: true,
+          userID: true,
+          shelterID: true,
+        },
+        include: {
+          pet: {
+            omit: {
+              shelterID: true,
+              breedID: true,
+              speciesID: true,
+            },
+            include: {
+              breed: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+              species: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+            },
+          },
+          shelter: {
+            select: {
+              id: true,
+              name: true,
+              user: {
+                select: {
+                  avatarURL: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      this.logger.log('Adoptions fetched successfully.');
+
+      return adoptions;
+    } catch (error) {
+      this.logger.error(`Error fetching adoptions: ${error.message}`, error.stack);
+    }
+  }
+
+  async findByShelter(shelterId: string) {
+    const isShelterValid = await this.prisma.shelter.findUnique({
+      where: { id: shelterId },
+      select: { id: true },
+    });
+
+    if (!isShelterValid) {
+      throw new NotFoundException('Shelter not found');
+    }
+
+    try {
+      const adoptions = await this.prisma.adoption.findMany({
+        where: { shelterID: isShelterValid.id },
+      });
 
       this.logger.log('Adoptions fetched successfully.');
 
@@ -112,7 +250,7 @@ export class AdoptionsService {
         data: adoptions,
       };
     } catch (error) {
-      this.logger.error('Error fetching adoptions.');
+      this.logger.error(`Error fetching adoption: ${error.message}`, error.stack);
     }
   }
 
@@ -138,104 +276,7 @@ export class AdoptionsService {
         data: adoption,
       };
     } catch (error) {
-      this.logger.error('Error fetching adoptions.');
+      this.logger.error(`Error fetching adoption: ${error.message}`, error.stack);
     }
   }
-
-  // async createAdoption(newAdoption: CreateAdoptionDto): Promise<IAdoption> {
-  //   const adoptions: IAdoption[] = await this.adoptionsRepository.getAllAdoption();
-  //   const existingPending: IAdoption | null =
-  //     adoptions.find(
-  //       (adoption) =>
-  //         (adoption.userID === newAdoption.userID || adoption.dni === newAdoption.dni) &&
-  //         adoption.status === AdoptionStatus.Pending,
-  //     ) || null;
-
-  //   if (existingPending) {
-  //     throw new BadRequestException(
-  //       'Ya existe una solicitud de adopción pendiente para este usuario.',
-  //     );
-  //   }
-
-  //   const now: Date = new Date();
-  //   const sixMonthsAgo: Date = new Date();
-  //   sixMonthsAgo.setMonth(now.getMonth() - 6);
-
-  //   const rejectionCount: number = adoptions.filter(
-  //     (adoption) =>
-  //       adoption.userID === newAdoption.userID &&
-  //       adoption.status === AdoptionStatus.Rejected &&
-  //       adoption.rejectedAt &&
-  //       adoption.rejectedAt >= sixMonthsAgo,
-  //   ).length;
-
-  //   if (rejectionCount >= 3) {
-  //     throw new BadRequestException(
-  //       'Has alcanzado 3 rechazos en los últimos 6 meses. No puedes realizar nuevas solicitudes hasta que pase ese periodo.',
-  //     );
-  //   }
-
-  //   return await this.adoptionsRepository.createAdoption(newAdoption);
-  // }
-
-  // async updateAdoptionStatus(
-  //   id: string,
-  //   status: AdoptionStatus,
-  //   rejectionReason?: string,
-  // ): Promise<IAdoption | null> {
-  //   // 1️⃣ Verificar existencia
-  //   const adoption: IAdoption | null = await this.adoptionsRepository.getByIdAdoption(id);
-  //   if (!adoption) {
-  //     throw new NotFoundException(`No se encontró la adopción con id ${id}`);
-  //   }
-
-  //   // 2️⃣ Validar transición de estado
-  //   const validTransitions: Record<EAdoptionStatus, EAdoptionStatus[]> = {
-  //     [EAdoptionStatus.PENDING]: [EAdoptionStatus.APPROVED, EAdoptionStatus.REJECTED, EAdoptionStatus.WITHDRAWN],
-  //     [EAdoptionStatus.APPROVED]: [EAdoptionStatus.WITHDRAWN],
-  //     [EAdoptionStatus.REJECTED]: [],
-  //     [EAdoptionStatus.WITHDRAWN]: [],
-  //   };
-
-  //   const allowedNext: EAdoptionStatus[] = validTransitions[adoption.status] || [];
-  //   if (!allowedNext.includes(status)) {
-  //     throw new BadRequestException(`No es posible cambiar de estado "${adoption.status}" a "${status}"`);
-  //   }
-
-  //   // 3️⃣ Validar razón de rechazo
-  //   if (status === EAdoptionStatus.REJECTED && !rejectionReason) {
-  //     throw new BadRequestException('Debe proporcionar una razón de rechazo al rechazar la solicitud.');
-  //   }
-
-  //   // 4️⃣ Actualizar
-  //   return await this.adoptionsRepository.updateAdoptionStatus(id, status, rejectionReason);
-  // }
-
-  // async updateAdoption(id: string, updateData: Partial<IAdoption>): Promise<IAdoption> {
-  //   if (!updateData || Object.keys(updateData).length === 0) {
-  //     throw new BadRequestException('Debe enviar al menos un campo para actualizar.');
-  //   }
-
-  //   const updated: IAdoption | null = await this.adoptionsRepository.updateAdoption(id, updateData);
-  //   if (!updated) {
-  //     throw new NotFoundException(`No se encontró la adopción con ID ${id}`);
-  //   }
-  //   return updated;
-  // }
-
-  // async deleteAdoption(id: string): Promise<object> {
-  //   const deleted: boolean = await this.adoptionsRepository.deleteAdoption(id);
-  //   if (!deleted) {
-  //     throw new NotFoundException(`No se encontró la adopción con ID ${id}`);
-  //   }
-  //   return { message: `La adopción con ID ${id} ha sido eliminada exitosamente` };
-  // }
-
-  // async adoptionIsActive(id: string): Promise<IAdoption> {
-  //   const updated: IAdoption | null = await this.adoptionsRepository.adoptionIsActive(id);
-  //   if (!updated) {
-  //     throw new NotFoundException(`No se encontró la adopción con ID ${id}`);
-  //   }
-  //   return updated;
-  // }
 }

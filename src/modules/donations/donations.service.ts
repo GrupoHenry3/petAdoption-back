@@ -5,9 +5,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { DonationDTO } from './donations.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
-import Stripe from 'stripe';
 import { StripeService } from '../stripe/stripe.service';
 
 @Injectable()
@@ -48,6 +47,7 @@ export class DonationsService {
         data: {
           userID: userId,
           sessionID: checkout.id,
+          paymentIntentId: checkout.payment_intent as string,
           ...payload,
         },
       });
@@ -96,19 +96,301 @@ export class DonationsService {
         sessionId: checkout.id,
       };
     } catch (error) {
-      this.logger.error(`Error creating donation: ${error.message}`, error.stack);
+      this.logger.error('Failed to create donation', error);
       throw new InternalServerErrorException('An unexpected error has ocurred');
+    }
+  }
+
+  async failed(payload: { sessionId: string; errorReason: string }) {
+    try {
+      const donation = await this.prisma.donation.findFirst({
+        where: { sessionID: payload.sessionId },
+        include: {
+          user: {
+            select: {
+              fullName: true,
+              email: true,
+            },
+          },
+          shelter: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      });
+
+      if (!donation) {
+        throw new NotFoundException('Donation not found');
+      }
+
+      await this.mailService.userFailedPayment(
+        donation.user.email,
+        donation.user.fullName,
+        donation.shelter.name,
+        donation.amount,
+        donation.updatedAt,
+        payload.errorReason,
+      );
+
+      this.logger.log(`Payment failure notification sent for donation ${donation.id}`);
+
+      return {
+        message: 'Payment failure notification sent successfully',
+        donation: {
+          id: donation.id,
+          amount: donation.amount,
+          shelterName: donation.shelter.name,
+        },
+      };
+    } catch (error) {
+      this.logger.error('Error handling payment failure', error);
+      throw new InternalServerErrorException(
+        'An unexpected error has ocurred while handling payment failure',
+      );
     }
   }
 
   async findAll() {
     try {
-      return await this.prisma.donation.findMany();
+      const donations = await this.prisma.donation.findMany({
+        omit: {
+          userID: true,
+          shelterID: true,
+        },
+        include: {
+          user: {
+            omit: {
+              password: true,
+              googleID: true,
+            },
+          },
+          shelter: true,
+        },
+      });
+      return donations;
     } catch (error) {
-      this.logger.error(`Error fetching donations: ${error.message}`, error.stack);
+      this.logger.error(`Failed to fetch donations`, error);
       throw new InternalServerErrorException(
         'An unexpected error has ocurred while fetching donations',
       );
+    }
+  }
+
+  async findByUser(userId: string) {
+    const isUserValid = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+
+    if (!isUserValid) {
+      throw new NotFoundException(`User not found: ${userId}`);
+    }
+
+    try {
+      const donations = await this.prisma.donation.findMany({
+        where: { userID: isUserValid.id },
+        omit: {
+          userID: true,
+          shelterID: true,
+        },
+        include: {
+          shelter: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      });
+      return donations;
+    } catch (error) {
+      this.logger.error(`Failed to fetch donations for user ${isUserValid.id}`, error);
+      throw new InternalServerErrorException(
+        'An unexpected error has ocurred while fetching donations',
+      );
+    }
+  }
+
+  async findByShelter(userId: string) {
+    const isUserValid = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!isUserValid) {
+      throw new NotFoundException(`User not found: ${userId}`);
+    }
+
+    const shelter = await this.prisma.shelter.findUnique({
+      where: { userID: isUserValid.id },
+      select: { id: true },
+    });
+
+    if (!shelter) {
+      throw new NotFoundException('Shelter not found');
+    }
+
+    try {
+      const donations = await this.prisma.donation.findMany({
+        where: { shelterID: shelter.id },
+        omit: {
+          userID: true,
+          shelterID: true,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+            },
+          },
+        },
+      });
+
+      return donations;
+    } catch (error) {
+      this.logger.error(`Failed to fetch donations for shelter ${shelter.id}`, error);
+      throw new InternalServerErrorException(
+        'An unexpected error has ocurred while fetching donations',
+      );
+    }
+  }
+
+  async markDonationAsCompleted(sessionId: string) {
+    try {
+      const donation = await this.prisma.donation.findFirst({
+        where: { sessionID: sessionId },
+        include: {
+          user: {
+            select: { fullName: true, email: true },
+          },
+          shelter: {
+            select: { name: true, user: { select: { email: true } } },
+          },
+        },
+      });
+
+      if (!donation) {
+        throw new NotFoundException('Donation not found');
+      }
+
+      await this.prisma.donation.update({
+        where: { id: donation.id },
+        data: { status: 'completed' },
+      });
+
+      await this.mailService.shelterDonationConfirmation(
+        donation.shelter.name,
+        donation.shelter.user.email,
+        donation.user.fullName,
+        donation.id,
+        donation.amount,
+        donation.message || '',
+      );
+
+      await this.mailService.userDonationConfirmation(
+        donation.user.email,
+        donation.user.fullName,
+        donation.shelter.name,
+        donation.amount,
+      );
+
+      this.logger.log(`Donation ${donation.id} marked as completed`);
+    } catch (error) {
+      this.logger.error(`Error marking donation as completed: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async markDonationAsExpired(sessionId: string) {
+    try {
+      const donation = await this.prisma.donation.findFirst({
+        where: { sessionID: sessionId },
+        include: {
+          user: {
+            select: { fullName: true, email: true },
+          },
+          shelter: {
+            select: { name: true },
+          },
+        },
+      });
+
+      if (!donation) {
+        throw new NotFoundException('Donation not found');
+      }
+
+      await this.prisma.donation.update({
+        where: { id: donation.id },
+        data: { status: 'expired' },
+      });
+
+      await this.mailService.userPaymentExpired(
+        donation.user.email,
+        donation.user.fullName,
+        donation.shelter.name,
+        donation.amount,
+        donation.updatedAt,
+      );
+
+      this.logger.log(`Donation ${donation.id} marked as expired`);
+    } catch (error) {
+      this.logger.error(`Error marking donation as expired: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async markDonationAsFailed(sessionId: string, errorReason: string) {
+    try {
+      const donation = await this.prisma.donation.findFirst({
+        where: { sessionID: sessionId },
+        include: {
+          user: {
+            select: { fullName: true, email: true },
+          },
+          shelter: {
+            select: { name: true },
+          },
+        },
+      });
+
+      if (!donation) {
+        throw new NotFoundException('Donation not found');
+      }
+
+      await this.prisma.donation.update({
+        where: { id: donation.id },
+        data: { status: 'failed', paymentIntentId: errorReason },
+      });
+
+      await this.mailService.userFailedPayment(
+        donation.user.email,
+        donation.user.fullName,
+        donation.shelter.name,
+        donation.amount,
+        donation.updatedAt,
+        errorReason,
+      );
+
+      this.logger.log(`Donation ${donation.id} marked as failed: ${errorReason}`);
+    } catch (error) {
+      this.logger.error(`Error marking donation as failed: ${error.message}`);
+      throw error;
+    }
+  }
+
+  async findByPaymentIntentId(id: string) {
+    try {
+      const donation = await this.prisma.donation.findFirst({
+        where: { paymentIntentId: id },
+      });
+      return donation;
+    } catch (error) {
+      this.logger.error(`Error finding donation by payment intent ID: ${error.message}`);
+      throw error;
     }
   }
 }

@@ -40,9 +40,10 @@
         margin-bottom: 16px;
       }
 
-      p {
+      p,
+      ul {
         margin: 0;
-        color: #9e9e9e;
+        color: #717182;
         line-height: 1.5;
       }
 
@@ -51,7 +52,7 @@
       }
 
       a {
-        color: #00c950;
+        color: #007bff;
         text-decoration: underline;
       }
 
@@ -81,6 +82,24 @@
         padding: 24px 0;
         text-align: center;
       }
+
+      .content {
+        text-align: left;
+        background: #eff0ef;
+        max-width: 95%;
+        margin: 12px auto;
+        padding: 12px;
+        border-left: 4px solid #007bff;
+      }
+
+      .content p {
+        margin: 0;
+        color: #717182;
+      }
+
+      .content p:not(:last-of-type) {
+        margin-bottom: 6px;
+      }
     </style>
   </head>
   <body>
@@ -97,12 +116,24 @@
         <tr>
           <td>
             <div class='container'>
-              <h1>Dear, {{userName}}</h1>
-              <p>Your adoption application has been submmited, the shelter staff will contact you to
-                schedule a meeting or proceed with the next steps in your adoption process.
-              </p>
-              <p>If desired, your application can be withdrawn at any time.</p>
-              <a href='/{{requestId}}' class='button'>Review application</a>
+              <h1>Payment Session Expired</h1>
+              <p>Dear, {{userName}}.</p>
+              <p>We're sorry to inform you that your donation session for
+                {{shelterName}}
+                has expired. This may occur due to the following:</p>
+              <ul>
+                <li>Session remained open for over 24 hours</li>
+                <li>Browser closed without finishing the process</li>
+                <li>Connection problems during the process</li>
+              </ul>
+              <div class='content'>
+                <p><b>Shelter:</b> {{shelterName}}</p>
+                <p><b>Amount:</b> ${{donationAmount}}</p>
+                <p><b>Date:</b> {{donationDate}}</p>
+              </div>
+              <p>Don't worry, no charge has been added to your card. If you still wish to proceed
+                with the donation you may try again.</p>
+              <a href='/dashboard/donation' class='button'>Try Again</a>
             </div>
           </td>
         </tr>

@@ -57,6 +57,7 @@ model Shelter {
   description           String?
   isVerified            Boolean         @default(false) @map("is_verified")
   isActive              Boolean         @default(true)  @map("is_active")
+  avatarURL             String?         @map("avatar_url")
   createdAt             DateTime        @default(now()) @map("created_at")
   updatedAt             DateTime        @updatedAt @map("updated_at")
 
@@ -78,7 +79,11 @@ model Pet {
   size                  PetSize         @default(Small)
   adoptionFee           Int             @map("adoption_fee")
   avatarURL             String          @map("avatar_url")
-  neutered              Boolean         @default(false)
+  neutered              Boolean?        @default(false)
+  trained               Boolean?        @default(false)
+  vaccinated            Boolean?        @default(false)
+  goodWithKids          Boolean?        @default(false) @map("good_with_kids")
+  goodWithPets          Boolean?        @default(false) @map("good_with_pets")
   isAdopted             Boolean         @default(false) @map("is_adopted")
   isActive              Boolean         @default(true)  @map("is_active")
   createdAt             DateTime        @default(now()) @map("created_at")
@@ -143,10 +148,10 @@ model Adoption {
   birthdate             String
   mainReason            String          @map("main_reason")
   expectatives          String
-  previousPetExp        previousPetExp  @default(None) @map("previous_pet_experience")
-  houseType             houseType       @default(House) @map("house_type")
-  houseOwnership        houseOwnership  @default(Owned) @map("house_ownership")
-  houseOuterSpace       houseOuterSpace @default(None) @map("house_outher_space")
+  previousPetExp        PreviousPetExp  @default(None) @map("previous_pet_experience")
+  houseType             HouseType       @default(House) @map("house_type")
+  houseOwnership        HouseOwnership  @default(Owned) @map("house_ownership")
+  houseOuterSpace       HouseOuterSpace @default(None) @map("house_outher_space")
   houseMembers          String          @map("house_members")
   livingSpace           String          @map("living_space")
   workingHours          String          @map("working_hours")
@@ -179,11 +184,17 @@ model Donation {
   amount                Int
   message               String?
   sessionID             String          @map("session_id")
+  status                DonationStatus? @default(pending)
+  paymentIntentId       String?         @map("payment_intent_id")
+  failureReason         String?         @map("failure_reason")
+
 
   userID                String          @map("user_id")
   user                  User            @relation(fields: [userID], references: [id])
   shelterID             String          @map("shelter_id")
   shelter               Shelter         @relation(fields: [shelterID], references: [id])
+  createdAt             DateTime        @default(now()) @map("created_at")
+  updatedAt             DateTime        @updatedAt @map("updated_at")
 
   @@index([userID])
   @@map("pa_user_donations")
@@ -211,27 +222,34 @@ enum AdoptionStatus {
   Withdrawn
 }
 
-enum previousPetExp {
+enum PreviousPetExp {
   None
   Basic
   Moderate
   Experienced
 }
 
-enum houseOwnership {
+enum HouseOwnership {
   Owned
   Rented
 }
 
-enum houseType {
+enum HouseType {
   House
   Apartment
   Farm
 }
 
-enum houseOuterSpace {
+enum HouseOuterSpace {
   None
   Small
   Medium
   Large
+}
+
+enum DonationStatus {
+  pending
+  completed
+  failed
+  expired
 }

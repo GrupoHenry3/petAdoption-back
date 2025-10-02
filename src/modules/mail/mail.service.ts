@@ -17,7 +17,19 @@ export class MailService {
     });
   }
 
-  async shelterAdoptionRequest(shelterEmail: string, shelterName: string, requestId: string) {
+  async shelterVerificationConfirmation(shelterEmail: string, shelterName: string) {
+    await this.mailerService.sendMail({
+      to: shelterEmail,
+      from: `Pet Adoption ${process.env.GMAIL_USER}`,
+      subject: 'Shelter Verification Confirmation',
+      template: 'shelterVerificationConfirmation',
+      context: {
+        shelterName: shelterName,
+      },
+    });
+  }
+
+  async shelterAdoptionConfirmation(shelterEmail: string, shelterName: string, requestId: string) {
     await this.mailerService.sendMail({
       to: shelterEmail,
       from: `Pet Adoption ${process.env.GMAIL_USER}`,
@@ -81,6 +93,50 @@ export class MailService {
         shelterName: shelterName,
         userName: userName,
         donationAmount: donationAmount,
+      },
+    });
+  }
+
+  async userFailedPayment(
+    userEmail: string,
+    userName: string,
+    shelterName: string,
+    donationAmount: number,
+    donationDate: Date,
+    errorReason: string,
+  ) {
+    await this.mailerService.sendMail({
+      to: userEmail,
+      from: `Pet Adoption ${process.env.GMAIL_USER}`,
+      subject: 'Donation Failed (Rejected Payment)',
+      template: 'userPaymentFailed',
+      context: {
+        userName: userName,
+        shelterName: shelterName,
+        donationAmount: donationAmount,
+        errorReason: errorReason,
+        donationDate: donationDate,
+      },
+    });
+  }
+
+  async userPaymentExpired(
+    userEmail: string,
+    userName: string,
+    shelterName: string,
+    donationAmount: number,
+    donationDate: Date,
+  ) {
+    await this.mailerService.sendMail({
+      to: userEmail,
+      from: `Pet Adoption ${process.env.GMAIL_USER}`,
+      subject: 'Donation Session Expired',
+      template: 'userPaymentExpired',
+      context: {
+        userName: userName,
+        shelterName: shelterName,
+        donationAmount: donationAmount,
+        donationDate: donationDate,
       },
     });
   }

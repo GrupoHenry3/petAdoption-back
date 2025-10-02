@@ -12,106 +12,103 @@ import {
   Req,
 } from '@nestjs/common';
 import { AdoptionsService } from './adoptions.service';
-import { AdoptionDTO, UpdateAdoptionDTO } from './adoptions.dto';
+import { Adoption, AdoptionDTO, UpdateAdoptionDTO } from './adoptions.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
+import { UserTypeGuard } from '../auth/guards/user-type.guard';
+import { UserTypes } from '../auth/auth.decorator';
+import { UserType } from '@prisma/client';
+import {
+  ApiBadRequestResponse,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiUnauthorizedResponse,
+  ApiNotFoundResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 
 @Controller('adoptions')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, UserTypeGuard)
+@ApiBearerAuth()
+@ApiUnauthorizedResponse({ description: 'Unauthorized' })
+@ApiBadRequestResponse({ description: 'Bad request' })
 export class AdoptionsController {
   constructor(private readonly adoptionsService: AdoptionsService) {}
 
+  @ApiOperation({ summary: 'Submit a new adoption application' })
+  @ApiBody({
+    type: AdoptionDTO,
+  })
+  @ApiCreatedResponse({ description: 'Adoption application created successfully' })
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @UserTypes(UserType.User)
   async create(@Req() req, @Body() payload: AdoptionDTO) {
     const { id } = req.user;
 
     await this.adoptionsService.create(id, payload);
   }
 
+  @ApiOperation({ summary: 'Withdraw an adoption application' })
+  @ApiOkResponse({ description: 'Adoption application withdrawn successfully' })
+  @ApiNotFoundResponse({ description: 'Adoption application not found' })
   @Patch(':id')
+  @HttpCode(HttpStatus.OK)
   async patch(@Param('id') id: string, payload: UpdateAdoptionDTO) {
-    return await this.adoptionsService.updateStatus(id, payload);
+    return await this.adoptionsService.withdrawApplication(id);
   }
 
+  @ApiOperation({ summary: 'Delete an adoption application' })
+  @ApiOkResponse({ description: 'Adoption application deleted successfully' })
+  @ApiNotFoundResponse({ description: 'Adoption application not found' })
   @Delete(':id')
+  @UserTypes(UserType.Shelter)
+  @HttpCode(HttpStatus.OK)
   async delete(@Param('id') id: string) {
     return await this.adoptionsService.delete(id);
   }
 
+  @ApiOperation({ summary: 'List all adoption applications (Shelter / Admin)' })
+  @ApiOkResponse({ description: 'List of all adoption applications', type: [Adoption] })
   @Get()
+  @HttpCode(HttpStatus.OK)
+  @UserTypes(UserType.Shelter)
   async findAll() {
     return await this.adoptionsService.findAll();
   }
 
+  @ApiOperation({ summary: 'List all adoptions by shelter' })
+  @ApiOkResponse({ description: 'List of all adoption applications', type: [Adoption] })
+  @ApiBadRequestResponse()
+  @Get('shelter/:id')
+  @HttpCode(HttpStatus.OK)
+  @UserTypes(UserType.Shelter)
+  async findByShelter(@Param('id') id: string) {
+    return await this.adoptionsService.findByShelter(id);
+  }
+
+  @ApiOperation({ summary: 'Get a specific adoption application' })
+  @ApiOkResponse({
+    description: 'Adoption application details fetched successfully',
+    type: Adoption,
+  })
+  @ApiBadRequestResponse()
   @Get(':id')
+  @HttpCode(HttpStatus.OK)
   async findOne(@Param('id') id: string) {
     return await this.adoptionsService.findOne(id);
   }
 
-  // @Get('all')
-  // @HttpCode(HttpStatus.OK)
-  // async getAllAdoption(): Promise<object> {
-  //   const adoptions: IAdoption[] = await this.adoptionsService.getAllAdoption();
-  //   return {
-  //     message: 'Lista de adopciones obtenida exitosamente',
-  //     data: adoptions,
-  //   };
-  // }
-
-  // @Get('by-id/:id')
-  // @HttpCode(HttpStatus.OK)
-  // async getByIdAdoption(@Param('id') id: string): Promise<object> {
-  //   const adoption: IAdoption = await this.adoptionsService.getByIdAdoption(id);
-  //   return {
-  //     message: 'Adopción encontrada exitosamente',
-  //     data: adoption,
-  //   };
-  // }
-
-  // @Patch('status/:id')
-  // @HttpCode(HttpStatus.OK)
-  // async updateAdoptionStatus(
-  //   @Param('id') id: string,
-  //   @Body('status') status: AdoptionStatus,
-  //   @Body('rejectionReason') rejectionReason?: string,
-  // ): Promise<object> {
-  //   const adoption: IAdoption | null = await this.adoptionsService.updateAdoptionStatus(
-  //     id,
-  //     status,
-  //     rejectionReason,
-  //   );
-  //   return {
-  //     message: `Estado de la adopción actualizado a "${status}"`,
-  //     data: adoption,
-  //   };
-  // }
-
-  // @Patch('update/:id')
-  // @HttpCode(HttpStatus.OK)
-  // async updateAdoption(
-  //   @Param('id') id: string,
-  //   @Body() updateData: Partial<IAdoption>,
-  // ): Promise<object> {
-  //   const updated: IAdoption = await this.adoptionsService.updateAdoption(id, updateData);
-  //   return {
-  //     message: 'Adopción actualizada exitosamente',
-  //     data: updated,
-  //   };
-  // }
-
-  // @Delete('delete/:id')
-  // @HttpCode(HttpStatus.OK)
-  // async deleteAdoption(@Param('id') id: string): Promise<object> {
-  //   return await this.adoptionsService.deleteAdoption(id);
-  // }
-
-  // @Patch('active/:id')
-  // @HttpCode(HttpStatus.OK)
-  // async adoptionIsActive(@Param('id') id: string): Promise<object> {
-  //   const adoption: IAdoption = await this.adoptionsService.adoptionIsActive(id);
-  //   return {
-  //     message: `El estado de la adopción con ID ${id} ha sido actualizado a ${adoption.isActive ? 'Activo' : 'Inactivo'}`,
-  //     data: adoption,
-  //   };
-  // }
+  @ApiOperation({ summary: 'Update the status of an adoption application (Shelter / Admin)' })
+  @ApiBody({
+    type: Adoption,
+  })
+  @ApiOkResponse({ description: 'Adoption application updated successfully' })
+  @Patch(':id/status')
+  @HttpCode(HttpStatus.OK)
+  @UserTypes(UserType.Shelter)
+  async updateAdoptionStatus(@Param('id') id: string, @Body() payload: UpdateAdoptionDTO) {
+    return await this.adoptionsService.updateStatus(id, payload);
+  }
 }

@@ -9,7 +9,9 @@ import { JsonWebTokenError, JwtService } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
 import { Reflector } from '@nestjs/core';
 import { UserType } from '@prisma/client';
-import { USER_TYPES_KEY } from '../decorators/user-type.decorator';
+import type { Request } from 'express';
+import { TokenType } from '../auth.types';
+import { USER_TYPES_KEY } from '../auth.decorator';
 
 @Injectable()
 export class UserTypeGuard implements CanActivate {
@@ -24,8 +26,8 @@ export class UserTypeGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    const request = context.switchToHttp().getRequest();
-    let token = request?.cookies?.access_token;
+    const request: Request = context.switchToHttp().getRequest();
+    let token = request?.cookies?.access_token as string;
 
     if (!token) {
       const authHeader = request.headers.authorization;
@@ -39,21 +41,28 @@ export class UserTypeGuard implements CanActivate {
     }
 
     try {
-      const decodedToken = this.jwtService.verify(token, {
+      const decodedToken: Record<string, TokenType> = this.jwtService.verify(token, {
         secret: `${process.env.JWT_SECRET_TOKEN}`,
       });
 
-      if (!decodedToken || typeof decodedToken !== 'object' || !('userType' in decodedToken)) {
+      if (!decodedToken || typeof decodedToken !== 'object') {
         throw new ForbiddenException();
       }
 
-      const userType = decodedToken.type;
+      const userType = decodedToken.userType as UserType;
+      const siteAdmin = decodedToken.siteAdmin as boolean;
+
+      // If user is admin, skip all checks
+      if (siteAdmin === true) {
+        return true;
+      }
 
       if (!requiredUserTypes.includes(userType)) {
         throw new ForbiddenException('This user is not managing a shelter');
       }
 
-      return true;
+      const hasRequiredType = requiredUserTypes.some((type) => userType === type);
+      return hasRequiredType;
     } catch (error) {
       if (error instanceof JsonWebTokenError) {
         throw new ForbiddenException('Invalid token');

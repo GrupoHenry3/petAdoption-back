@@ -1,17 +1,20 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { Prisma, Pet } from '@prisma/client';
-import { PetWithRelations } from './types/pet.types';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
+import { PetWithRelations } from './pet.types';
+import { CreatePetDTO } from './pets.dto';
 
 @Injectable()
 export class PetService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  async create(data: Prisma.PetCreateInput): Promise<Pet> {
-    return this.prisma.pet.create({
-      data,
-      include: { photos: true },
-    });
+  async create(payload: CreatePetDTO) {
+    try {
+      const pet = await this.prisma.pet.create({ data: payload });
+      return pet;
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async findAll(params?: {
@@ -26,10 +29,12 @@ export class PetService {
       take,
       where: { ...(where || {}), isActive: true },
       orderBy,
-      select: {
-        id: true,
-        name: true,
-        avatarURL: true,
+      omit: {
+        breedID: true,
+        speciesID: true,
+        shelterID: true,
+      },
+      include: {
         breed: {
           select: {
             id: true,
@@ -46,6 +51,9 @@ export class PetService {
           select: {
             id: true,
             name: true,
+            city: true,
+            state: true,
+            country: true,
           },
         },
       },
@@ -55,32 +63,37 @@ export class PetService {
   async findOne(id: string) {
     const pet = await this.prisma.pet.findUnique({
       where: { id, isActive: true },
-      select: {
-        id: true,
-        name: true,
-        age: true,
-        gender: true,
-        size: true,
-        adoptionFee: true,
-        avatarURL: true,
-        neutered: true,
-        isAdopted: true,
-        isActive: true,
+      omit: {
+        breedID: true,
+        speciesID: true,
+        shelterID: true,
+      },
+      include: {
+        photos: {
+          select: {
+            image_url: true,
+          },
+        },
+        species: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
         breed: {
           select: {
             id: true,
             name: true,
           },
         },
-        photos: {
-          select: {
-            image_url: true,
-          },
-        },
         shelter: {
           select: {
             id: true,
             name: true,
+            city: true,
+            state: true,
+            country: true,
+            phoneNumber: true,
           },
         },
         adoption: {
@@ -95,21 +108,51 @@ export class PetService {
     return pet;
   }
 
-  async update(id: string, data: Prisma.PetUpdateInput): Promise<PetWithRelations> {
-    await this.findOne(id);
-
-    return this.prisma.pet.update({
-      where: { id },
-      data,
-      include: {
-        photos: true,
-        shelter: true,
-        breed: true,
-        species: true,
-        adoption: true,
-        favorites: true,
-      },
+  async update(id: string, payload: Prisma.PetUpdateInput) {
+    const isPetValid = await this.prisma.pet.findUnique({
+      where: { id: id },
+      select: { id: true },
     });
+
+    if (!isPetValid) {
+      throw new NotFoundException(`Pet not found ${id}`);
+    }
+
+    try {
+      const updatedPet = await this.prisma.pet.update({
+        where: { id: isPetValid.id },
+        data: { ...payload },
+        omit: {
+          breedID: true,
+          speciesID: true,
+          shelterID: true,
+        },
+        include: {
+          breed: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          species: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          shelter: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      });
+
+      return updatedPet;
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async remove(id: string): Promise<PetWithRelations> {
@@ -139,7 +182,7 @@ export class PetService {
     return this.prisma.pet.findMany({
       skip,
       take,
-      where, //no filtramos por isActive
+      where,
       orderBy,
       include: {
         photos: true,
@@ -186,15 +229,12 @@ export class PetService {
   async findAllByShelter(id: string) {
     return this.prisma.pet.findMany({
       where: { shelterID: id, isActive: true },
-      select: {
-        id: true,
-        name: true,
-        age: true,
-        gender: true,
-        size: true,
-        avatarURL: true,
-        isAdopted: true,
-        createdAt: true,
+      omit: {
+        breedID: true,
+        speciesID: true,
+        shelterID: true,
+      },
+      include: {
         breed: {
           select: {
             name: true,

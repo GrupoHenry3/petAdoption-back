@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import { PrismaService } from '../../prisma/prisma.service';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
@@ -14,14 +13,14 @@ import { MailService } from '../mail/mail.service';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       global: true,
-      useFactory: async () => ({
+      useFactory: () => ({
         secret: `${process.env.JWT_SECRET_TOKEN}`,
-        signOptions: { expiresIn: '1h' },
+        signOptions: { expiresIn: '10m' },
       }),
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, PrismaService, UsersService, JwtStrategy, GoogleStrategy, MailService],
+  providers: [AuthService, UsersService, JwtStrategy, GoogleStrategy, MailService],
   exports: [PassportModule, JwtModule, JwtStrategy],
 })
 export class AuthModule {}

@@ -37,7 +37,7 @@
 
       h1 {
         font-size: 18px;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
       }
 
       p {
@@ -47,12 +47,7 @@
       }
 
       p:not(:last-of-type) {
-        margin-bottom: 12px;
-      }
-
-      a {
-        color: #00c950;
-        text-decoration: underline;
+        margin-bottom: 20px;
       }
 
       .button {
@@ -81,10 +76,46 @@
         padding: 24px 0;
         text-align: center;
       }
+
+      .content {
+        text-align: left;
+        background: #f3f3f5;
+        max-width: 95%;
+        margin: 0 auto;
+        padding: 12px;
+        margin-top: 12px;
+      }
+
+      .content p {
+        margin: 0;
+      }
+
+      .content p:not(:last-of-type) {
+        margin-bottom: 6px;
+      }
+
+      .content p b {
+        color: #717182;
+      }
+
+      .preheader {
+        color: transparent;
+        display: none;
+        height: 0;
+        max-height: 0;
+        max-width: 0;
+        opacity: 0;
+        overflow: hidden;
+        mso-hide: all;
+        visibility: hidden;
+        width: 0;
+      }
     </style>
   </head>
   <body>
+    <p class='preheader'>You've received a new donation.</p>
     <table class='table'>
+      <td>&nbsp;</td>
       <tbody>
         <tr>
           <td class='topline'></td>
@@ -97,12 +128,8 @@
         <tr>
           <td>
             <div class='container'>
-              <h1>Dear, {{userName}}</h1>
-              <p>Your adoption application has been submmited, the shelter staff will contact you to
-                schedule a meeting or proceed with the next steps in your adoption process.
-              </p>
-              <p>If desired, your application can be withdrawn at any time.</p>
-              <a href='/{{requestId}}' class='button'>Review application</a>
+              <h1>Dear, {{shelterName}} staff</h1>
+              <p>We're glad to inform you that your shelter has been verified on our website.</p>
             </div>
           </td>
         </tr>

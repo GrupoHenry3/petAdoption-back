@@ -1,9 +1,15 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, UseGuards } from '@nestjs/common';
 import { CloudinaryService } from './cloudinary.service';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt.guard';
+import { UserTypeGuard } from '../auth/guards/user-type.guard';
+import { UserType } from '@prisma/client';
+import { UserTypes } from '../auth/auth.decorator';
 
 @ApiTags('Cloudinary')
 @Controller('cloudinary')
+@UseGuards(JwtAuthGuard, UserTypeGuard)
+@UserTypes(UserType.Shelter)
 export class CloudinaryController {
   constructor(private readonly cloudinaryService: CloudinaryService) {}
 

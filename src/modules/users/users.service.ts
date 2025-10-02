@@ -7,7 +7,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDTO, GetUsersDTO, UpdateUserDTO } from './user.dto';
 import { Prisma } from '@prisma/client';
@@ -49,9 +49,7 @@ export class UsersService {
 
     try {
       const user = await this.prisma.user.create({ data: newUser });
-
       this.logger.log('User created successfully');
-
       await this.mailService.signUpConfirmation(user.fullName, user.email);
 
       return {
@@ -64,13 +62,13 @@ export class UsersService {
         },
       };
     } catch (error) {
-      this.logger.error(`Error creating user: ${error.message}`, error.stack);
+      this.logger.error('Failed to create user', error);
       throw new InternalServerErrorException('An unexpected error occurred during user creation');
     }
   }
 
-  async update(id: string, payload: UpdateUserDTO) {
-    const user = await this.prisma.user.findUnique({ where: { id: id } });
+  async update(userId: string, payload: UpdateUserDTO) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
 
     if (!user) {
       throw new NotFoundException(`User not found`);
@@ -78,52 +76,41 @@ export class UsersService {
 
     try {
       const user = await this.prisma.user.update({
-        where: { id: id },
+        where: { id: userId },
         data: { ...payload },
-        select: {
-          email: true,
-          fullName: true,
-          country: true,
-          city: true,
-          address: true,
-          phoneNumber: true,
-          avatarURL: true,
-          userType: true,
-          siteAdmin: true,
-          isActive: true,
-          createdAt: true,
-          updatedAt: true,
+        omit: {
+          password: true,
+          googleID: true,
         },
       });
 
-      this.logger.log(`Successfully updated user ${id}`);
+      this.logger.log(`Successfully updated user: ${userId}`);
 
       return user;
     } catch (error) {
-      this.logger.error(`Error creating user: ${error.message}`, error.stack);
+      this.logger.error(`Failed to update user: ${userId}`, error);
       throw new BadRequestException('An error has ocurred');
     }
   }
 
-  async updateUserStatus(id: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: id } });
+  async updateUserStatus(userId: string) {
+    const isUserValid = await this.prisma.user.findUnique({ where: { id: userId } });
 
-    if (!user) throw new NotFoundException('User not found');
+    if (!isUserValid) {
+      throw new NotFoundException('User not found');
+    }
 
-    const userStatus = !user.isActive;
+    const userStatus = !isUserValid.isActive;
 
     try {
       await this.prisma.user.update({
-        where: { id: user.id },
+        where: { id: isUserValid.id },
         data: {
           isActive: userStatus,
         },
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-
-      this.logger.error(`Error updating user status: ${errorMessage}`, errorStack);
+      this.logger.error(`Failed to update status for user: ${userId}`, error);
       throw new BadRequestException('An error has ocurred');
     }
   }
@@ -176,20 +163,11 @@ export class UsersService {
     try {
       const users = await this.prisma.user.findMany({
         where: where,
-        select: {
-          id: true,
-          email: true,
-          fullName: true,
-          country: true,
-          city: true,
-          address: true,
-          phoneNumber: true,
-          avatarURL: true,
-          userType: true,
-          siteAdmin: true,
-          isActive: true,
-          createdAt: true,
-          updatedAt: true,
+        omit: {
+          password: true,
+          googleID: true,
+        },
+        include: {
           adoptions: {
             select: {
               id: true,
@@ -210,42 +188,33 @@ export class UsersService {
         },
       });
 
-      this.logger.log('Fetched information for all users');
+      this.logger.log('Fetched data for all users');
 
       return users;
     } catch (error) {
-      this.logger.error(`Error fetching users: ${error.message}`, error.stack);
+      this.logger.error(`Failed to fetch data for all users`, error);
+      throw new BadRequestException('An error has ocurred');
     }
   }
 
-  async findOne(id: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: id },
+  async findOne(userId: string) {
+    const isUserValid = await this.prisma.user.findUnique({
+      where: { id: userId },
       select: { id: true },
     });
 
-    if (!user) {
+    if (!isUserValid) {
       throw new NotFoundException(`User not found`);
     }
 
     try {
       const user = await this.prisma.user.findUnique({
-        where: { id: id },
-        select: {
-          id: true,
-          email: true,
-          fullName: true,
-          country: true,
-          city: true,
-          address: true,
-          phoneNumber: true,
-          avatarURL: true,
-          userType: true,
-          siteAdmin: true,
-          isActive: true,
-          createdAt: true,
-          updatedAt: true,
-          favoritePets: true,
+        where: { id: userId },
+        omit: {
+          password: true,
+          googleID: true,
+        },
+        include: {
           adoptions: {
             select: {
               id: true,
@@ -282,17 +251,81 @@ export class UsersService {
         },
       });
 
-      this.logger.log(`Fetched information for user ${id}`);
+      this.logger.log(`Fetched data for user ${userId}`);
 
       return user;
     } catch (error) {
-      this.logger.error(`Error fetching user: ${error.message}`, error.stack);
+      this.logger.error(`Failed to fetch data for user: ${userId}`, error);
+      throw new BadRequestException('An error has ocurred');
     }
   }
 
-  async findByEmail(email: string) {
-    return await this.prisma.user.findUnique({ where: { email: email } });
-  }
+  async findCurrentUser(userId: string) {
+    const isUserValid = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
 
-  async findCurrentUser(userId: string) {}
+    if (!isUserValid) {
+      throw new NotFoundException(`User not found`);
+    }
+
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        omit: {
+          password: true,
+          googleID: true,
+        },
+        include: {
+          adoptions: {
+            include: {
+              pet: {
+                select: {
+                  id: true,
+                  name: true,
+                  age: true,
+                  gender: true,
+                  size: true,
+                  avatarURL: true,
+                  breed: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                  species: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
+              shelter: {
+                select: {
+                  id: true,
+                  name: true,
+                  city: true,
+                  state: true,
+                  country: true,
+                },
+              },
+            },
+          },
+          favoritePets: true,
+          shelter: {
+            omit: {
+              userID: true,
+            },
+          },
+        },
+      });
+
+      this.logger.log(`Fetched data for user: ${userId}`);
+
+      return user;
+    } catch (error) {
+      this.logger.error(`Failed to fetch data for user: ${userId}`, error);
+      throw new InternalServerErrorException('An error occurred while fetching user information');
+    }
+  }
 }

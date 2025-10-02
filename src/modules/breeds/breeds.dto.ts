@@ -1,5 +1,21 @@
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
+export class Breed {
+  @IsString()
+  id: string;
+
+  @IsString()
+  name: string;
+
+  @IsString()
+  description: string;
+
+  @IsString()
+  avatarURL: string;
+
+  @IsString()
+  speciesID: string;
+}
 export class BreedDTO {
   @IsString()
   @IsNotEmpty()

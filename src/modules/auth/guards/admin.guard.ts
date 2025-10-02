@@ -7,14 +7,16 @@ import {
 } from '@nestjs/common';
 import { JsonWebTokenError, JwtService } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
+import type { Request } from 'express';
+import { TokenType } from '../auth.types';
 
 @Injectable()
 export class AdminGuard implements CanActivate {
   constructor(private readonly jwtService: JwtService) {}
 
   canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
-    const request = context.switchToHttp().getRequest();
-    let token = request?.cookies?.access_token;
+    const request: Request = context.switchToHttp().getRequest();
+    let token = request?.cookies?.access_token as string;
 
     if (!token) {
       const authHeader = request.headers.authorization;
@@ -28,7 +30,7 @@ export class AdminGuard implements CanActivate {
     }
 
     try {
-      const decodedToken = this.jwtService.verify(token, {
+      const decodedToken: Record<string, TokenType> = this.jwtService.verify(token, {
         secret: `${process.env.JWT_SECRET_TOKEN}`,
       });
 
@@ -36,7 +38,7 @@ export class AdminGuard implements CanActivate {
         throw new ForbiddenException();
       }
 
-      const siteAdmin = decodedToken.siteAdmin;
+      const siteAdmin = decodedToken.siteAdmin as boolean;
 
       if (siteAdmin === false) {
         throw new ForbiddenException('User has no administrator priviledges');
