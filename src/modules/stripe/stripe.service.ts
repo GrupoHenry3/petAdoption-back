@@ -31,6 +31,12 @@ export class StripeService {
       cancel_url: `${process.env.FRONTEND_URL}/dashboard/donation/cancel`,
       payment_intent_data: {
         capture_method: 'automatic',
+        metadata: {
+          type: 'donation',
+        },
+      },
+      metadata: {
+        type: 'donation',
       },
       allow_promotion_codes: false,
       billing_address_collection: 'auto',

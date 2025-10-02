@@ -1,4 +1,4 @@
-import { Controller, Post, Req, Res, Headers, Logger } from '@nestjs/common';
+import { Controller, Post, Req, Res, Headers, Logger, Inject, forwardRef } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { StripeService } from './stripe.service';
 import { DonationsService } from '../donations/donations.service';
@@ -10,6 +10,7 @@ export class StripeController {
 
   constructor(
     private readonly stripeService: StripeService,
+    @Inject(forwardRef(() => DonationsService))
     private readonly donationsService: DonationsService,
   ) {}
 
@@ -29,9 +30,10 @@ export class StripeController {
     let event: Stripe.Event;
 
     try {
-      // Verificar la firma del webhook
-      event = this.stripeService.constructWebhookEvent(req.body, signature, endpointSecret);
-    } catch (err) {
+      // Verificar la firma del webhook - usar rawBody para Stripe
+      const rawBody = (req as any).rawBody || req.body;
+      event = this.stripeService.constructWebhookEvent(rawBody, signature, endpointSecret);
+    } catch (err: any) {
       this.logger.error(`Webhook signature verification failed: ${err.message}`);
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
@@ -54,6 +56,10 @@ export class StripeController {
 
         case 'payment_intent.payment_failed':
           await this.handlePaymentIntentFailed(event.data.object as Stripe.PaymentIntent);
+          break;
+
+        case 'charge.failed':
+          await this.handleChargeFailed(event.data.object as Stripe.Charge);
           break;
 
         default:
@@ -113,20 +119,47 @@ export class StripeController {
 
   private async handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
     this.logger.log(`Payment intent failed: ${paymentIntent.id}`);
+    this.logger.log(`Payment intent metadata:`, paymentIntent.metadata);
 
     try {
-      const session = await this.stripeService.retrieveCheckoutSession(
-        paymentIntent.metadata?.session_id,
-      );
-      if (session) {
+      // Buscar la donación por el payment_intent_id en lugar de session_id
+      const donation = await this.donationsService.findByPaymentIntentId(paymentIntent.id);
+      
+      if (donation) {
         await this.donationsService.markDonationAsFailed(
-          session.id,
+          donation.sessionID,
           paymentIntent.last_payment_error?.message || 'Payment failed',
         );
         this.logger.log(`Donation marked as failed for payment intent: ${paymentIntent.id}`);
+      } else {
+        this.logger.warn(`No donation found for payment intent: ${paymentIntent.id}`);
       }
     } catch (error) {
       this.logger.error(`Error handling payment intent failure: ${error.message}`);
+      throw error;
+    }
+  }
+
+  private async handleChargeFailed(charge: Stripe.Charge) {
+    this.logger.log(`Charge failed: ${charge.id}`);
+    this.logger.log(`Charge payment intent: ${charge.payment_intent}`);
+
+    try {
+      // Buscar la donación por el payment_intent_id del charge
+      const donation = await this.donationsService.findByPaymentIntentId(charge.payment_intent as string);
+      
+      if (donation) {
+        const failureReason = charge.failure_message || charge.outcome?.seller_message || 'Payment failed';
+        await this.donationsService.markDonationAsFailed(
+          donation.sessionID,
+          failureReason,
+        );
+        this.logger.log(`Donation marked as failed for charge: ${charge.id}`);
+      } else {
+        this.logger.warn(`No donation found for charge payment intent: ${charge.payment_intent}`);
+      }
+    } catch (error) {
+      this.logger.error(`Error handling charge failure: ${error.message}`);
       throw error;
     }
   }

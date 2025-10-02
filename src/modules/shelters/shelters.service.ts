@@ -20,6 +20,9 @@ export class SheltersService {
   ) {}
 
   async create(payload: ShelterDTO, userID: string) {
+    console.log('SheltersService.create - Payload received:', payload);
+    console.log('SheltersService.create - avatarURL:', payload.avatarURL);
+    
     const existingShelter = await this.prisma.shelter.findUnique({
       where: { userID: userID },
       select: { id: true },
@@ -40,6 +43,9 @@ export class SheltersService {
             city: payload.city,
             address: payload.address,
             phoneNumber: payload.phoneNumber,
+            website: payload.website,
+            description: payload.description,
+            avatarURL: payload.avatarURL,
           },
           select: {
             id: true,
@@ -49,6 +55,7 @@ export class SheltersService {
             city: true,
             address: true,
             phoneNumber: true,
+            avatarURL: true,
             createdAt: true,
           },
         });
@@ -59,10 +66,12 @@ export class SheltersService {
         });
 
         this.logger.log('Shelter application successfull');
+        console.log('SheltersService.create - newShelter created:', newShelter);
 
         return { newShelter, updateUser };
       });
 
+      console.log('SheltersService.create - Final response shelter:', tx.newShelter);
       return {
         statusCode: HttpStatus.CREATED,
         shelter: tx.newShelter,
@@ -96,6 +105,7 @@ export class SheltersService {
           website: true,
           phoneNumber: true,
           description: true,
+          avatarURL: true,
         },
       });
 
@@ -273,7 +283,10 @@ export class SheltersService {
           phoneNumber: true,
           website: true,
           description: true,
+          avatarURL: true,
           isVerified: true,
+          isActive: true,
+          createdAt: true,
         },
       });
 
@@ -307,8 +320,10 @@ export class SheltersService {
           phoneNumber: true,
           website: true,
           description: true,
+          avatarURL: true,
           isActive: true,
           isVerified: true,
+          createdAt: true,
           adoptions: true,
           donations: true,
         },

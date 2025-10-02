@@ -27,6 +27,10 @@ export class Shelter {
 
   @IsString()
   description: string;
+
+  @IsString()
+  @IsOptional()
+  avatarURL?: string;
 }
 
 export class ShelterDTO {
@@ -53,6 +57,18 @@ export class ShelterDTO {
   @IsNotEmpty()
   @IsString()
   country: string;
+
+  @IsOptional()
+  @IsString()
+  website?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  avatarURL?: string;
 }
 
 export class UpdateShelterDTO {
@@ -66,7 +82,7 @@ export class UpdateShelterDTO {
 
   @IsOptional()
   @IsString()
-  state: string;
+  state?: string;
 
   @IsOptional()
   @IsString()
@@ -87,6 +103,10 @@ export class UpdateShelterDTO {
   @IsOptional()
   @IsString()
   description?: string;
+
+  @IsOptional()
+  @IsString()
+  avatarURL?: string;
 }
 
 export class GetSheltersDTO {

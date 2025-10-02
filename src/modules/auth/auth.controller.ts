@@ -45,7 +45,7 @@ export class AuthController {
     res.cookie('access_token', result.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
+      sameSite: 'lax',
       maxAge: 60 * 60 * 1000,
     });
 
@@ -74,15 +74,28 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
   async googleCallback(@Req() req, @Res() res: Response) {
-    const result = await this.authService.googleSignIn(req.user.id);
+    try {
+      console.log('Google OAuth callback - User ID:', req.user.id);
+      console.log('Google OAuth callback - User object:', req.user);
+      
+      const result = await this.authService.googleSignIn(req.user.id);
+      console.log('Google OAuth callback - JWT generated:', !!result.accessToken);
 
-    res.cookie('access_token', result.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
-      maxAge: 60 * 60 * 1000,
-    });
+      const cookieOptions = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: (process.env.NODE_ENV === 'production' ? 'none' : 'lax') as 'none' | 'lax',
+        maxAge: 60 * 60 * 1000,
+      };
+      
+      console.log('Google OAuth callback - Cookie options:', cookieOptions);
+      res.cookie('access_token', result.accessToken, cookieOptions);
 
-    res.redirect(`${process.env.FRONTEND_URL}`);
+      console.log('Google OAuth callback - Cookie set, redirecting to:', process.env.FRONTEND_URL);
+      res.redirect(`${process.env.FRONTEND_URL}`);
+    } catch (error) {
+      console.error('Google OAuth callback error:', error);
+      res.redirect(`${process.env.FRONTEND_URL}/auth?error=oauth_failed`);
+    }
   }
 }

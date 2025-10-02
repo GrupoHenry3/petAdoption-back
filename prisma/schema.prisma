@@ -55,6 +55,7 @@ model Shelter {
   phoneNumber           String          @map("phone_number")
   website               String?
   description           String?
+  avatarURL             String?         @map("avatar_url")
   isVerified            Boolean         @default(false) @map("is_verified")
   isActive              Boolean         @default(true)  @map("is_active")
   createdAt             DateTime        @default(now()) @map("created_at")
@@ -183,7 +184,9 @@ model Donation {
   amount                Int
   message               String?
   sessionID             String          @map("session_id")
+  paymentIntentId       String?         @map("payment_intent_id")
   status                DonationStatus  @default(pending)
+  failureReason         String?         @map("failure_reason")
 
   userID                String          @map("user_id")
   user                  User            @relation(fields: [userID], references: [id])
@@ -193,6 +196,7 @@ model Donation {
   updatedAt             DateTime        @updatedAt @map("updated_at")
 
   @@index([userID])
+  @@index([paymentIntentId])
   @@map("pa_user_donations")
 }
 

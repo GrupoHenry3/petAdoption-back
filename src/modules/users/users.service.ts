@@ -53,13 +53,10 @@ export class UsersService {
       await this.mailService.signUpConfirmation(user.fullName, user.email);
 
       return {
-        statusCode: HttpStatus.CREATED,
-        message: 'User created successfully',
-        user: {
-          id: user.id,
-          createAt: user.createdAt,
-          updatedAt: user.updatedAt,
-        },
+        id: user.id,
+        userType: user.userType,
+        isActive: user.isActive,
+        siteAdmin: user.siteAdmin,
       };
     } catch (error) {
       this.logger.error('Failed to create user', error);
@@ -361,6 +358,7 @@ export class UsersService {
               phoneNumber: true,
               website: true,
               description: true,
+              avatarURL: true,
               isVerified: true,
               createdAt: true,
             },
@@ -369,6 +367,7 @@ export class UsersService {
       });
 
       this.logger.log(`Fetched data for user: ${userId}`);
+      console.log('UsersService.findCurrentUser - User shelter:', user?.shelter);
 
       return user;
     } catch (error) {

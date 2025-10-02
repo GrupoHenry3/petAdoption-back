@@ -3,6 +3,8 @@ import {
   InternalServerErrorException,
   Logger,
   NotFoundException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { DonationDTO } from './donations.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -16,6 +18,7 @@ export class DonationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
+    @Inject(forwardRef(() => StripeService))
     private readonly stripeService: StripeService,
   ) {}
 
@@ -48,6 +51,7 @@ export class DonationsService {
         data: {
           userID: userId,
           sessionID: checkout.id,
+          paymentIntentId: checkout.payment_intent as string,
           ...payload,
         },
       });
@@ -160,12 +164,7 @@ export class DonationsService {
         },
         include: {
           user: true,
-          shelter: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
+          shelter: true,
         },
       });
       return donations;
@@ -337,7 +336,7 @@ export class DonationsService {
       // Actualizar el estado de la donación
       await this.prisma.donation.update({
         where: { id: donation.id },
-        data: { status: 'failed' },
+        data: { status: 'failed', failureReason: errorReason },
       });
 
       // Enviar email de notificación de fallo
@@ -356,4 +355,18 @@ export class DonationsService {
       throw error;
     }
   }
+
+  async findByPaymentIntentId(paymentIntentId: string) {
+    try {
+      const donation = await this.prisma.donation.findFirst({
+        where: { paymentIntentId: paymentIntentId },
+      });
+      return donation;
+    } catch (error) {
+      this.logger.error(`Error finding donation by payment intent ID: ${error.message}`);
+      throw error;
+    }
+  }
+
+  
 }

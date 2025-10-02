@@ -51,10 +51,13 @@ export class DonationsController {
     return this.donationsService.findAll();
   }
 
-  @ApiOperation({ summary: 'Get a specific user donations' })
+  @ApiOperation({ summary: 'Get current user donations' })
   @ApiOkResponse({ description: 'Donation details fetched successfully', type: [Donation] })
-  @Get(':id')
-  async findByUser(@Param('id') id: string) {
+  @Get('user')
+  @UseGuards(UserTypeGuard)
+  @UserTypes(UserType.User)
+  async findByUser(@Req() req) {
+    const { id } = req.user;
     return await this.donationsService.findByUser(id);
   }
 

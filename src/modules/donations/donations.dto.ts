@@ -83,7 +83,9 @@ export class DonationDTO {
   @ApiProperty({
     type: 'string',
     example: DonationStatus,
+    required: false,
   })
   @IsEnum(DonationStatus)
-  status: DonationStatus;
+  @IsOptional()
+  status?: DonationStatus;
 }

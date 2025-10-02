@@ -9,6 +9,7 @@ import { DonationsModule } from './modules/donations/donations.module';
 import { MailModule } from './modules/mail/mail.module';
 import { CloudinaryModule } from './modules/cloudinary/coudinary.module';
 import { AdoptionsModule } from './modules/adoptions/adoptions.module';
+import { StripeModule } from './modules/stripe/stripe.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { AdoptionsModule } from './modules/adoptions/adoptions.module';
     MailModule,
     CloudinaryModule,
     AdoptionsModule,
+    StripeModule,
   ],
 })
 export class AppModule {}
