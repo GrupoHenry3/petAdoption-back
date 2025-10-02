@@ -184,6 +184,9 @@ model Donation {
   message               String?
   sessionID             String          @map("session_id")
   status                DonationStatus  @default(pending)
+  paymentIntentId       String?         @map("payment_intent_id")
+  failureReason         String?         @map("failure_reason")
+
 
   userID                String          @map("user_id")
   user                  User            @relation(fields: [userID], references: [id])
