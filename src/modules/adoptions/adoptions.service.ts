@@ -8,11 +8,15 @@ import {
 import { AdoptionDTO, UpdateAdoptionDTO } from './adoptions.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AdoptionStatus } from '@prisma/client';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AdoptionsService {
   private readonly logger = new Logger(AdoptionsService.name);
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mail: MailService,
+  ) {}
 
   async create(userId: string, payload: AdoptionDTO) {
     const hasAdoptionOpen = await this.prisma.adoption.findFirst({
@@ -24,18 +28,58 @@ export class AdoptionsService {
     }
 
     try {
-      const newAdoption = await this.prisma.adoption.create({
-        data: {
-          userID: userId,
-          ...payload,
-        },
+      const tx = await this.prisma.$transaction(async (prisma) => {
+        const adoption = await prisma.adoption.create({
+          data: {
+            userID: userId,
+            ...payload,
+          },
+        });
+
+        const user = await prisma.user.findUnique({
+          where: { id: adoption.userID },
+          select: {
+            fullName: true,
+            email: true,
+          },
+        });
+
+        if (!user) {
+          throw new NotFoundException('User not found');
+        }
+
+        const shelter = await prisma.shelter.findUnique({
+          where: { id: adoption.shelterID },
+          select: {
+            name: true,
+            user: true,
+          },
+        });
+
+        if (!shelter) {
+          throw new NotFoundException('Shelter not found');
+        }
+
+        this.logger.log('Adoption application created successfully.');
+
+        return { adoption, user, shelter };
       });
 
-      this.logger.log('Adoption application created successfully.');
+      await this.mail.shelterAdoptionConfirmation(
+        tx.shelter.user.email,
+        tx.shelter.name,
+        tx.adoption.id,
+      );
+
+      await this.mail.userAdoptionConfirmation(
+        tx.user.email, 
+        tx.user.fullName, 
+        tx.adoption.id
+      );
 
       return {
         statusCode: HttpStatus.CREATED,
-        data: newAdoption,
+        data: tx.adoption,
       };
     } catch (error) {
       this.logger.error(`Error creating adoption application: ${error.message}`, error.stack);

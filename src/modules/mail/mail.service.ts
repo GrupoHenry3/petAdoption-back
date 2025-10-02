@@ -29,7 +29,7 @@ export class MailService {
     });
   }
 
-  async shelterAdoptionRequest(shelterEmail: string, shelterName: string, requestId: string) {
+  async shelterAdoptionConfirmation(shelterEmail: string, shelterName: string, requestId: string) {
     await this.mailerService.sendMail({
       to: shelterEmail,
       from: `Pet Adoption ${process.env.GMAIL_USER}`,
