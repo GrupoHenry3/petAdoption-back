@@ -383,10 +383,10 @@ export class DonationsService {
     }
   }
 
-  async findByPaymentIntentId(paymentIntentId: string) {
+  async findByPaymentIntentId(id: string) {
     try {
       const donation = await this.prisma.donation.findFirst({
-        where: { paymentIntentId: paymentIntentId },
+        where: { paymentIntentId: id },
       });
       return donation;
     } catch (error) {
