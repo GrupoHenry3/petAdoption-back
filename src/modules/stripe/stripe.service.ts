@@ -11,6 +11,18 @@ export class StripeService {
     });
   }
 
+  constructWebhookEvent(payload: string | Buffer, signature: string, secret: string): Stripe.Event {
+    return this.stripe.webhooks.constructEvent(payload, signature, secret);
+  }
+
+  async retrieveCheckoutSession(sessionId: string): Promise<Stripe.Checkout.Session | null> {
+    try {
+      return await this.stripe.checkout.sessions.retrieve(sessionId);
+    } catch {
+      return null;
+    }
+  }
+
   async checkoutSession(amount: number) {
     const res = await this.stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -27,8 +39,8 @@ export class StripeService {
         },
       ],
       mode: 'payment',
-      success_url: `${process.env.FRONTEND_URL}/donation/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL}/donation/cancel`,
+      success_url: `${process.env.FRONTEND_URL}/dashboard/donation/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL}/dashboard/donation/cancel`,
       payment_intent_data: {
         capture_method: 'automatic',
       },

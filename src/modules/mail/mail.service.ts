@@ -118,4 +118,24 @@ export class MailService {
       },
     });
   }
+
+  async userPaymentExpired(
+    userEmail: string,
+    userName: string,
+    shelterName: string,
+    donationAmount: number,
+  ) {
+    await this.mailerService.sendMail({
+      to: userEmail,
+      from: `Pet Adoption ${process.env.GMAIL_USER}`,
+      subject: 'Donation Session Expired',
+      template: 'userPaymentExpired',
+      context: {
+        userName: userName,
+        shelterName: shelterName,
+        donationAmount: donationAmount,
+        donationDate: new Date().toLocaleDateString('es-ES'),
+      },
+    });
+  }
 }

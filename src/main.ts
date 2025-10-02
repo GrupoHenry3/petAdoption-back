@@ -20,15 +20,25 @@ async function bootstrap() {
   SwaggerModule.setup('/', app, documentFactory);
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }));
   app.use(cookieParser());
+  
+  // Configurar middleware para webhooks de Stripe (raw body)
+  app.use('/api/stripe/webhook', (req, res, next) => {
+    if (req.originalUrl === '/api/stripe/webhook') {
+      next();
+    } else {
+      next();
+    }
+  });
   app.enableCors({
-    origin: process.env.FRONTEND_URL,
+    origin: 'http://localhost:3000',
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
     exposedHeaders: ['Set-Cookie'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   });
   app.setGlobalPrefix('api');
 
-  await app.listen(process.env.APP_PORT || 3000);
+  await app.listen(process.env.APP_PORT || 5500);
 }
 
 void bootstrap();

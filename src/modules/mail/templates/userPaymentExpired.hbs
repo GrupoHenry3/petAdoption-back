@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sesión de Donación Expirada</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .content {
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+        }
+        .alert {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .donation-details {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .button {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            color: #6c757d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🐾 Pet Adoption</h1>
+        <h2>Sesión de Donación Expirada</h2>
+    </div>
+
+    <div class="content">
+        <p>Hola <strong>{{userName}}</strong>,</p>
+
+        <div class="alert">
+            <strong>⚠️ Tu sesión de donación ha expirado</strong><br>
+            La sesión de pago para tu donación ha expirado sin completarse.
+        </div>
+
+        <p>Lamentamos informarte que tu sesión de donación para <strong>{{shelterName}}</strong> ha expirado. Esto puede suceder cuando:</p>
+        
+        <ul>
+            <li>La sesión de pago permanece abierta por más de 24 horas</li>
+            <li>El navegador se cierra sin completar el proceso</li>
+            <li>Hay problemas de conectividad durante el proceso</li>
+        </ul>
+
+        <div class="donation-details">
+            <h3>Detalles de la Donación:</h3>
+            <p><strong>Refugio:</strong> {{shelterName}}</p>
+            <p><strong>Monto:</strong> ${{donationAmount}}</p>
+            <p><strong>Fecha:</strong> {{donationDate}}</p>
+        </div>
+
+        <p>No te preocupes, no se ha procesado ningún cargo en tu tarjeta. Si aún deseas hacer esta donación, puedes intentar nuevamente:</p>
+
+        <a href="https://tu-dominio.com/dashboard/donation" class="button">
+            Intentar Donación Nuevamente
+        </a>
+
+        <p>Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos.</p>
+
+        <p>¡Gracias por tu interés en ayudar a los animales!</p>
+    </div>
+
+    <div class="footer">
+        <p>Este es un mensaje automático de Pet Adoption.</p>
+        <p>Si no solicitaste esta donación, puedes ignorar este mensaje.</p>
+    </div>
+</body>
+</html>
