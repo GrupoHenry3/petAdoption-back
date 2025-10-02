@@ -18,11 +18,10 @@ import { ApiBody } from '@nestjs/swagger';
 
 const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: (process.env.NODE_ENV === 'production' ? 'none' : 'lax') as 'none' | 'lax',
+  secure: true,
+  sameSite: 'none' as const,
   maxAge: 60 * 60 * 1000,
 };
-
 @Controller('auth')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
