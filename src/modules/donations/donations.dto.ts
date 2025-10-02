@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { DonationStatus } from '@prisma/client';
-import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsObject,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class Donation {
   @ApiProperty({
@@ -31,12 +38,6 @@ export class Donation {
     type: 'string',
   })
   @IsString()
-  shelterID: string;
-
-  @ApiProperty({
-    type: 'string',
-  })
-  @IsString()
   userID: string;
 
   @ApiProperty({
@@ -45,6 +46,19 @@ export class Donation {
   })
   @IsEnum(DonationStatus)
   status: DonationStatus;
+
+  @ApiProperty({
+    type: 'object',
+    properties: {
+      id: { type: 'string' },
+      name: { type: 'string' },
+    },
+  })
+  @IsObject()
+  shelter: {
+    id: string;
+    name: string;
+  };
 
   @ApiProperty({
     type: 'string',

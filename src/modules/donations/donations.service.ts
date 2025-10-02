@@ -188,7 +188,22 @@ export class DonationsService {
     }
 
     try {
-      return await this.prisma.donation.findMany({ where: { userID: isUserValid.id } });
+      const donations = await this.prisma.donation.findMany({
+        where: { userID: isUserValid.id },
+        omit: {
+          userID: true,
+          shelterID: true,
+        },
+        include: {
+          shelter: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      });
+      return donations;
     } catch (error) {
       this.logger.error(`Failed to fetch donations for user ${isUserValid.id}`, error);
       throw new InternalServerErrorException(
@@ -219,7 +234,23 @@ export class DonationsService {
     }
 
     try {
-      return await this.prisma.donation.findMany({ where: { shelterID: shelter.id } });
+      const donations = await this.prisma.donation.findMany({
+        where: { shelterID: shelter.id },
+        omit: {
+          userID: true,
+          shelterID: true,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+            },
+          },
+        },
+      });
+
+      return donations;
     } catch (error) {
       this.logger.error(`Failed to fetch donations for shelter ${shelter.id}`, error);
       throw new InternalServerErrorException(

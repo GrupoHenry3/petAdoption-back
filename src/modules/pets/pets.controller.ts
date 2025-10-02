@@ -12,7 +12,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { PetService } from './pets.service';
-// import { Pet, Prisma, UserType } from '@prisma/client';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -29,7 +28,7 @@ import { PetWithRelations } from './pet.types';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { UserTypeGuard } from '../auth/guards/user-type.guard';
 import { UserTypes } from '../auth/auth.decorator';
-import { CreatePetDTO, UpdatePetDTO } from './pets.dto';
+import { CreatePetDTO, Pet, UpdatePetDTO } from './pets.dto';
 import { UserType } from '@prisma/client';
 
 @Controller('pets')
@@ -54,7 +53,7 @@ export class PetController {
 
   @Get()
   @ApiOperation({ summary: 'List all pets' })
-  @ApiResponse({ status: 200, description: 'List of all active pets' })
+  @ApiResponse({ status: 200, description: 'List of all active pets', type: [Pet] })
   @ApiNoContentResponse({ description: 'No pets found' })
   findAll(
     @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip: number,
@@ -67,8 +66,9 @@ export class PetController {
   @UseGuards(JwtAuthGuard, UserTypeGuard)
   @UserTypes(UserType.Shelter)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get all pets (active and inactive) - (admin only)' })
-  @ApiResponse({ status: 200, description: 'List of pets returned.' })
+  @ApiOperation({ summary: 'Get all pets (Admin)' })
+  @ApiResponse({ status: 200, description: 'List of all pets', type: [Pet] })
+  @ApiNoContentResponse({ description: 'No pets found' })
   findAllWithInactive(
     @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip: number,
     @Query('take', new DefaultValuePipe(10), ParseIntPipe) take: number,
@@ -88,7 +88,7 @@ export class PetController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a specific pet' })
-  @ApiOkResponse({ description: 'Pet details fetched successfully' })
+  @ApiOkResponse({ description: 'Pet details fetched successfully', type: Pet })
   @ApiNotFoundResponse({ description: 'Pet not found' })
   findOne(@Param('id') id: string) {
     return this.petService.findOne(id);
@@ -100,7 +100,7 @@ export class PetController {
   @ApiBody({
     type: UpdatePetDTO,
   })
-  @ApiOkResponse({ description: 'Pet updated successfully' })
+  @ApiOkResponse({ description: 'Pet updated successfully', type: Pet })
   @ApiNotFoundResponse({ description: 'Pet not found' })
   update(@Param('id') id: string, @Body() payload: UpdatePetDTO) {
     return this.petService.update(id, payload);
@@ -122,8 +122,8 @@ export class PetController {
   @UseGuards(JwtAuthGuard, UserTypeGuard)
   @UserTypes(UserType.Shelter)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get all pets by shelter (active and inactive)' })
-  @ApiOkResponse({ description: 'List of pets returned' })
+  @ApiOperation({ summary: 'Get all pets by shelter' })
+  @ApiOkResponse({ description: 'List of pets returned', type: [Pet] })
   findAllByShelter(@Param('id') id: string) {
     return this.petService.findAllByShelter(id);
   }
