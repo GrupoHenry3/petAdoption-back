@@ -41,8 +41,8 @@ export class PetController {
   @UseGuards(JwtAuthGuard, UserTypeGuard)
   @UserTypes(UserType.Shelter)
   @ApiOperation({ summary: 'Create a new pet' })
-  @ApiResponse({ status: 201, description: 'Pet created successfully.' })
-  @ApiResponse({ status: 400, description: 'Invalid data.' })
+  @ApiResponse({ status: 201, description: 'Pet created successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid data' })
   @ApiBody({
     type: CreatePetDTO,
   })
