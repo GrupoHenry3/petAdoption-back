@@ -17,7 +17,7 @@ import type { Response } from 'express';
 import { ApiBody } from '@nestjs/swagger';
 
 const cookieOptions = {
-  httpOnly: true,
+  httpOnly: false,
   secure: true,
   sameSite: 'none' as const,
   maxAge: 60 * 60 * 1000,
@@ -51,13 +51,7 @@ export class AuthController {
   @HttpCode(HttpStatus.ACCEPTED)
   async signIn(@Res({ passthrough: true }) res: Response, @Body() payload: SignInDTO) {
     const result = await this.authService.signIn(payload);
-    res.cookie('access_token', result.accessToken, {
-      httpOnly: false,
-      secure: false,
-      sameSite: 'none',
-      maxAge: 60 * 60 * 1000,
-      path: '/',
-    });
+    res.cookie('access_token', result.accessToken, cookieOptions);
 
     // return {
     //   statusCode: 202,
@@ -86,13 +80,7 @@ export class AuthController {
   async googleCallback(@Req() req, @Res({ passthrough: true }) res: Response) {
     try {
       const result = await this.authService.googleSignIn(req.user.id);
-      res.cookie('access_token', result.accessToken, {
-        httpOnly: false,
-        secure: false,
-        sameSite: 'none',
-        maxAge: 60 * 60 * 1000,
-        path: '/',
-      });
+      res.cookie('access_token', result.accessToken, cookieOptions);
       // res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${result.accessToken}`);
       res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
     } catch (e) {
