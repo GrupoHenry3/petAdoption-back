@@ -79,7 +79,7 @@ export class AuthController {
   async googleCallback(@Req() req, @Res({ passthrough: true }) res: Response) {
     try {
       const result = await this.authService.googleSignIn(req.user.id);
-      // res.cookie('access_token', result.accessToken, cookieOptions);
+      res.cookie('access_token', result.accessToken, cookieOptions);
       res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${result.accessToken}`);
     } catch (e) {
       this.logger.error(e);
