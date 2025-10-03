@@ -27,6 +27,7 @@ import {
   ApiNotFoundResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import { AdminGuard } from '../auth/guards/admin.guard';
 
 @Controller('adoptions')
 @UseGuards(JwtAuthGuard, UserTypeGuard)
@@ -55,7 +56,7 @@ export class AdoptionsController {
   @ApiNotFoundResponse({ description: 'Adoption application not found' })
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
-  async patch(@Param('id') id: string, payload: UpdateAdoptionDTO) {
+  async patch(@Param('id') id: string) {
     return await this.adoptionsService.withdrawApplication(id);
   }
 
@@ -83,7 +84,7 @@ export class AdoptionsController {
   @ApiBadRequestResponse()
   @Get('shelter/:id')
   @HttpCode(HttpStatus.OK)
-  @UserTypes(UserType.Shelter)
+  @UseGuards(AdminGuard)
   async findByShelter(@Param('id') id: string) {
     return await this.adoptionsService.findByShelter(id);
   }
