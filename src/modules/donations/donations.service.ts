@@ -1,4 +1,6 @@
 import {
+  forwardRef,
+  Inject,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -15,6 +17,7 @@ export class DonationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
+    @Inject(forwardRef(() => StripeService))
     private readonly stripeService: StripeService,
   ) {}
 

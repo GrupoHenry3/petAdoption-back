@@ -51,6 +51,20 @@ export class AdoptionsController {
     await this.adoptionsService.create(id, payload);
   }
 
+  @ApiOperation({ summary: 'List adoptions for current shelter' })
+  @ApiOkResponse({
+    description: 'List of adoption applications for current shelter',
+    type: [Adoption],
+  })
+  @ApiBadRequestResponse()
+  @Get('shelter')
+  @HttpCode(HttpStatus.OK)
+  @UserTypes(UserType.Shelter)
+  async findByCurrentShelter(@Req() req) {
+    const { id } = req.user;
+    return await this.adoptionsService.findByCurrentShelter(id);
+  }
+
   @ApiOperation({ summary: 'Withdraw an adoption application' })
   @ApiOkResponse({ description: 'Adoption application withdrawn successfully' })
   @ApiNotFoundResponse({ description: 'Adoption application not found' })
@@ -70,7 +84,7 @@ export class AdoptionsController {
     return await this.adoptionsService.delete(id);
   }
 
-  @ApiOperation({ summary: 'List all adoption applications (Shelter / Admin)' })
+  @ApiOperation({ summary: 'List all adoption applications (Admin)' })
   @ApiOkResponse({ description: 'List of all adoption applications', type: [Adoption] })
   @Get()
   @HttpCode(HttpStatus.OK)
