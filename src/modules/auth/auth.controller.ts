@@ -52,8 +52,8 @@ export class AuthController {
   async signIn(@Res({ passthrough: true }) res: Response, @Body() payload: SignInDTO) {
     const result = await this.authService.signIn(payload);
     res.cookie('access_token', result.accessToken, {
-      httpOnly: true,
-      secure: true,
+      httpOnly: false,
+      secure: false,
       sameSite: 'lax',
       maxAge: 60 * 60 * 1000,
       domain: '.onrender.com',
