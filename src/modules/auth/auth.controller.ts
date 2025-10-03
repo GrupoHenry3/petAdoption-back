@@ -80,7 +80,7 @@ export class AuthController {
     try {
       const result = await this.authService.googleSignIn(req.user.id);
       // res.cookie('access_token', result.accessToken, cookieOptions);
-      res.redirect(`${process.env.FRONTEND_URL}/auth/google/success?token=${result.accessToken}`);
+      res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${result.accessToken}`);
     } catch (e) {
       this.logger.error(e);
       res.redirect(`${process.env.FRONTEND_URL}/auth?error=oauth_failed`);
