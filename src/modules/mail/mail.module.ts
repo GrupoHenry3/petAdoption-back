@@ -7,7 +7,9 @@ import { MailService } from './mail.service';
   imports: [
     MailerModule.forRoot({
       transport: {
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
         auth: {
           user: `${process.env.GMAIL_USER}`,
           pass: `${process.env.GMAIL_PASSWORD}`,
