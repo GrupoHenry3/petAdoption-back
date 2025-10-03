@@ -56,7 +56,6 @@ export class AuthController {
       secure: false,
       sameSite: 'none',
       maxAge: 60 * 60 * 1000,
-      domain: '.onrender.com',
       path: '/',
     });
 
@@ -92,7 +91,6 @@ export class AuthController {
         secure: false,
         sameSite: 'none',
         maxAge: 60 * 60 * 1000,
-        domain: 'onrender.com',
         path: '/',
       });
       // res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${result.accessToken}`);
