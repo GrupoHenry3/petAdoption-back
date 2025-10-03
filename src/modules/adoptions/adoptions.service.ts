@@ -65,13 +65,13 @@ export class AdoptionsService {
         return { adoption, user, shelter };
       });
 
-      await this.mail.shelterAdoptionConfirmation(
-        tx.shelter.user.email,
-        tx.shelter.name,
-        tx.adoption.id,
-      );
+      // await this.mail.shelterAdoptionConfirmation(
+      //   tx.shelter.user.email,
+      //   tx.shelter.name,
+      //   tx.adoption.id,
+      // );
 
-      await this.mail.userAdoptionConfirmation(tx.user.email, tx.user.fullName, tx.adoption.id);
+      // await this.mail.userAdoptionConfirmation(tx.user.email, tx.user.fullName, tx.adoption.id);
 
       return {
         statusCode: HttpStatus.CREATED,

@@ -172,7 +172,7 @@ export class SheltersService {
 
       this.logger.log(`Verified shelter ${shelter.id}`);
 
-      await this.mailService.shelterVerificationConfirmation(shelter.user.email, shelter.name);
+      // await this.mailService.shelterVerificationConfirmation(shelter.user.email, shelter.name);
 
       return {
         statusCode: HttpStatus.OK,

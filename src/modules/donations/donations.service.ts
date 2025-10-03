@@ -75,21 +75,21 @@ export class DonationsService {
         throw new NotFoundException('Shelter not fund');
       }
 
-      await this.mailService.shelterDonationConfirmation(
-        shelter.name,
-        shelter.user.email,
-        user.fullName,
-        donation.id,
-        donation.amount,
-        donation.message || '',
-      );
+      // await this.mailService.shelterDonationConfirmation(
+      //   shelter.name,
+      //   shelter.user.email,
+      //   user.fullName,
+      //   donation.id,
+      //   donation.amount,
+      //   donation.message || '',
+      // );
 
-      await this.mailService.userDonationConfirmation(
-        user.email,
-        user.fullName,
-        shelter.name,
-        donation.amount,
-      );
+      // await this.mailService.userDonationConfirmation(
+      //   user.email,
+      //   user.fullName,
+      //   shelter.name,
+      //   donation.amount,
+      // );
 
       return {
         sessionUrl: checkout.url,
@@ -124,14 +124,14 @@ export class DonationsService {
         throw new NotFoundException('Donation not found');
       }
 
-      await this.mailService.userFailedPayment(
-        donation.user.email,
-        donation.user.fullName,
-        donation.shelter.name,
-        donation.amount,
-        donation.updatedAt,
-        payload.errorReason,
-      );
+      // await this.mailService.userFailedPayment(
+      //   donation.user.email,
+      //   donation.user.fullName,
+      //   donation.shelter.name,
+      //   donation.amount,
+      //   donation.updatedAt,
+      //   payload.errorReason,
+      // );
 
       this.logger.log(`Payment failure notification sent for donation ${donation.id}`);
 
@@ -282,21 +282,21 @@ export class DonationsService {
         data: { status: 'completed' },
       });
 
-      await this.mailService.shelterDonationConfirmation(
-        donation.shelter.name,
-        donation.shelter.user.email,
-        donation.user.fullName,
-        donation.id,
-        donation.amount,
-        donation.message || '',
-      );
+      // await this.mailService.shelterDonationConfirmation(
+      //   donation.shelter.name,
+      //   donation.shelter.user.email,
+      //   donation.user.fullName,
+      //   donation.id,
+      //   donation.amount,
+      //   donation.message || '',
+      // );
 
-      await this.mailService.userDonationConfirmation(
-        donation.user.email,
-        donation.user.fullName,
-        donation.shelter.name,
-        donation.amount,
-      );
+      // await this.mailService.userDonationConfirmation(
+      //   donation.user.email,
+      //   donation.user.fullName,
+      //   donation.shelter.name,
+      //   donation.amount,
+      // );
 
       this.logger.log(`Donation ${donation.id} marked as completed`);
     } catch (error) {
@@ -328,13 +328,13 @@ export class DonationsService {
         data: { status: 'expired' },
       });
 
-      await this.mailService.userPaymentExpired(
-        donation.user.email,
-        donation.user.fullName,
-        donation.shelter.name,
-        donation.amount,
-        donation.updatedAt,
-      );
+      // await this.mailService.userPaymentExpired(
+      //   donation.user.email,
+      //   donation.user.fullName,
+      //   donation.shelter.name,
+      //   donation.amount,
+      //   donation.updatedAt,
+      // );
 
       this.logger.log(`Donation ${donation.id} marked as expired`);
     } catch (error) {
@@ -366,14 +366,14 @@ export class DonationsService {
         data: { status: 'failed', paymentIntentId: errorReason },
       });
 
-      await this.mailService.userFailedPayment(
-        donation.user.email,
-        donation.user.fullName,
-        donation.shelter.name,
-        donation.amount,
-        donation.updatedAt,
-        errorReason,
-      );
+      // await this.mailService.userFailedPayment(
+      //   donation.user.email,
+      //   donation.user.fullName,
+      //   donation.shelter.name,
+      //   donation.amount,
+      //   donation.updatedAt,
+      //   errorReason,
+      // );
 
       this.logger.log(`Donation ${donation.id} marked as failed: ${errorReason}`);
     } catch (error) {

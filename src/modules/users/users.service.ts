@@ -50,7 +50,8 @@ export class UsersService {
     try {
       const user = await this.prisma.user.create({ data: newUser });
       this.logger.log('User created successfully');
-      await this.mailService.signUpConfirmation(user.fullName, user.email);
+      
+      // await this.mailService.signUpConfirmation(user.fullName, user.email);
 
       return {
         statusCode: HttpStatus.CREATED,
