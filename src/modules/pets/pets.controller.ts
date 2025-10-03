@@ -86,6 +86,17 @@ export class PetController {
     return this.petService.restore(id);
   }
 
+  @Patch(':id/status')
+  @UseGuards(JwtAuthGuard, UserTypeGuard)
+  @UserTypes(UserType.Shelter)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Activate / Deactivate a pet (Admin)' })
+  @ApiOkResponse({ description: 'Pet status updated successfully' })
+  @ApiNotFoundResponse({ description: 'Pet not found' })
+  async updateStatus(@Param('id') id: string) {
+    return this.petService.updateStatus(id);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a specific pet' })
   @ApiOkResponse({ description: 'Pet details fetched successfully' })
@@ -95,6 +106,8 @@ export class PetController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, UserTypeGuard)
+  @UserTypes(UserType.Shelter)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a specific pet (Shelter / Admin)' })
   @ApiBody({

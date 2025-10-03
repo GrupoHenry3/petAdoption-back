@@ -82,4 +82,11 @@ export class DonationsController {
 
     return await this.donationsService.findByShelter(id);
   }
+
+  @ApiOperation({ summary: 'Mark donation as completed (for testing)' })
+  @ApiOkResponse({ description: 'Donation marked as completed' })
+  @Post('mark-completed/:sessionId')
+  async markCompleted(@Param('sessionId') sessionId: string) {
+    return await this.donationsService.markDonationAsCompleted(sessionId);
+  }
 }

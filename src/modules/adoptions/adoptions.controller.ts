@@ -55,6 +55,7 @@ export class AdoptionsController {
   @ApiNotFoundResponse({ description: 'Adoption application not found' })
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
+  @UserTypes(UserType.User, UserType.Shelter)
   async patch(@Param('id') id: string, payload: UpdateAdoptionDTO) {
     return await this.adoptionsService.withdrawApplication(id);
   }
@@ -96,6 +97,7 @@ export class AdoptionsController {
   @ApiBadRequestResponse()
   @Get(':id')
   @HttpCode(HttpStatus.OK)
+  @UserTypes(UserType.User, UserType.Shelter)
   async findOne(@Param('id') id: string) {
     return await this.adoptionsService.findOne(id);
   }

@@ -112,6 +112,9 @@ export class AdoptionsService {
   }
 
   async updateStatus(id: string, payload: UpdateAdoptionDTO) {
+    this.logger.log(`🔄 Updating adoption status for ID: ${id}`);
+    this.logger.log(`📋 Payload received:`, payload);
+
     const isAdoptionValid = await this.prisma.adoption.findUnique({
       where: { id: id },
       select: { id: true },
@@ -129,14 +132,16 @@ export class AdoptionsService {
         },
       });
 
-      this.logger.log('Adoption status updated successfully.');
+      this.logger.log('✅ Adoption status updated successfully.');
+      this.logger.log(`📊 Updated adoption:`, updatedAdoption);
 
       return {
         statusCode: HttpStatus.OK,
         data: updatedAdoption,
       };
     } catch (error) {
-      this.logger.error(`Failed to update application: ${id}`, error);
+      this.logger.error(`❌ Failed to update application: ${id}`, error);
+      throw error;
     }
   }
 
@@ -241,6 +246,10 @@ export class AdoptionsService {
     try {
       const adoptions = await this.prisma.adoption.findMany({
         where: { shelterID: isShelterValid.id },
+        include: {
+          pet: true,
+          user: true,
+        },
       });
 
       this.logger.log('Adoptions fetched successfully.');
@@ -248,6 +257,7 @@ export class AdoptionsService {
       return {
         statusCode: HttpStatus.OK,
         data: adoptions,
+        
       };
     } catch (error) {
       this.logger.error(`Error fetching adoption: ${error.message}`, error.stack);
@@ -267,9 +277,13 @@ export class AdoptionsService {
     try {
       const adoption = await this.prisma.adoption.findUnique({
         where: { id: isAdoptionValid.id },
+        include: {
+          pet: true,
+          user: true,
+        },
       });
 
-      this.logger.log('Adoptions fetched successfully.');
+      this.logger.log('Adoption fetched successfully.');
 
       return {
         statusCode: HttpStatus.OK,

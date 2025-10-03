@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, HttpStatus, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma, Pet } from '@prisma/client';
 import { PetWithRelations } from './pet.types';
@@ -6,6 +6,8 @@ import { CreatePetDTO } from './pets.dto';
 
 @Injectable()
 export class PetService {
+  private readonly logger = new Logger(PetService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async create(payload: CreatePetDTO) {
@@ -42,6 +44,7 @@ export class PetService {
         goodWithKids: true,
         goodWithPets: true,
         isAdopted: true,
+        isActive: true,
         breed: {
           select: {
             id: true,
@@ -153,6 +156,49 @@ export class PetService {
     });
   }
 
+  async updateStatus(id: string) {
+    this.logger.log(`🔄 Updating pet status for ID: ${id}`);
+    
+    const pet = await this.prisma.pet.findUnique({
+      where: { id: id },
+      select: { id: true, name: true, isActive: true },
+    });
+
+    if (!pet) {
+      throw new NotFoundException('Pet not found');
+    }
+
+    const newStatus = !pet.isActive;
+    this.logger.log(`📋 Current status: ${pet.isActive}, New status: ${newStatus}`);
+
+    try {
+      const updatedPet = await this.prisma.pet.update({
+        where: { id: pet.id },
+        data: {
+          isActive: newStatus,
+        },
+        include: {
+          photos: true,
+          shelter: true,
+          breed: true,
+          species: true,
+          adoption: true,
+          favorites: true,
+        },
+      });
+
+      this.logger.log(`✅ Pet ${pet.name} status updated to: ${newStatus}`);
+
+      return {
+        statusCode: HttpStatus.OK,
+        data: updatedPet,
+      };
+    } catch (error) {
+      this.logger.error(`❌ Failed to update pet status ${pet.id}`, error);
+      throw error;
+    }
+  }
+
   async findAllWithInactive(params?: {
     skip?: number;
     take?: number;
@@ -218,6 +264,7 @@ export class PetService {
         size: true,
         avatarURL: true,
         isAdopted: true,
+        isActive: true,
         createdAt: true,
         breed: {
           select: {

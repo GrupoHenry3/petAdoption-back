@@ -33,6 +33,7 @@ export class StripeService {
         capture_method: 'automatic',
         metadata: {
           type: 'donation',
+          session_id: '{CHECKOUT_SESSION_ID}',
         },
       },
       metadata: {

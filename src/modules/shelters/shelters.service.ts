@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ShelterDTO, GetSheltersDTO, UpdateShelterDTO } from './shelters.dto';
-import { Prisma, UserType } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { MailService } from '../mail/mail.service';
 
 @Injectable()
@@ -118,64 +118,48 @@ export class SheltersService {
   }
 
   async updateStatus(id: string) {
+    this.logger.log(`🔄 Updating shelter status for ID: ${id}`);
+    
     const shelter = await this.prisma.shelter.findUnique({
       where: { id: id },
-      select: { id: true, userID: true, name: true, isActive: true },
+      select: { id: true, name: true, isActive: true },
     });
 
     if (!shelter) {
       throw new NotFoundException('Shelter not found');
     }
 
-    const user = await this.prisma.user.findUnique({
-      where: { id: shelter.userID },
-      select: { id: true, userType: true },
-    });
-
-    if (!user) throw new NotFoundException('User not found');
-
-    const shelterStatus = !shelter.isActive;
-    let userType: UserType;
-
-    if (user.userType === 'Shelter') {
-      userType = 'User';
-    } else {
-      userType = 'Shelter';
-    }
+    const newStatus = !shelter.isActive;
+    this.logger.log(`📋 Current status: ${shelter.isActive}, New status: ${newStatus}`);
 
     try {
-      const tx = await this.prisma.$transaction(async (prisma) => {
-        const updatedShelter = await prisma.shelter.update({
-          where: { id: shelter?.id },
-          data: {
-            isActive: shelterStatus,
-          },
-          select: {
-            id: true,
-            isActive: true,
-          },
-        });
-
-        const updateUser = await prisma.user.update({
-          where: { id: shelter.userID },
-          data: { userType: userType },
-        });
-
-        return { updatedShelter, updateUser };
+      const updatedShelter = await this.prisma.shelter.update({
+        where: { id: shelter.id },
+        data: {
+          isActive: newStatus,
+        },
+        select: {
+          id: true,
+          name: true,
+          isActive: true,
+        },
       });
 
-      this.logger.log(`Shelter ${shelter.name} status updated successfully`);
+      this.logger.log(`✅ Shelter ${shelter.name} status updated to: ${newStatus}`);
 
       return {
-        statusCode: HttpStatus.ACCEPTED,
-        shelter: tx.updatedShelter,
+        statusCode: HttpStatus.OK,
+        data: updatedShelter,
       };
     } catch (error) {
-      this.logger.error(`Failed to disable shelter ${shelter.id}`, error);
+      this.logger.error(`❌ Failed to update shelter status ${shelter.id}`, error);
+      throw error;
     }
   }
 
   async verify(id: string) {
+    this.logger.log(`🔄 Verifying shelter with ID: ${id}`);
+    
     const shelter = await this.prisma.shelter.findUnique({
       where: { id: id },
       select: {
@@ -191,16 +175,17 @@ export class SheltersService {
     }
 
     const status = shelter.isVerified;
+    this.logger.log(`📋 Current verification status: ${status}`);
 
     try {
       const verifiedShelter = await this.prisma.shelter.update({
         where: { id: shelter.id },
         data: {
-          isActive: !status,
+          isVerified: !status,
         },
       });
 
-      this.logger.log(`Verified shelter ${shelter.id}`);
+      this.logger.log(`✅ Shelter ${shelter.id} verification status updated to: ${!status}`);
 
       await this.mailService.shelterVerificationConfirmation(shelter.user.email, shelter.name);
 

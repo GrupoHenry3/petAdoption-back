@@ -101,15 +101,28 @@ export class StripeController {
 
   private async handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent) {
     this.logger.log(`Payment intent succeeded: ${paymentIntent.id}`);
+    this.logger.log(`Payment intent metadata:`, paymentIntent.metadata);
 
     try {
-      // Obtener la sesión de checkout asociada
-      const session = await this.stripeService.retrieveCheckoutSession(
-        paymentIntent.metadata?.session_id,
-      );
-      if (session) {
-        await this.donationsService.markDonationAsCompleted(session.id);
-        this.logger.log(`Donation marked as completed for payment intent: ${paymentIntent.id}`);
+      // Primero intentar obtener la sesión usando los metadatos
+      let sessionId = paymentIntent.metadata?.session_id;
+      
+      if (sessionId) {
+        const session = await this.stripeService.retrieveCheckoutSession(sessionId);
+        if (session) {
+          await this.donationsService.markDonationAsCompleted(session.id);
+          this.logger.log(`Donation marked as completed for session: ${session.id}`);
+          return;
+        }
+      }
+
+      // Si no se encuentra por session_id, buscar por payment_intent_id
+      const donation = await this.donationsService.findByPaymentIntentId(paymentIntent.id);
+      if (donation) {
+        await this.donationsService.markDonationAsCompleted(donation.sessionID);
+        this.logger.log(`Donation marked as completed for payment intent: ${paymentIntent.id} via donation lookup`);
+      } else {
+        this.logger.warn(`No donation found for payment intent: ${paymentIntent.id}`);
       }
     } catch (error) {
       this.logger.error(`Error handling payment intent success: ${error.message}`);
