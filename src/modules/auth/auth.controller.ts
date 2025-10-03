@@ -19,9 +19,8 @@ import { ApiBody } from '@nestjs/swagger';
 const cookieOptions = {
   httpOnly: false,
   secure: true,
-  sameSite: 'lax' as const,
+  sameSite: 'none' as const,
   maxAge: 60 * 60 * 1000,
-  domain: '.onrender.com',
   path: '/',
 };
 @Controller('auth')
