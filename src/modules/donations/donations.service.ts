@@ -3,6 +3,8 @@ import {
   InternalServerErrorException,
   Logger,
   NotFoundException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { DonationDTO } from './donations.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -15,6 +17,7 @@ export class DonationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
+    @Inject(forwardRef(() => StripeService))
     private readonly stripeService: StripeService,
   ) {}
 

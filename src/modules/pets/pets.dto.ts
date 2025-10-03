@@ -228,14 +228,14 @@ export class CreatePetDTO {
   shelterID: string;
 
   @ApiProperty({
-    type: 'boolean',
+    type: 'string',
   })
   @IsString()
   @IsNotEmpty()
   breedID: string;
 
   @ApiProperty({
-    type: 'boolean',
+    type: 'string',
   })
   @IsString()
   @IsNotEmpty()

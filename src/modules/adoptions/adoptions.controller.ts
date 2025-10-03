@@ -79,7 +79,7 @@ export class AdoptionsController {
     return await this.adoptionsService.findAll();
   }
 
-  @ApiOperation({ summary: 'List all adoptions by shelter' })
+  @ApiOperation({ summary: 'List all adoptions by shelter (Admin only)' })
   @ApiOkResponse({ description: 'List of all adoption applications', type: [Adoption] })
   @ApiBadRequestResponse()
   @Get('shelter/:id')
@@ -87,6 +87,17 @@ export class AdoptionsController {
   @UseGuards(AdminGuard)
   async findByShelter(@Param('id') id: string) {
     return await this.adoptionsService.findByShelter(id);
+  }
+
+  @ApiOperation({ summary: 'List adoptions for current shelter' })
+  @ApiOkResponse({ description: 'List of adoption applications for current shelter', type: [Adoption] })
+  @ApiBadRequestResponse()
+  @Get('shelter')
+  @HttpCode(HttpStatus.OK)
+  @UserTypes(UserType.Shelter)
+  async findByCurrentShelter(@Req() req) {
+    const { id } = req.user;
+    return await this.adoptionsService.findByCurrentShelter(id);
   }
 
   @ApiOperation({ summary: 'Get a specific adoption application' })
@@ -97,6 +108,7 @@ export class AdoptionsController {
   @ApiBadRequestResponse()
   @Get(':id')
   @HttpCode(HttpStatus.OK)
+  @UserTypes(UserType.User, UserType.Shelter)
   async findOne(@Param('id') id: string) {
     return await this.adoptionsService.findOne(id);
   }

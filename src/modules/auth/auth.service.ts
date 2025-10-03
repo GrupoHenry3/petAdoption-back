@@ -79,9 +79,13 @@ export class AuthService {
   }
 
   async googleSignIn(id: string) {
+    console.log('GoogleSignIn - Looking for user with ID:', id);
+    
     const user = await this.prisma.user.findUnique({ where: { id: id } });
+    console.log('GoogleSignIn - User found:', !!user);
 
     if (!user) {
+      console.log('GoogleSignIn - User not found');
       throw new NotFoundException('User not found');
     }
 
@@ -96,8 +100,12 @@ export class AuthService {
       isActive: user.isActive,
     };
 
+    console.log('GoogleSignIn - JWT payload:', jwt);
+    const accessToken = await this.jwtService.signAsync(jwt);
+    console.log('GoogleSignIn - JWT generated successfully');
+
     return {
-      accessToken: await this.jwtService.signAsync(jwt),
+      accessToken,
     };
   }
 
@@ -109,11 +117,29 @@ export class AuthService {
         userType: true,
         isActive: true,
         siteAdmin: true,
+        googleID: true,
       },
     });
 
+    console.log('ValidateGoogleUser - User found:', !!user);
+
     if (!user) {
-      return await this.usersService.create(payload);
+      console.log('ValidateGoogleUser - Creating new user');
+      // Usuario nuevo - crear cuenta
+      const newUser = await this.usersService.create(payload);
+      console.log('ValidateGoogleUser - New user created:', newUser);
+      return newUser;
+    }
+
+    console.log('ValidateGoogleUser - Existing user found:', user);
+    
+    // Usuario existente - actualizar googleID si no lo tiene
+    if (!user.googleID) {
+      console.log('ValidateGoogleUser - Updating googleID for existing user');
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { googleID: payload.googleID },
+      });
     }
 
     return user;

@@ -112,6 +112,9 @@ export class AdoptionsService {
   }
 
   async updateStatus(id: string, payload: UpdateAdoptionDTO) {
+    this.logger.log(`🔄 Updating adoption status for ID: ${id}`);
+    this.logger.log(`📋 Payload received:`, payload);
+
     const isAdoptionValid = await this.prisma.adoption.findUnique({
       where: { id: id },
       select: { id: true },
@@ -129,7 +132,8 @@ export class AdoptionsService {
         },
       });
 
-      this.logger.log('Adoption status updated successfully.');
+      this.logger.log('✅ Adoption status updated successfully.');
+      this.logger.log(`📊 Updated adoption:`, updatedAdoption);
 
       return {
         statusCode: HttpStatus.OK,
@@ -248,9 +252,77 @@ export class AdoptionsService {
       return {
         statusCode: HttpStatus.OK,
         data: adoptions,
+        
       };
     } catch (error) {
       this.logger.error(`Error fetching adoption: ${error.message}`, error.stack);
+    }
+  }
+
+  async findByCurrentShelter(userId: string) {
+    // Primero obtenemos el shelter asociado al usuario
+    const userShelter = await this.prisma.shelter.findFirst({
+      where: { userID: userId },
+      select: { id: true },
+    });
+
+    if (!userShelter) {
+      throw new NotFoundException('Shelter not found for this user');
+    }
+
+    try {
+      const adoptions = await this.prisma.adoption.findMany({
+        where: { shelterID: userShelter.id },
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              phoneNumber: true,
+              avatarURL: true,
+            },
+          },
+          pet: {
+            select: {
+              id: true,
+              name: true,
+              age: true,
+              gender: true,
+              size: true,
+              avatarURL: true,
+              breed: {
+                select: {
+                  name: true,
+                },
+              },
+              species: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+          shelter: {
+            select: {
+              id: true,
+              name: true,
+              city: true,
+              state: true,
+              country: true,
+            },
+          },
+        },
+      });
+
+      this.logger.log('Adoptions fetched successfully for current shelter.');
+
+      return {
+        statusCode: HttpStatus.OK,
+        data: adoptions,
+      };
+    } catch (error) {
+      this.logger.error(`Error fetching adoptions for current shelter: ${error.message}`, error.stack);
     }
   }
 
@@ -267,9 +339,13 @@ export class AdoptionsService {
     try {
       const adoption = await this.prisma.adoption.findUnique({
         where: { id: isAdoptionValid.id },
+        include: {
+          pet: true,
+          user: true,
+        },
       });
 
-      this.logger.log('Adoptions fetched successfully.');
+      this.logger.log('Adoption fetched successfully.');
 
       return {
         statusCode: HttpStatus.OK,

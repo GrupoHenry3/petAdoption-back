@@ -25,7 +25,6 @@ export class UserTypeGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-
     const request: Request = context.switchToHttp().getRequest();
     let token = request?.cookies?.access_token as string;
 
@@ -36,7 +35,10 @@ export class UserTypeGuard implements CanActivate {
       }
     }
 
+    console.log('🔍 Token found:', !!token);
+
     if (!token) {
+      console.log('❌ No token found');
       throw new UnauthorizedException();
     }
 
@@ -60,13 +62,14 @@ export class UserTypeGuard implements CanActivate {
       }
 
       if (!requiredUserTypes.includes(userType)) {
+        console.log('❌ User type not in required types:', userType, 'not in', requiredUserTypes);
         throw new ForbiddenException('This user is not managing a shelter');
       }
 
       const hasRequiredType = requiredUserTypes.some((type) => userType === type);
-
       return hasRequiredType;
     } catch (error) {
+      console.log('❌ Error in UserTypeGuard:', error.message);
       if (error instanceof JsonWebTokenError) {
         throw new ForbiddenException('Invalid token');
       }

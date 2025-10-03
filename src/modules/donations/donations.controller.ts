@@ -62,13 +62,6 @@ export class DonationsController {
     return await this.donationsService.findByUser(id);
   }
 
-  @ApiOperation({ summary: 'Get a specific user donations' })
-  @ApiOkResponse({ description: 'Donation details fetched successfully', type: [Donation] })
-  @Get(':id')
-  async findByUser(@Param('id') id: string) {
-    return await this.donationsService.findByUser(id);
-  }
-
   @ApiOperation({ summary: 'List all donations by shelter' })
   @ApiOkResponse({ description: 'List of all donations', type: [Donation] })
   @UseGuards(UserTypeGuard)
@@ -78,5 +71,12 @@ export class DonationsController {
     const { id } = req.user;
 
     return await this.donationsService.findByShelter(id);
+  }
+
+  @ApiOperation({ summary: 'Get a specific user donations' })
+  @ApiOkResponse({ description: 'Donation details fetched successfully', type: [Donation] })
+  @Get(':id')
+  async findByUser(@Param('id') id: string) {
+    return await this.donationsService.findByUser(id);
   }
 }
