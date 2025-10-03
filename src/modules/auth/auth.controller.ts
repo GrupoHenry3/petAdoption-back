@@ -51,7 +51,14 @@ export class AuthController {
   @HttpCode(HttpStatus.ACCEPTED)
   async signIn(@Res({ passthrough: true }) res: Response, @Body() payload: SignInDTO) {
     const result = await this.authService.signIn(payload);
-    res.cookie('access_token', result.accessToken, cookieOptions);
+    res.cookie('access_token', result.accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: 60 * 60 * 1000,
+      domain: '.onrender.com',
+      path: '/',
+    });
 
     // return {
     //   statusCode: 202,
@@ -80,8 +87,16 @@ export class AuthController {
   async googleCallback(@Req() req, @Res({ passthrough: true }) res: Response) {
     try {
       const result = await this.authService.googleSignIn(req.user.id);
-      res.cookie('access_token', result.accessToken, cookieOptions);
-      res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${result.accessToken}`);
+      res.cookie('access_token', result.accessToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+        maxAge: 60 * 60 * 1000,
+        domain: '.onrender.com',
+        path: '/',
+      });
+      // res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${result.accessToken}`);
+      res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
     } catch (e) {
       this.logger.error(e);
       res.redirect(`${process.env.FRONTEND_URL}/auth?error=oauth_failed`);
