@@ -52,11 +52,11 @@ export class AuthController {
     const result = await this.authService.signIn(payload);
     res.cookie('access_token', result.accessToken, cookieOptions);
 
-    return {
-      statusCode: 202,
-      message: 'Login successful',
-      accessToken: result.accessToken,
-    };
+    // return {
+    //   statusCode: 202,
+    //   message: 'Login successful',
+    //   accessToken: result.accessToken,
+    // };
   }
 
   @Post('signout')
@@ -76,7 +76,7 @@ export class AuthController {
 
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
-  async googleCallback(@Req() req, @Res() res: Response) {
+  async googleCallback(@Req() req, @Res({ passthrough: true }) res: Response) {
     try {
       const result = await this.authService.googleSignIn(req.user.id);
       res.cookie('access_token', result.accessToken, cookieOptions);
