@@ -89,6 +89,8 @@ export class AuthService {
       throw new UnauthorizedException('User is inactive');
     }
 
+    this.logger.log(`User '${user.fullName}' has logged in`);
+
     const jwt = {
       sub: user.id,
       userType: user.userType,
