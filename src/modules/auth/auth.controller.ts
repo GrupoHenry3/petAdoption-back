@@ -19,7 +19,7 @@ import { ApiBody } from '@nestjs/swagger';
 const cookieOptions = {
   httpOnly: true,
   secure: true,
-  sameSite: 'none' as const,
+  sameSite: 'lax' as const,
   maxAge: 60 * 60 * 1000,
   path: '/',
 };
