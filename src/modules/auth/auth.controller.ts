@@ -20,8 +20,7 @@ const cookieOptions = {
   httpOnly: true,
   secure: true,
   sameSite: 'none' as const,
-  maxAge: 60 * 60 * 1000,
-  domain: `${process.env.FRONTEND_URL}`,
+  maxAge: 60 * 60 * 1000
 };
 @Controller('auth')
 export class AuthController {
