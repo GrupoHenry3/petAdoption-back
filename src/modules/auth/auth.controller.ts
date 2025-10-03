@@ -6,23 +6,16 @@ import {
   HttpStatus,
   UseGuards,
   Get,
-  Res,
   Req,
+  Res,
   Logger,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { GoogleAuthGuard } from './guards/google.guard';
 import { CreateUserDTO, SignInDTO } from '../users/user.dto';
-import type { Response } from 'express';
 import { ApiBody } from '@nestjs/swagger';
+import type { Response } from 'express';
 
-const cookieOptions = {
-  httpOnly: false,
-  secure: true,
-  sameSite: 'lax' as const,
-  maxAge: 60 * 60 * 1000,
-  path: '/',
-};
 @Controller('auth')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
@@ -48,22 +41,19 @@ export class AuthController {
 
   @Post('signin')
   @HttpCode(HttpStatus.ACCEPTED)
-  async signIn(@Res({ passthrough: true }) res: Response, @Body() payload: SignInDTO) {
+  async signIn(@Body() payload: SignInDTO) {
     const result = await this.authService.signIn(payload);
-    res.cookie('access_token', result.accessToken, cookieOptions);
-
-    // return {
-    //   statusCode: 202,
-    //   message: 'Login successful',
-    //   accessToken: result.accessToken,
-    // };
+    
+    return {
+      statusCode: 202,
+      message: 'Login successful',
+      accessToken: result.accessToken,
+    };
   }
 
   @Post('signout')
   @HttpCode(HttpStatus.OK)
-  signOut(@Res({ passthrough: true }) res: Response) {
-    res.clearCookie('access_token');
-
+  signOut() {
     return {
       statusCode: 200,
       message: 'Logged out successfully',
@@ -76,12 +66,12 @@ export class AuthController {
 
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
-  async googleCallback(@Req() req, @Res({ passthrough: true }) res: Response) {
+  async googleCallback(@Req() req, @Res() res: Response) {
     try {
       const result = await this.authService.googleSignIn(req.user.id);
-      res.cookie('access_token', result.accessToken, cookieOptions);
-      // res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${result.accessToken}`);
-      res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
+      
+      // Redirigir al frontend con el token en la URL
+      res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${result.accessToken}`);
     } catch (e) {
       this.logger.error(e);
       res.redirect(`${process.env.FRONTEND_URL}/auth?error=oauth_failed`);

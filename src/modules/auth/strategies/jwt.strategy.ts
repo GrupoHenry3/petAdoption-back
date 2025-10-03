@@ -15,14 +15,7 @@ export interface JwtPayload {
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(private readonly authService: AuthService) {
     super({
-      jwtFromRequest: ExtractJwt.fromExtractors([
-        (request: Request) => {
-          console.log('JWT Token', request.cookies);
-
-          return request?.cookies?.access_token as string;
-        },
-        ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ]),
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: `${process.env.JWT_SECRET_TOKEN}`,
       ignoreExpiration: false,
     });
