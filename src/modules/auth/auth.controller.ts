@@ -75,7 +75,7 @@ export class AuthController {
 
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
-  async googleCallback(@Req() req, @Res({ passthrough: true }) res: Response) {
+  async googleCallback(@Req() req, @Res() res: Response) {
     try {
       const result = await this.authService.googleSignIn(req.user.id);
       res.cookie('access_token', result.accessToken, cookieOptions);
