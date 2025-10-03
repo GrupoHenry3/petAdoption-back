@@ -54,7 +54,7 @@ export class AuthController {
     res.cookie('access_token', result.accessToken, {
       httpOnly: true,
       secure: true,
-      sameSite: 'none',
+      sameSite: 'lax',
       maxAge: 60 * 60 * 1000,
       domain: '.onrender.com',
       path: '/',
@@ -90,7 +90,7 @@ export class AuthController {
       res.cookie('access_token', result.accessToken, {
         httpOnly: true,
         secure: true,
-        sameSite: 'none',
+        sameSite: 'lax',
         maxAge: 60 * 60 * 1000,
         domain: '.onrender.com',
         path: '/',
