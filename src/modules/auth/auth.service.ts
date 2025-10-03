@@ -102,8 +102,8 @@ export class AuthService {
   }
 
   async validateGoogleUser(payload: CreateUserDTO) {
-    const user = await this.prisma.user.findFirst({
-      where: { OR: [{ googleID: payload.googleID }, { email: payload.email }] },
+    const user = await this.prisma.user.findUnique({
+      where: { email: payload.email },
       select: {
         id: true,
         userType: true,
