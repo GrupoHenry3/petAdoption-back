@@ -17,7 +17,7 @@ import {
 import { AdminGuard } from '../auth/guards/admin.guard';
 
 @Controller('donations')
-@UseGuards(JwtAuthGuard, UserTypeGuard)
+@UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({ description: 'Unauthorized' })
 @ApiBadRequestResponse({ description: 'Bad request' })
@@ -51,13 +51,6 @@ export class DonationsController {
     return this.donationsService.findAll();
   }
 
-  @ApiOperation({ summary: 'Get a specific user donations' })
-  @ApiOkResponse({ description: 'Donation details fetched successfully', type: [Donation] })
-  @Get(':id')
-  async findByUser(@Param('id') id: string) {
-    return await this.donationsService.findByUser(id);
-  }
-
   @ApiOperation({ summary: 'Get current user donations' })
   @ApiOkResponse({ description: 'Donation details fetched successfully', type: [Donation] })
   @UseGuards(UserTypeGuard)
@@ -66,6 +59,13 @@ export class DonationsController {
   async findMyDonations(@Req() req) {
     const { id } = req.user;
 
+    return await this.donationsService.findByUser(id);
+  }
+
+  @ApiOperation({ summary: 'Get a specific user donations' })
+  @ApiOkResponse({ description: 'Donation details fetched successfully', type: [Donation] })
+  @Get(':id')
+  async findByUser(@Param('id') id: string) {
     return await this.donationsService.findByUser(id);
   }
 
