@@ -88,8 +88,8 @@ export class AuthController {
     try {
       const result = await this.authService.googleSignIn(req.user.id);
       res.cookie('access_token', result.accessToken, {
-        httpOnly: true,
-        secure: true,
+        httpOnly: false,
+        secure: false,
         sameSite: 'lax',
         maxAge: 60 * 60 * 1000,
         domain: '.onrender.com',
