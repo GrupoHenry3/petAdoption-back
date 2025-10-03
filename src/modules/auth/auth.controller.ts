@@ -21,6 +21,7 @@ const cookieOptions = {
   secure: true,
   sameSite: 'none' as const,
   maxAge: 60 * 60 * 1000,
+  path: '/',
 };
 @Controller('auth')
 export class AuthController {
