@@ -48,19 +48,23 @@ export class UsersService {
     };
 
     try {
-      const user = await this.prisma.user.create({ data: newUser });
-      this.logger.log('User created successfully');
+      const user = await this.prisma.user.create({
+        data: newUser,
+        select: {
+          id: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
       
+      this.logger.log('User created successfully');
+
       // await this.mailService.signUpConfirmation(user.fullName, user.email);
 
       return {
-        statusCode: HttpStatus.CREATED,
-        message: 'User created successfully',
-        user: {
-          id: user.id,
-          createAt: user.createdAt,
-          updatedAt: user.updatedAt,
-        },
+        id: user.id,
+        createAt: user.createdAt,
+        updatedAt: user.updatedAt,
       };
     } catch (error) {
       this.logger.error('Failed to create user', error);

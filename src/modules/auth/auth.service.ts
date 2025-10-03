@@ -114,9 +114,13 @@ export class AuthService {
       },
     });
 
+    this.logger.error('User not found, will now be created');
+
     if (!user) {
       return await this.usersService.create(payload);
     }
+
+    this.logger.log('User has been created');
 
     return user;
   }

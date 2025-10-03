@@ -68,13 +68,13 @@ export class AuthController {
 
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
-  async googleCallback(@Req() req, @Res({ passthrough: true }) res: Response) {
+  async googleCallback(@Req() req, @Res() res: Response) {
     try {
       const result = await this.authService.googleSignIn(req.user.id);
       res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${result.accessToken}`);
     } catch (e) {
       this.logger.error(e);
-      res.redirect(`${process.env.FRONTEND_URL}/auth?error=oauth_failed`);
+      res.redirect(`${process.env.FRONTEND_URL}/auth`);
     }
   }
 }

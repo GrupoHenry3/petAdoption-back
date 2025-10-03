@@ -15,13 +15,17 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(_accessToken: string, _refreshToken: string, profile: Profile) {
+    const { id, name, emails, photos, displayName } = profile;
+    const { givenName, familyName } = name;
+    const fullName = givenName && familyName ? `${givenName} ${familyName}` : displayName;
+
     const payload = {
-      googleID: profile.id,
-      fullName: `${profile.name.givenName} ${profile.name.familyName}`,
-      email: profile.emails[0].value,
-      password: profile.id,
-      confirmedPassword: profile.id,
-      avatarURL: profile.photos[0].value,
+      googleID: id,
+      fullName,
+      email: emails[0].value,
+      password: id,
+      confirmedPassword: id,
+      avatarURL: photos[0].value,
     };
 
     return await this.authService.validateGoogleUser(payload);
