@@ -50,16 +50,15 @@ export class UsersService {
     try {
       const user = await this.prisma.user.create({
         data: newUser,
-        select: {
-          id: true,
-          createdAt: true,
-          updatedAt: true,
+        omit: {
+          googleID: true,
+          password: true,
         },
       });
-      
+
       this.logger.log('User created successfully');
 
-      // await this.mailService.signUpConfirmation(user.fullName, user.email);
+      await this.mailService.signUpConfirmation(user.fullName, user.email);
 
       return {
         id: user.id,
