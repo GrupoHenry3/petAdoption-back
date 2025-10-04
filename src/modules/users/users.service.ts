@@ -58,7 +58,7 @@ export class UsersService {
 
       this.logger.log('User created successfully');
 
-      await this.mailService.signUpConfirmation(user.fullName, user.email);
+      // await this.mailService.signUpConfirmation(user.fullName, user.email);
 
       return {
         id: user.id,
