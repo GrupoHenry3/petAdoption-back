@@ -97,7 +97,7 @@ model Pet {
   species               PetSpecies      @relation(fields: [speciesID], references: [id])
   favorites             FavoritePets[]
   photos                PetPhotos[]
-  adoption              Adoption?
+  adoption              Adoption[]
 
   @@index([name, gender, size, breedID, speciesID])
   @@map("pa_pets")
@@ -172,7 +172,7 @@ model Adoption {
   user                  User            @relation(fields: [userID], references: [id])
   shelterID             String          @map("shelter_id")
   shelter               Shelter         @relation(fields: [shelterID], references: [id])
-  petID                 String          @unique @map("pet_id")
+  petID                 String          @map("pet_id")
   pet                   Pet             @relation(fields: [petID], references: [id])
 
   @@index([status, userID, shelterID])
